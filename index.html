@@ -203,9 +203,14 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
 </div>
 
 <script>
-const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co';
-const SB_KEY = 'sb_publishable_fIatmTW4rufpUKqzwtLfpA_e6YDPn8r';
-const sb = supabase.createClient(SB_URL, SB_KEY);
+const sb = createClient(
+  'https://agreoglnwnesdekjbacu.supabase.co',
+  'sb_publishable_fIatmTW4rufpUKqzwtLfpA_e6YDPn8r'
+)
+  
+//const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co';
+//const SB_KEY = 'sb_publishable_fIatmTW4rufpUKqzwtLfpA_e6YDPn8r';
+//const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── STATE ──────────────────────────────────────────────────────────────
 let player = null, isAdmin = false;
