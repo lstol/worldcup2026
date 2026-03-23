@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>â½ World Cup 2026 â Family Predictions</title>
+<title>⚽ World Cup 2026 — Family Predictions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#F0F4F8;color:#1A3A5C;min-height:100vh}
 
-/* ââ LOGIN ââ */
+/* ── LOGIN ── */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0D2137 0%,#1565C0 100%)}
 .login-card{background:#fff;border-radius:16px;padding:40px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .login-logo{font-size:3rem;text-align:center;margin-bottom:8px}
@@ -23,7 +23,7 @@ body{font-family:Arial,sans-serif;background:#F0F4F8;color:#1A3A5C;min-height:10
 .err{background:#FDEAEA;color:#C9041C;padding:10px 12px;border-radius:8px;font-size:.85rem;margin-top:12px;display:none}
 .hint{font-size:.75rem;color:#888;text-align:center;margin-top:16px;line-height:1.6}
 
-/* ââ HEADER ââ */
+/* ── HEADER ── */
 header{background:#0D2137;color:#fff;position:sticky;top:0;z-index:100}
 .hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;max-width:960px;margin:0 auto}
 .hdr-title{font-size:1.05rem;font-weight:700}
@@ -35,17 +35,17 @@ nav button{background:none;border:none;color:rgba(255,255,255,.65);padding:9px 1
 nav button.active{color:#FFD700;border-bottom-color:#FFD700}
 nav button:hover{color:#fff}
 
-/* ââ PAGES ââ */
+/* ── PAGES ── */
 .page{display:none;max-width:960px;margin:0 auto;padding:16px 16px 80px}
 .page.active{display:block}
 .pg-title{font-size:1.15rem;font-weight:700;color:#0D2137;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 
-/* ââ ROUND TABS ââ */
+/* ── ROUND TABS ── */
 .rtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .rtab{background:#fff;border:2px solid #9DC3E6;color:#1A3A5C;padding:6px 12px;border-radius:20px;cursor:pointer;font-size:.8rem;font-weight:700;transition:all .2s}
 .rtab.active{background:#1565C0;color:#fff;border-color:#1565C0}
 
-/* ââ TABLES ââ */
+/* ── TABLES ── */
 .section{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:18px}
 .sec-hdr{background:#0D2137;color:#fff;padding:9px 14px;font-weight:700;font-size:.87rem;display:flex;align-items:center;gap:8px}
 table{width:100%;border-collapse:collapse}
@@ -64,7 +64,7 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
 .et{width:50px;padding:4px 2px;border:2px solid #FFC87A;border-radius:6px;background:#FFF3E8;font-size:.8rem;text-align:center}
 .et:disabled{opacity:.28;background:#F0F0F0;border-color:#DDD;cursor:not-allowed}
 
-/* ââ SAVE BAR ââ */
+/* ── SAVE BAR ── */
 .savebar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #9DC3E6;padding:10px 16px;display:flex;align-items:center;gap:12px;z-index:99;display:none}
 .savebar.show{display:flex}
 .btn-save{background:#1565C0;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem}
@@ -72,7 +72,7 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
 .sstatus{font-size:.82rem;color:#666}
 .ok{color:#2D7A2D;font-weight:700}
 
-/* ââ LEADERBOARD ââ */
+/* ── LEADERBOARD ── */
 .lb-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:16px}
 .lb-hdr{background:#0D2137;color:#fff;padding:14px 20px;font-size:1.05rem;font-weight:700;text-align:center}
 .lb-row{display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #EBF4FB;gap:14px}
@@ -86,12 +86,12 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
 .lb-pts{font-size:1.3rem;font-weight:700;color:#1565C0}
 .lb-gap{font-size:.75rem;color:#999;min-width:50px;text-align:right}
 
-/* ââ INFO ââ */
+/* ── INFO ── */
 .info{background:#EBF4FB;border-left:4px solid #1565C0;padding:10px 14px;border-radius:0 8px 8px 0;margin-bottom:14px;font-size:.82rem}
 .spin{text-align:center;padding:40px;color:#999;font-size:1rem}
 .empty{text-align:center;padding:30px;color:#999;font-size:.9rem}
 
-/* ââ ADD MATCH FORM ââ */
+/* ── ADD MATCH FORM ── */
 .add-match-form{background:#fff;border-radius:10px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:16px}
 .add-match-form h3{font-size:.9rem;font-weight:700;color:#0D2137;margin-bottom:12px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -111,65 +111,65 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
 </head>
 <body>
 
-<!-- ââ LOGIN ââ -->
+<!-- ── LOGIN ── -->
 <div id="login-screen" class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">â½</div>
+    <div class="login-logo">⚽</div>
     <div class="login-title">World Cup 2026</div>
-    <div class="login-sub">Family Prediction Competition ð</div>
+    <div class="login-sub">Family Prediction Competition 🏆</div>
     <label class="lbl">Email</label>
     <input id="lemail" class="inp" type="email" placeholder="yourname@worldcup2026.local" autocomplete="email">
     <label class="lbl">Password</label>
-    <input id="lpass" class="inp" type="password" placeholder="â¢â¢â¢â¢â¢â¢â¢â¢" autocomplete="current-password">
-    <button class="btn-primary" onclick="doLogin()">â½ Sign In</button>
+    <input id="lpass" class="inp" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn-primary" onclick="doLogin()">⚽ Sign In</button>
     <div id="lerr" class="err"></div>
     <div class="hint">Email: <b>yourname@worldcup2026.local</b><br>e.g. lasse@worldcup2026.local<br>Password given by Lasse</div>
   </div>
 </div>
 
-<!-- ââ APP ââ -->
+<!-- ── APP ── -->
 <div id="app" style="display:none">
   <header>
     <div class="hdr">
       <div>
-        <div class="hdr-title">â½ World Cup 2026</div>
+        <div class="hdr-title">⚽ World Cup 2026</div>
         <div class="hdr-sub">Family Predictions</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         <span id="adminpill" class="admin-pill" style="display:none">ADMIN</span>
-        <button class="user-pill" onclick="doLogout()">ð¤ <span id="uname">â¦</span> â©</button>
+        <button class="user-pill" onclick="doLogout()">👤 <span id="uname">…</span> ↩</button>
       </div>
     </div>
     <nav id="mainnav">
-      <button onclick="showPage('lb')" class="active">ð Standings</button>
-      <button onclick="showPage('pred')">ð¯ My Predictions</button>
-      <button id="adminbtn" onclick="showPage('admin')" style="display:none">âï¸ Enter Results</button>
+      <button onclick="showPage('lb')" class="active">🏆 Standings</button>
+      <button onclick="showPage('pred')">🎯 My Predictions</button>
+      <button id="adminbtn" onclick="showPage('admin')" style="display:none">⚙️ Enter Results</button>
     </nav>
   </header>
 
   <!-- STANDINGS -->
   <div id="page-lb" class="page active">
-    <div class="pg-title">ð Live Standings</div>
-    <div id="lb-content"><div class="spin">Loadingâ¦</div></div>
+    <div class="pg-title">🏆 Live Standings</div>
+    <div id="lb-content"><div class="spin">Loading…</div></div>
   </div>
 
   <!-- PREDICTIONS -->
   <div id="page-pred" class="page">
-    <div class="pg-title">ð¯ My Predictions</div>
-    <div class="info">Enter your predicted scores in the green cells. ET/P column activates automatically when you predict a draw in a knockout match. Save your predictions â you can update them until the round closes.</div>
+    <div class="pg-title">🎯 My Predictions</div>
+    <div class="info">Enter your predicted scores in the green cells. ET/P column activates automatically when you predict a draw in a knockout match. Save your predictions — you can update them until the round closes.</div>
     <div class="rtabs" id="pred-tabs"></div>
-    <div id="pred-content"><div class="spin">Loadingâ¦</div></div>
+    <div id="pred-content"><div class="spin">Loading…</div></div>
   </div>
 
   <!-- ADMIN -->
   <div id="page-admin" class="page">
-    <div class="pg-title">âï¸ Enter Actual Results</div>
+    <div class="pg-title">⚙️ Enter Actual Results</div>
     <div class="info">Enter actual match scores here. All family members see the update immediately and their points recalculate. You can also add new matches for each round.</div>
     <div class="rtabs" id="admin-tabs"></div>
 
     <!-- Add match form -->
     <div id="add-match-form" class="add-match-form">
-      <h3>â Add New Match</h3>
+      <h3>➕ Add New Match</h3>
       <div class="form-grid">
         <div><label>Match Number</label><input id="fm-num" type="number" placeholder="e.g. 73"></div>
         <div><label>Date</label><input id="fm-date" type="date"></div>
@@ -188,52 +188,51 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
         </div>
         <div><label>Group (if group stage)</label><input id="fm-group" type="text" placeholder="A-L" maxlength="1"></div>
       </div>
-      <button class="btn-add" onclick="addMatch()">â Add Match</button>
+      <button class="btn-add" onclick="addMatch()">➕ Add Match</button>
       <span id="add-status" style="margin-left:10px;font-size:.82rem;color:#2D7A2D"></span>
     </div>
 
-    <div id="admin-content"><div class="spin">Loadingâ¦</div></div>
+    <div id="admin-content"><div class="spin">Loading…</div></div>
   </div>
 
   <!-- SAVE BAR (shown for pred + admin pages) -->
   <div class="savebar" id="savebar">
-    <button class="btn-save" id="save-btn">ð¾ Save</button>
+    <button class="btn-save" id="save-btn">💾 Save</button>
     <span class="sstatus" id="save-status"></span>
   </div>
 </div>
 
 <script>
 const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncmVvZ2xud25lc2Rla2piYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjQ1NjgsImV4cCI6MjA4OTg0MDU2OH0.4P3YRTK4vW6IkSVNdLJnwbpzTT5kbtDE3pCqd-hSSyc';
-const sb = createClient(SB_URL, SB_KEY);
+const SB_KEY = 'sb_publishable_fIatmTW4rufpUKqzwtLfpA_e6YDPn8r';
+const sb = supabase.createClient(SB_URL, SB_KEY);
 
-// ââ STATE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── STATE ──────────────────────────────────────────────────────────────
 let player = null, isAdmin = false;
 let matches = [], preds = [], players = [], settings = {};
 let predRound = 'group', adminRound = 'group', curPage = 'lb';
 
 const ROUNDS = [
-  {k:'group', l:'Group Stage',    i:'ðµ'},
-  {k:'R32',   l:'Round of 32',   i:'â¡'},
-  {k:'R16',   l:'Round of 16',   i:'ð¥'},
-  {k:'QF',    l:'Quarter-Finals', i:'ð¥'},
-  {k:'SF',    l:'Semi-Finals',    i:'ð'},
-  {k:'final', l:'Final',          i:'ð'},
-  {k:'bronze',l:'Bronze Final',   i:'ð¥'},
+  {k:'group', l:'Group Stage',    i:'🔵'},
+  {k:'R32',   l:'Round of 32',   i:'⚡'},
+  {k:'R16',   l:'Round of 16',   i:'🔥'},
+  {k:'QF',    l:'Quarter-Finals', i:'💥'},
+  {k:'SF',    l:'Semi-Finals',    i:'🌟'},
+  {k:'final', l:'Final',          i:'🏆'},
+  {k:'bronze',l:'Bronze Final',   i:'🥉'},
 ];
-const MEDALS = ['','ð¥','ð¥','ð¥','4ï¸â£','5ï¸â£'];
+const MEDALS = ['','🥇','🥈','🥉','4️⃣','5️⃣'];
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
-// ââ AUTH ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── AUTH ────────────────────────────────────────────────────────────────
 async function doLogin() {
   const email = document.getElementById('lemail').value.trim();
   const pass  = document.getElementById('lpass').value;
   const errEl = document.getElementById('lerr');
   errEl.style.display = 'none';
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) { errEl.textContent = 'â ' + error.message; errEl.style.display = 'block'; return; }
-  errEl.textContent='Loading...'; errEl.style.display='block'; errEl.style.background='#EBF4FB'; errEl.style.color='#1565C0';
-  try { await bootApp(data.user); errEl.style.display='none'; } catch(e) { errEl.textContent='Error: '+e.message; errEl.style.display='block'; errEl.style.background=''; errEl.style.color=''; }
+  if (error) { errEl.textContent = '❌ ' + error.message; errEl.style.display = 'block'; return; }
+  await bootApp(data.user);
 }
 
 async function doLogout() {
@@ -243,7 +242,7 @@ async function doLogout() {
 
 async function bootApp(user) {
   const { data: p, error } = await sb.from('players').select('*').eq('id', user.id).single();
-  if (error || !p) { document.getElementById('lerr').textContent = '❌ ' + (error ? error.message + ' | code: ' + error.code : 'Player not found'); document.getElementById('lerr').style.display='block'; return; }
+  if (!p) { alert('Player record not found. Contact Lasse.'); return; }
   player = p; isAdmin = p.is_admin;
   document.getElementById('uname').textContent = p.name;
   if (isAdmin) {
@@ -271,7 +270,7 @@ async function loadAll() {
   (s.data||[]).forEach(r => settings[r.key] = r.value);
 }
 
-// ââ NAVIGATION ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── NAVIGATION ──────────────────────────────────────────────────────────
 function showPage(p) {
   curPage = p;
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
@@ -284,7 +283,7 @@ function showPage(p) {
   if (p === 'pred' || p === 'admin') {
     sb2.classList.add('show');
     document.getElementById('save-btn').onclick = p === 'pred' ? savePred : saveResults;
-    document.getElementById('save-btn').textContent = p === 'pred' ? 'ð¾ Save Predictions' : 'ð¾ Save Results';
+    document.getElementById('save-btn').textContent = p === 'pred' ? '💾 Save Predictions' : '💾 Save Results';
   } else {
     sb2.classList.remove('show');
   }
@@ -310,7 +309,7 @@ function setRound(prefix, k, btn) {
   if (prefix === 'pred') renderPred(); else renderAdmin();
 }
 
-// ââ SCORING âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── SCORING ─────────────────────────────────────────────────────────────
 function score(ph, pa, ah, aa, round) {
   if (ph == null || pa == null || ah == null || aa == null) return null;
   const gs = round === 'group';
@@ -322,9 +321,9 @@ function score(ph, pa, ah, aa, round) {
   return pr === ar ? rp : 0;
 }
 
-// ââ LEADERBOARD ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── LEADERBOARD ──────────────────────────────────────────────────────────
 async function renderLB() {
-  document.getElementById('lb-content').innerHTML = '<div class="spin">Loadingâ¦</div>';
+  document.getElementById('lb-content').innerHTML = '<div class="spin">Loading…</div>';
   const { data: allPr } = await sb.from('predictions').select('*');
   const scores = {};
   players.forEach(p => { scores[p.id] = { name: p.name, gs: 0, ko: 0, total: 0 }; });
@@ -341,7 +340,7 @@ async function renderLB() {
   const ranked = Object.values(scores).sort((a, b) => b.total - a.total);
   const leader = ranked[0]?.total || 0;
   const played = matches.filter(m => m.home_score != null).length;
-  let html = `<div class="lb-card"><div class="lb-hdr">â½ World Cup 2026 â Family Standings</div>`;
+  let html = `<div class="lb-card"><div class="lb-hdr">⚽ World Cup 2026 — Family Standings</div>`;
   ranked.forEach((s, i) => {
     const rank = i + 1;
     const cls = rank <= 3 ? ` r${rank}` : '';
@@ -350,7 +349,7 @@ async function renderLB() {
       <div class="lb-medal">${MEDALS[rank] || rank}</div>
       <div style="flex:1">
         <div class="lb-name">${s.name}</div>
-        <div class="lb-sub">â½ Group: ${s.gs} pts &nbsp;|&nbsp; ð KO: ${s.ko} pts</div>
+        <div class="lb-sub">⚽ Group: ${s.gs} pts &nbsp;|&nbsp; 🏆 KO: ${s.ko} pts</div>
       </div>
       <div style="text-align:right">
         <div class="lb-pts">${s.total} <small style="font-size:.6rem;color:#999">pts</small></div>
@@ -359,16 +358,16 @@ async function renderLB() {
     </div>`;
   });
   html += '</div>';
-  html += `<p style="text-align:center;font-size:.73rem;color:#999;margin-top:10px">ð ${played} of ${matches.length} matches played &nbsp;Â·&nbsp; Updates live</p>`;
+  html += `<p style="text-align:center;font-size:.73rem;color:#999;margin-top:10px">📊 ${played} of ${matches.length} matches played &nbsp;·&nbsp; Updates live</p>`;
   document.getElementById('lb-content').innerHTML = html;
 }
 
-// ââ PREDICTIONS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── PREDICTIONS ──────────────────────────────────────────────────────────
 function renderPred() {
   const ms = matches.filter(m => m.round === predRound);
   if (!ms.length) {
     document.getElementById('pred-content').innerHTML =
-      '<div class="section"><div class="empty">No matches in this round yet â Lasse will add them before each stage. ð</div></div>';
+      '<div class="section"><div class="empty">No matches in this round yet — Lasse will add them before each stage. 🕐</div></div>';
     return;
   }
   const pm = {}; preds.forEach(p => pm[p.match_id] = p);
@@ -379,12 +378,12 @@ function renderPred() {
     ms.forEach(m => { const g = m.group_letter || '?'; if (!byG[g]) byG[g] = []; byG[g].push(m); });
     GROUPS.forEach(g => {
       if (!byG[g]) return;
-      html += `<div class="section"><div class="sec-hdr">ðµ Group ${g}</div>${buildMatchTable(byG[g], pm, true)}</div>`;
+      html += `<div class="section"><div class="sec-hdr">🔵 Group ${g}</div>${buildMatchTable(byG[g], pm, true)}</div>`;
     });
     if (!html) {
       GROUPS.forEach(g => {
         if (!byG[g]) return;
-        html += `<div class="section"><div class="sec-hdr">ðµ Group ?</div>${buildMatchTable(byG['?']||[], pm, true)}</div>`;
+        html += `<div class="section"><div class="sec-hdr">🔵 Group ?</div>${buildMatchTable(byG['?']||[], pm, true)}</div>`;
       });
     }
   } else {
@@ -407,7 +406,7 @@ function buildMatchTable(ms, pm, isGS) {
     const ph = pr?.home_score ?? '', pa = pr?.away_score ?? '';
     const ah = m.home_score, aa = m.away_score;
     const pts = pr && ah != null ? score(+ph, +pa, ah, aa, m.round) : '';
-    const act = ah != null ? `${ah}â${aa}` : '';
+    const act = ah != null ? `${ah}–${aa}` : '';
     const isDraw = ph !== '' && pa !== '' && +ph === +pa;
     const mid = m.id;
     h += `<tr>
@@ -421,8 +420,8 @@ function buildMatchTable(ms, pm, isGS) {
         <option value="H" ${pr?.et_winner==='H'?'selected':''}>H wins</option>
         <option value="A" ${pr?.et_winner==='A'?'selected':''}>A wins</option>
       </select></td>` : ''}
-      <td class="pts">${pts !== '' && pts != null ? pts : 'â'}</td>
-      <td class="act">${act || 'â'}</td>
+      <td class="pts">${pts !== '' && pts != null ? pts : '–'}</td>
+      <td class="act">${act || '–'}</td>
     </tr>`;
   });
   return h + '</tbody></table>';
@@ -442,7 +441,7 @@ function onInput(el) {
 
 async function savePred() {
   const st = document.getElementById('save-status');
-  st.textContent = 'Savingâ¦'; st.className = 'sstatus';
+  st.textContent = 'Saving…'; st.className = 'sstatus';
   const rows = [];
   document.querySelectorAll('#pred-content [data-side="h"]').forEach(hEl => {
     if (hEl.value === '') return;
@@ -460,21 +459,21 @@ async function savePred() {
   });
   if (!rows.length) { st.textContent = 'Nothing to save.'; return; }
   const { error } = await sb.from('predictions').upsert(rows, { onConflict: 'player_id,match_id' });
-  if (error) { st.textContent = 'â ' + error.message; return; }
+  if (error) { st.textContent = '❌ ' + error.message; return; }
   const { data } = await sb.from('predictions').select('*').eq('player_id', player.id);
   preds = data || [];
-  st.textContent = 'â Saved!'; st.className = 'sstatus ok';
+  st.textContent = '✅ Saved!'; st.className = 'sstatus ok';
   renderPred();
   setTimeout(() => { st.textContent = ''; }, 3000);
 }
 
-// ââ ADMIN ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── ADMIN ────────────────────────────────────────────────────────────────
 function renderAdmin() {
   const ms = matches.filter(m => m.round === adminRound);
   document.getElementById('fm-round').value = adminRound;
   if (!ms.length) {
     document.getElementById('admin-content').innerHTML =
-      '<div class="section"><div class="empty">No matches in this round yet. Add them above. â¬ï¸</div></div>';
+      '<div class="section"><div class="empty">No matches in this round yet. Add them above. ⬆️</div></div>';
     return;
   }
   const isGS = adminRound === 'group';
@@ -498,7 +497,7 @@ function renderAdmin() {
         <option value="H" ${m.et_winner==='H'?'selected':''}>H wins</option>
         <option value="A" ${m.et_winner==='A'?'selected':''}>A wins</option>
       </select></td>
-      <td class="act">${played ? 'â' : 'â³'}</td>
+      <td class="act">${played ? '✅' : '⏳'}</td>
     </tr>`;
   });
   h += '</tbody></table></div>';
@@ -519,7 +518,7 @@ function onAdminInput(el) {
 
 async function saveResults() {
   const st = document.getElementById('save-status');
-  st.textContent = 'Savingâ¦'; st.className = 'sstatus';
+  st.textContent = 'Saving…'; st.className = 'sstatus';
   const updates = [];
   document.querySelectorAll('#admin-content [data-side="h"]').forEach(hEl => {
     if (hEl.value === '') return;
@@ -532,11 +531,11 @@ async function saveResults() {
   if (!updates.length) { st.textContent = 'Nothing to save.'; return; }
   for (const u of updates) {
     const { error } = await sb.from('matches').update({ home_score: u.home_score, away_score: u.away_score, et_winner: u.et_winner, status: u.status }).eq('id', u.id);
-    if (error) { st.textContent = 'â ' + error.message; return; }
+    if (error) { st.textContent = '❌ ' + error.message; return; }
   }
   const { data } = await sb.from('matches').select('*').order('match_number');
   matches = data || [];
-  st.textContent = 'â Results saved!'; st.className = 'sstatus ok';
+  st.textContent = '✅ Results saved!'; st.className = 'sstatus ok';
   renderAdmin();
   setTimeout(() => { st.textContent = ''; }, 3000);
 }
@@ -549,12 +548,12 @@ async function addMatch() {
   const round = document.getElementById('fm-round').value;
   const grp   = document.getElementById('fm-group').value.trim().toUpperCase() || null;
   const st    = document.getElementById('add-status');
-  if (!num || !home || !away) { st.textContent = 'â ï¸ Match number, home and away team required.'; st.style.color = '#C9041C'; return; }
+  if (!num || !home || !away) { st.textContent = '⚠️ Match number, home and away team required.'; st.style.color = '#C9041C'; return; }
   const { error } = await sb.from('matches').insert({ match_number: num, round, match_date: date || null, home_team: home, away_team: away, group_letter: grp, status: 'open' });
-  if (error) { st.textContent = 'â ' + error.message; st.style.color = '#C9041C'; return; }
+  if (error) { st.textContent = '❌ ' + error.message; st.style.color = '#C9041C'; return; }
   const { data } = await sb.from('matches').select('*').order('match_number');
   matches = data || [];
-  st.textContent = `â M${num} added!`; st.style.color = '#2D7A2D';
+  st.textContent = `✅ M${num} added!`; st.style.color = '#2D7A2D';
   document.getElementById('fm-num').value = '';
   document.getElementById('fm-home').value = '';
   document.getElementById('fm-away').value = '';
@@ -566,7 +565,7 @@ async function addMatch() {
   setTimeout(() => { st.textContent = ''; }, 4000);
 }
 
-// ââ BOOT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── BOOT ──────────────────────────────────────────────────────────────────
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) await bootApp(session.user);
