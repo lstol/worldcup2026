@@ -293,10 +293,10 @@ function showPage(p) {
   } else {
     sb2.classList.remove('show');
   }
-  if (p === 'lb')    renderLB();
-  if (p === 'groups') renderGroups();
-  if (p === 'pred')  renderPred();
-  if (p === 'admin') renderAdmin();
+  if (p === 'lb')    { document.getElementById('lb-content').innerHTML='<div class="spin">Loading…</div>'; setTimeout(renderLB,10); }
+  if (p === 'groups') { document.getElementById('groups-content').innerHTML='<div class="spin">Loading…</div>'; setTimeout(renderGroups,10); }
+  if (p === 'pred')  { document.getElementById('pred-content').innerHTML='<div class="spin">Loading…</div>'; setTimeout(renderPred,10); }
+  if (p === 'admin') { document.getElementById('admin-content').innerHTML='<div class="spin">Loading…</div>'; setTimeout(renderAdmin,10); }
 }
 
 function buildTabs() {
@@ -404,35 +404,51 @@ function renderPred() {
 
 function buildMatchTable(ms, pm, isGS) {
   const etCol = !isGS;
-  let h = `<table><thead><tr>
-    <th class="tl">Match</th><th class="tl" style="min-width:90px">Home</th>
-    <th>My H</th><th>My A</th>
-    <th class="tl" style="min-width:90px">Away</th>
-    ${etCol ? '<th>ET/P</th>' : ''}
-    <th>Pts</th><th>Actual</th>
-  </tr></thead><tbody>`;
+  let h = '<table><thead><tr>' +
+    '<th class="tl">Match</th><th class="tl">Home</th>' +
+    '<th>My H</th><th>My A</th>' +
+    '<th class="tl">Away</th>' +
+    (etCol ? '<th>ET/P</th>' : '') +
+    '<th>Pts</th><th>Actual</th>' +
+    '</tr></thead><tbody>';
   ms.forEach(m => {
     const pr = pm[m.id];
     const ph = pr?.home_score ?? '', pa = pr?.away_score ?? '';
     const ah = m.home_score, aa = m.away_score;
-    const pts = pr && ah != null ? score(+ph, +pa, ah, aa, m.round) : '';
-    const act = ah != null ? `${ah}–${aa}` : '';
+    // Points calculation
+    let pts = '', ptsColor = '#1565C0';
+    if (pr && ah != null) {
+      pts = score(+ph, +pa, ah, aa, m.round);
+      if (pts === (settings.gs_exact||5) || pts === (settings.ko_exact||5)) ptsColor = '#2D7A2D';
+      else if (pts > 0) ptsColor = '#B07800';
+      else ptsColor = '#C9041C';
+    }
+    // Actual result with colour coding
+    let actHtml = '–';
+    if (ah != null) {
+      const res = ah > aa ? 'H' : ah < aa ? 'A' : 'D';
+      const resBg = res==='H'?'#EBF4FB':res==='A'?'#FBF0EB':'#F5F5F5';
+      actHtml = '<span style="background:'+resBg+';padding:2px 6px;border-radius:4px;font-weight:700">'+ah+'–'+aa+'</span>';
+    }
     const isDraw = ph !== '' && pa !== '' && +ph === +pa;
     const mid = m.id;
-    h += `<tr>
-      <td class="mnum">M${m.match_number}<br><small style="font-size:.65rem;color:#aaa">${m.match_date||''}</small></td>
-      <td class="team">${m.home_team || 'TBD'}</td>
-      <td class="num"><input class="si" type="number" min="0" max="20" data-mid="${mid}" data-side="h" value="${ph}" oninput="onInput(this)"></td>
-      <td class="num"><input class="si" type="number" min="0" max="20" data-mid="${mid}" data-side="a" value="${pa}" oninput="onInput(this)"></td>
-      <td class="team">${m.away_team || 'TBD'}</td>
-      ${etCol ? `<td class="num"><select class="et" data-mid="${mid}" data-side="et" ${isDraw?'':'disabled'}>
-        <option value="">-</option>
-        <option value="H" ${pr?.et_winner==='H'?'selected':''}>H wins</option>
-        <option value="A" ${pr?.et_winner==='A'?'selected':''}>A wins</option>
-      </select></td>` : ''}
-      <td class="pts">${pts !== '' && pts != null ? pts : '–'}</td>
-      <td class="act">${act || '–'}</td>
-    </tr>`;
+    // Home/away team with TBD styling
+    const homeStyle = (!m.home_team || m.home_team.includes('TBD')) ? 'color:#999;font-style:italic' : '';
+    const awayStyle = (!m.away_team || m.away_team.includes('TBD')) ? 'color:#999;font-style:italic' : '';
+    h += '<tr>' +
+      '<td class="mnum">M'+m.match_number+'<br><small style="font-size:.65rem;color:#aaa">'+( m.match_date||'')+'</small></td>' +
+      '<td class="team" style="'+homeStyle+'">'+(m.home_team||'TBD')+'</td>' +
+      '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="'+mid+'" data-side="h" value="'+ph+'" oninput="onInput(this)"></td>' +
+      '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="'+mid+'" data-side="a" value="'+pa+'" oninput="onInput(this)"></td>' +
+      '<td class="team" style="'+awayStyle+'">'+(m.away_team||'TBD')+'</td>' +
+      (etCol ? '<td class="num"><select class="et" data-mid="'+mid+'" data-side="et" '+(isDraw?'':'disabled')+'>' +
+        '<option value="">-</option>' +
+        '<option value="H" '+(pr?.et_winner==='H'?'selected':'')+'>H wins</option>' +
+        '<option value="A" '+(pr?.et_winner==='A'?'selected':'')+'>A wins</option>' +
+        '</select></td>' : '') +
+      '<td class="pts" style="color:'+ptsColor+';font-weight:700">'+(pts !== '' && pts != null ? pts : '–')+'</td>' +
+      '<td class="act">'+actHtml+'</td>' +
+      '</tr>';
   });
   return h + '</tbody></table>';
 }
@@ -498,10 +514,10 @@ function renderAdmin() {
     const isDraw = played && m.home_score === m.away_score && !isGS;
     h += `<tr>
       <td class="mnum">M${m.match_number}${m.group_letter ? ' Grp '+m.group_letter : ''}</td>
-      <td class="team">${m.home_team || 'TBD'}</td>
+      <td><input style="border:1px solid #9DC3E6;border-radius:4px;padding:3px 6px;font-size:.8rem;width:130px;background:#FFFDE7" data-mid="${m.id}" data-side="ht" value="${m.home_team||''}" placeholder="Home team (TBD)"></td>
       <td class="num"><input class="si" type="number" min="0" max="20" data-mid="${m.id}" data-side="h" value="${m.home_score??''}" style="background:${played?'#D6EAF8':'#C6EFCE'}" oninput="onAdminInput(this)"></td>
       <td class="num"><input class="si" type="number" min="0" max="20" data-mid="${m.id}" data-side="a" value="${m.away_score??''}" style="background:${played?'#D6EAF8':'#C6EFCE'}" oninput="onAdminInput(this)"></td>
-      <td class="team">${m.away_team || 'TBD'}</td>
+      <td><input style="border:1px solid #9DC3E6;border-radius:4px;padding:3px 6px;font-size:.8rem;width:130px;background:#FFFDE7" data-mid="${m.id}" data-side="at" value="${m.away_team||''}" placeholder="Away team (TBD)"></td>
       <td class="num"><select class="et" data-mid="${m.id}" data-side="et" ${isDraw?'':'disabled'}>
         <option value="">-</option>
         <option value="H" ${m.et_winner==='H'?'selected':''}>H wins</option>
@@ -536,11 +552,16 @@ async function saveResults() {
     const aEl = row.querySelector('[data-side="a"]');
     const etEl = row.querySelector('[data-side="et"]');
     if (aEl.value === '') return;
-    updates.push({ id: +hEl.dataset.mid, home_score: +hEl.value, away_score: +aEl.value, et_winner: etEl?.value || null, status: 'played' });
+    const htEl = row.querySelector('[data-side="ht"]');
+    const atEl = row.querySelector('[data-side="at"]');
+    updates.push({ id: +hEl.dataset.mid, home_score: +hEl.value, away_score: +aEl.value, et_winner: etEl?.value || null, status: 'played', home_team: htEl?.value||null, away_team: atEl?.value||null });
   });
   if (!updates.length) { st.textContent = 'Nothing to save.'; return; }
   for (const u of updates) {
-    const { error } = await sb.from('matches').update({ home_score: u.home_score, away_score: u.away_score, et_winner: u.et_winner, status: u.status }).eq('id', u.id);
+    const upd = { home_score: u.home_score, away_score: u.away_score, et_winner: u.et_winner, status: u.status };
+    if (u.home_team) upd.home_team = u.home_team;
+    if (u.away_team) upd.away_team = u.away_team;
+    const { error } = await sb.from('matches').update(upd).eq('id', u.id);
     if (error) { st.textContent = '❌ ' + error.message; return; }
   }
   const { data } = await sb.from('matches').select('*').order('match_number');
