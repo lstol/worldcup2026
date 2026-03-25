@@ -469,6 +469,33 @@ function onPredInput(el){
   scheduleAutosave();
 }
 
+// Update pts display cells in-place after autosave (avoids destroying predicted standings)
+function updatePtsCells(){
+  const pm={};preds.forEach(p=>{pm[p.match_id]=p;});
+  const isGS=predRound==='group';
+  const ep=settings[isGS?'gs_exact':'ko_exact']||5;
+  document.querySelectorAll('#pred-content tbody tr').forEach(row=>{
+    const hEl=row.querySelector('[data-side="h"]'),aEl=row.querySelector('[data-side="a"]');
+    if(!hEl)return;
+    const mid=+hEl.dataset.mid;
+    const m=matches.find(x=>x.id===mid);
+    if(!m||m.home_score==null)return;
+    const pr=pm[mid];
+    if(!pr)return;
+    const pts=calcScore(pr.home_score,pr.away_score,m.home_score,m.away_score,m.round);
+    const ptsCell=row.cells[row.cells.length-2]; // pts is second-to-last col
+    if(!ptsCell)return;
+    ptsCell.textContent=pts??'–';
+    ptsCell.style.cssText=pts==ep?'color:#2D7A2D;font-weight:700;text-align:center':pts>0?'color:#B07800;font-weight:700;text-align:center':'color:#C9041C;font-weight:700;text-align:center';
+    // Update actual score cell too
+    const actCell=row.cells[row.cells.length-1];
+    if(actCell&&m.home_score!=null){
+      const bg=m.home_score>m.away_score?'#D6EAF8':m.home_score<m.away_score?'#FDE8E8':'#F5F5F5';
+      actCell.innerHTML='<span style="background:'+bg+';padding:2px 5px;border-radius:4px;font-weight:700">'+m.home_score+'–'+m.away_score+'</span>';
+    }
+  });
+}
+
 // ── AUTOSAVE ──────────────────────────────────────────────────────────────
 function setAutosaveStatus(state,text){
   const dot=document.getElementById('autosave-dot'),txt=document.getElementById('autosave-text');
@@ -503,7 +530,8 @@ async function savePred(showFeedback=true){
   const {data}=await sb.from('predictions').select('*').eq('player_id',player.id);
   preds=data||[];
   setAutosaveStatus('saved','✅ Saved just now');
-  // Re-render to update pts colours without losing focus
+  // Update pts cells in-place without re-rendering (preserves DOM + predicted standings)
+  updatePtsCells();
   if(showFeedback) setTimeout(()=>setAutosaveStatus('idle','All changes saved'),3000);
 }
 
@@ -651,7 +679,7 @@ async function saveAllSettings(){
   const scoreInputs=document.querySelectorAll('.score-inp');
   for(const el of scoreInputs){
     if(el.value==='')continue;
-    const {error}=await sb.from('settings').upsert({key:el.dataset.key,value:+el.value},{onConflict:'key'});
+    const {error}=await sb.from('settings').upsert({key:el.dataset.key,value:+el.value},{onConflict:'key',ignoreDuplicates:false});
     if(error){st.textContent='❌ '+error.message;return;}
     settings[el.dataset.key]=+el.value;
   }
@@ -713,6 +741,11 @@ async function saveAllSettings(){
   // Reload matches
   const {data}=await sb.from('matches').select('*').order('match_number');
   matches=data||[];
+  // Reload matches and settings
+  const {data:newMatches}=await sb.from('matches').select('*').order('match_number');
+  matches=newMatches||[];
+  const {data:newSettings}=await sb.from('settings').select('*');
+  settings={};(newSettings||[]).forEach(r=>settings[r.key]=r.value);
   st.textContent='✅ All settings saved!';st.className='sstatus ok';
   setTimeout(()=>{st.textContent='';},4000);
 }
