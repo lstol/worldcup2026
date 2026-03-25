@@ -143,7 +143,7 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
     <nav id="mainnav">
       <button onclick="showPage('lb')" class="active">🏆 Standings</button>
       <button onclick="showPage('groups')">📊 Groups</button>
-        <button onclick="showPage('pred')">🎯 My Predictions</button>
+        <button onclick="showPage('pred'">🎯 My Predictions</button>
       <button id="adminbtn" onclick="showPage('admin')" style="display:none">⚙️ Enter Results</button>
     </nav>
   </header>
@@ -154,12 +154,8 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
     <div id="lb-content"><div class="spin">Loading…</div></div>
   </div>
 
-  <!-- GROUPS PAGE -->
-  <div id="page-groups" class="page">
-    <div class="pg-title">📊 Group Standings</div>
-    <div id="groups-content"><div class="spin">Loading…</div></div>
-  </div>
-
+  <!-- GROUPS -->
+  <div id="page-groups" class="page"><div class="pg-title">📊 Group Standings</div><div id="groups-content"><div class="spin">Loading…</div></div></div>
   <!-- PREDICTIONS -->
   <div id="page-pred" class="page">
     <div class="pg-title">🎯 My Predictions</div>
@@ -211,7 +207,7 @@ td.mnum{color:#999;font-size:.72rem;white-space:nowrap}
 
 <script>
 const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncmVvZ2xud25lc2Rla2piYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjQ1NjgsImV4cCI6MjA4OTg0MDU2OH0.4P3YRTK4vW6IkSVNdLJnwbpzTT5kbtDE3pCqd-hSSyc';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncmVvZ2xud25lc2Rla2piYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI3MzM5MjIsImV4cCI6MjA1ODMwOTkyMn0.4QpFfgf5qLf1zh03LM-4Boo8gFfCL9j3X2vHEAdmdaE';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── STATE ──────────────────────────────────────────────────────────────
@@ -220,20 +216,7 @@ let matches = [], preds = [], players = [], settings = {};
 let predRound = 'group', adminRound = 'group', curPage = 'lb';
 
 
-const GROUPS_DATA = {
-  A:['Mexico','USA','Canada','New Zealand'],
-  B:['Spain','Croatia','Morocco','Belgium'],
-  C:['Brazil','Germany','Japan','South Africa'],
-  D:['Argentina','Ecuador','Australia','Hungary'],
-  E:['France','Netherlands','Saudi Arabia','Iraq'],
-  F:['England','Iran','Senegal','Slovakia'],
-  G:['Portugal','Czechia','Cameroon','Chile'],
-  H:['Colombia','South Korea','Poland','Paraguay'],
-  I:['Italy','Norway','Peru','DR Congo'],
-  J:['Uruguay','Nigeria','Ivory Coast','Slovenia'],
-  K:['Serbia','Switzerland','Guatemala','Costa Rica'],
-  L:['Denmark','Qatar','Algeria','Bolivia'],
-};
+const GROUPS_DATA={A:['Mexico','USA','Canada','New Zealand'],B:['Spain','Croatia','Morocco','Belgium'],C:['Brazil','Germany','Japan','South Africa'],D:['Argentina','Ecuador','Australia','Hungary'],E:['France','Netherlands','Saudi Arabia','Iraq'],F:['England','Iran','Senegal','Slovakia'],G:['Portugal','Czechia','Cameroon','Chile'],H:['Colombia','South Korea','Poland','Paraguay'],I:['Italy','Norway','Peru','DR Congo'],J:['Uruguay','Nigeria','Ivory Coast','Slovenia'],K:['Serbia','Switzerland','Guatemala','Costa Rica'],L:['Denmark','Qatar','Algeria','Bolivia']};
 const ROUNDS = [
   {k:'group', l:'Group Stage',    i:'🔵'},
   {k:'R32',   l:'Round of 32',   i:'⚡'},
@@ -334,63 +317,8 @@ function setRound(prefix, k, btn) {
 }
 
 
-// ── GROUP STANDINGS ───────────────────────────────────────────────────
-function calcStandings() {
-  const st = {};
-  Object.entries(GROUPS_DATA).forEach(([g, teams]) => {
-    st[g] = {};
-    teams.forEach(t => { st[g][t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; });
-  });
-  matches.filter(m => m.round==='group' && m.home_score!=null).forEach(m => {
-    const g = m.group_letter; if (!g||!st[g]) return;
-    const h=st[g][m.home_team], a=st[g][m.away_team]; if (!h||!a) return;
-    h.p++; a.p++;
-    h.gf+=m.home_score; h.ga+=m.away_score; h.gd=h.gf-h.ga;
-    a.gf+=m.away_score; a.ga+=m.home_score; a.gd=a.gf-a.ga;
-    if (m.home_score>m.away_score)     {h.w++;h.pts+=3;a.l++;}
-    else if (m.home_score<m.away_score){a.w++;a.pts+=3;h.l++;}
-    else                               {h.d++;h.pts++;a.d++;a.pts++;}
-  });
-  Object.keys(st).forEach(g => {
-    st[g]=Object.values(st[g]).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||a.team.localeCompare(b.team));
-  });
-  return st;
-}
-
-function renderGroups() {
-  const st = calcStandings();
-  const grps = ['A','B','C','D','E','F','G','H','I','J','K','L'];
-  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">';
-  grps.forEach(g => {
-    const rows = st[g]||[];
-    const played = matches.filter(m=>m.group_letter===g&&m.home_score!=null).length;
-    const total  = matches.filter(m=>m.group_letter===g).length;
-    h += `<div class="section"><div class="sec-hdr" style="display:flex;justify-content:space-between">
-      <span>Group ${g}</span><span style="font-size:.72rem;opacity:.75">${played}/${total} played</span>
-    </div><table><thead><tr>
-      <th style="width:22px;text-align:center">#</th><th class="tl">Team</th>
-      <th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th>
-      <th style="font-weight:700">Pts</th>
-    </tr></thead><tbody>`;
-    rows.forEach((r,i) => {
-      const rank=i+1;
-      const bg=rank===1?'background:#1F6BB0;color:#fff':
-               rank===2?'background:#5BA3D9;color:#fff':
-               rank===3?'background:#BDD7EE':'';
-      const sign=r.gd>0?'+':'';
-      h+=`<tr style="${bg}"><td style="text-align:center;font-weight:700">${rank}</td>
-        <td style="font-weight:600">${r.team}</td>
-        <td class="num">${r.p}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td>
-        <td class="num">${r.gf}</td><td class="num">${r.ga}</td>
-        <td class="num">${sign}${r.gd}</td><td class="num" style="font-weight:700">${r.pts}</td>
-      </tr>`;
-    });
-    h+='</tbody></table></div>';
-  });
-  h+='</div>';
-  document.getElementById('groups-content').innerHTML=h;
-}
-
+function calcStandings(){const st={};Object.entries(GROUPS_DATA).forEach(([g,ts])=>{st[g]={};ts.forEach(t=>{st[g][t]={team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0};});});matches.filter(m=>m.round==='group'&&m.home_score!=null).forEach(m=>{const g=m.group_letter;if(!g||!st[g])return;const h=st[g][m.home_team],a=st[g][m.away_team];if(!h||!a)return;h.p++;a.p++;h.gf+=m.home_score;h.ga+=m.away_score;h.gd=h.gf-h.ga;a.gf+=m.away_score;a.ga+=m.home_score;a.gd=a.gf-a.ga;if(m.home_score>m.away_score){h.w++;h.pts+=3;a.l++;}else if(m.home_score<m.away_score){a.w++;a.pts+=3;h.l++;}else{h.d++;h.pts++;a.d++;a.pts++;}});Object.keys(st).forEach(g=>{st[g]=Object.values(st[g]).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||a.team.localeCompare(b.team));});return st;}
+function renderGroups(){const st=calcStandings();let h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">';['A','B','C','D','E','F','G','H','I','J','K','L'].forEach(g=>{const rows=st[g]||[];const played=matches.filter(m=>m.group_letter===g&&m.home_score!=null).length;const total=matches.filter(m=>m.group_letter===g).length;h+=`<div class="section"><div class="sec-hdr" style="display:flex;justify-content:space-between"><span>Group ${g}</span><span style="font-size:.72rem;opacity:.75">${played}/${total} played</span></div><table><thead><tr><th style="width:22px;text-align:center">#</th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th style="font-weight:700">Pts</th></tr></thead><tbody>`;rows.forEach((r,i)=>{const rank=i+1;const bg=rank===1?'background:#1F6BB0;color:#fff':rank===2?'background:#5BA3D9;color:#fff':rank===3?'background:#BDD7EE':'';const sign=r.gd>0?'+':'';h+=`<tr style="${bg}"><td style="text-align:center;font-weight:700">${rank}</td><td style="font-weight:600">${r.team}</td><td class="num">${r.p}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td><td class="num">${r.gf}</td><td class="num">${r.ga}</td><td class="num">${sign}${r.gd}</td><td class="num" style="font-weight:700">${r.pts}</td></tr>`;});h+='</tbody></table></div>';});h+='</div>';document.getElementById('groups-content').innerHTML=h;}
 // ── SCORING ─────────────────────────────────────────────────────────────
 function score(ph, pa, ah, aa, round) {
   if (ph == null || pa == null || ah == null || aa == null) return null;
