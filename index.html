@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚽ World Cup 2026 — Family Predictions</title>
+<title>â½ World Cup 2026 â Family Predictions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -119,14 +119,14 @@ td.team-cell{font-weight:600}
 
 <div id="login-screen" class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">⚽</div>
+    <div class="login-logo">â½</div>
     <div class="login-title">World Cup 2026</div>
-    <div class="login-sub">Family Prediction Competition 🏆</div>
+    <div class="login-sub">Family Prediction Competition ð</div>
     <label class="lbl">Email</label>
     <input id="lemail" class="inp" type="email" placeholder="your@email.com" autocomplete="email">
     <label class="lbl">Password</label>
-    <input id="lpass" class="inp" type="password" placeholder="••••••••" autocomplete="current-password">
-    <button class="btn-primary" onclick="doLogin()">⚽ Sign In</button>
+    <input id="lpass" class="inp" type="password" placeholder="â¢â¢â¢â¢â¢â¢â¢â¢" autocomplete="current-password">
+    <button class="btn-primary" onclick="doLogin()">â½ Sign In</button>
     <div id="lerr" class="err"></div>
     <div class="hint">Enter your email address<br>Use the link from your invitation email</div>
   </div>
@@ -135,29 +135,29 @@ td.team-cell{font-weight:600}
 <div id="app" style="display:none">
   <header>
     <div class="hdr">
-      <div><div class="hdr-title">⚽ World Cup 2026</div><div class="hdr-sub">Family Predictions</div></div>
+      <div><div class="hdr-title">â½ World Cup 2026</div><div class="hdr-sub">Family Predictions</div></div>
       <div style="display:flex;align-items:center;gap:6px">
         <span id="adminpill" class="admin-pill" style="display:none">ADMIN</span>
-        <button class="user-pill" onclick="doLogout()">👤 <span id="uname">…</span> ↩</button>
+        <button class="user-pill" onclick="doLogout()">ð¤ <span id="uname">â¦</span> â©</button>
       </div>
     </div>
     <nav id="mainnav">
-      <button onclick="gotoPage('lb')">🏆 Standings</button>
-      <button onclick="gotoPage('groups')">📊 Groups</button>
-      <button onclick="gotoPage('pred')">🎯 My Predictions</button>
-      <button id="adminbtn" onclick="gotoPage('admin')" style="display:none">📋 Enter Results</button>
-      <button id="settingsbtn" onclick="gotoPage('settings')" style="display:none">⚙️ Settings</button>
+      <button onclick="gotoPage('lb')">ð Standings</button>
+      <button onclick="gotoPage('groups')">ð Groups</button>
+      <button onclick="gotoPage('pred')">ð¯ My Predictions</button>
+      <button id="adminbtn" onclick="gotoPage('admin')" style="display:none">ð Enter Results</button>
+      <button id="settingsbtn" onclick="gotoPage('settings')" style="display:none">âï¸ Settings</button>
     </nav>
   </header>
 
-  <div id="page-lb" class="page"><div class="pg-title">🏆 Live Standings</div><div id="lb-content"><div class="spin">Loading…</div></div></div>
-  <div id="page-groups" class="page"><div class="pg-title">📊 Group Standings</div><div id="groups-content"><div class="spin">Loading…</div></div></div>
+  <div id="page-lb" class="page"><div class="pg-title">ð Live Standings</div><div id="lb-content"><div class="spin">Loadingâ¦</div></div></div>
+  <div id="page-groups" class="page"><div class="pg-title">ð Group Standings</div><div id="groups-content"><div class="spin">Loadingâ¦</div></div></div>
 
   <div id="page-pred" class="page">
-    <div class="pg-title">🎯 My Predictions</div>
+    <div class="pg-title">ð¯ My Predictions</div>
     <div class="info">Predictions autosave a few seconds after you stop typing. Green = exact score, amber = correct result, red = wrong.</div>
     <div class="rtabs" id="pred-tabs"></div>
-    <div id="pred-content"><div class="spin">Loading…</div></div>
+    <div id="pred-content"><div class="spin">Loadingâ¦</div></div>
   </div>
   <div class="autosave-bar" id="autosave-bar">
     <div class="autosave-dot" id="autosave-dot"></div>
@@ -166,21 +166,21 @@ td.team-cell{font-weight:600}
   </div>
 
   <div id="page-admin" class="page">
-    <div class="pg-title">📋 Enter Actual Results</div>
+    <div class="pg-title">ð Enter Actual Results</div>
     <div class="info">Enter actual scores. All family members see updates immediately and points recalculate live.</div>
     <div class="rtabs" id="admin-tabs"></div>
-    <div id="admin-content"><div class="spin">Loading…</div></div>
+    <div id="admin-content"><div class="spin">Loadingâ¦</div></div>
     <div class="settings-save-bar show" id="admin-save-bar">
-      <button class="btn-save" onclick="saveResults()">💾 Save Results</button>
+      <button class="btn-save" onclick="saveResults()">ð¾ Save Results</button>
       <span class="sstatus" id="admin-status"></span>
     </div>
   </div>
 
   <div id="page-settings" class="page">
-    <div class="pg-title">⚙️ Settings</div>
-    <div id="settings-content"><div class="spin">Loading…</div></div>
+    <div class="pg-title">âï¸ Settings</div>
+    <div id="settings-content"><div class="spin">Loadingâ¦</div></div>
     <div class="settings-save-bar" id="settings-save-bar">
-      <button class="btn-save" onclick="saveAllSettings()">💾 Save All Settings</button>
+      <button class="btn-save" onclick="saveAllSettings()">ð¾ Save All Settings</button>
       <span class="sstatus" id="settings-status"></span>
     </div>
   </div>
@@ -191,41 +191,41 @@ const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncmVvZ2xud25lc2Rla2piYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjQ1NjgsImV4cCI6MjA4OTg0MDU2OH0.4P3YRTK4vW6IkSVNdLJnwbpzTT5kbtDE3pCqd-hSSyc';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
-// ── STATE ──────────────────────────────────────────────────────────────
+// ââ STATE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let player = null, isAdmin = false;
 let matches = [], preds = [], players = [], settings = {};
 let predRound = 'group', adminRound = 'group';
 let autosaveTimer = null, pendingPredSave = false;
 
 const ROUNDS = [
-  {k:'group',l:'Group Stage',i:'🔵'},{k:'R32',l:'Round of 32',i:'⚡'},
-  {k:'R16',l:'Round of 16',i:'🔥'},{k:'QF',l:'Quarter-Finals',i:'💥'},
-  {k:'SF',l:'Semi-Finals',i:'🌟'},{k:'final',l:'Final',i:'🏆'},{k:'bronze',l:'Bronze Final',i:'🥉'},
+  {k:'group',l:'Group Stage',i:'ðµ'},{k:'R32',l:'Round of 32',i:'â¡'},
+  {k:'R16',l:'Round of 16',i:'ð¥'},{k:'QF',l:'Quarter-Finals',i:'ð¥'},
+  {k:'SF',l:'Semi-Finals',i:'ð'},{k:'final',l:'Final',i:'ð'},{k:'bronze',l:'Bronze Final',i:'ð¥'},
 ];
 const GRP_KEYS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
-const MEDALS = ['','🥇','🥈','🥉','4️⃣','5️⃣'];
+const MEDALS = ['','ð¥','ð¥','ð¥','4ï¸â£','5ï¸â£'];
 
-// ── AUTH ────────────────────────────────────────────────────────────────
+// ââ AUTH ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function doLogin() {
   const email = document.getElementById('lemail').value.trim();
   const pass  = document.getElementById('lpass').value;
   const errEl = document.getElementById('lerr');
   errEl.style.display='none';
   errEl.style.background='#EBF4FB'; errEl.style.color='#1565C0';
-  errEl.textContent='⏳ Signing in…'; errEl.style.display='block';
+  errEl.textContent='â³ Signing inâ¦'; errEl.style.display='block';
   try {
     const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
-    if (error){errEl.style.background='';errEl.style.color='';errEl.textContent='❌ '+error.message;return;}
-    errEl.textContent='⏳ Loading…';
+    if (error){errEl.style.background='';errEl.style.color='';errEl.textContent='â '+error.message;return;}
+    errEl.textContent='â³ Loadingâ¦';
     await bootApp(data.user);
     errEl.style.display='none';
-  } catch(e){errEl.style.background='';errEl.style.color='';errEl.textContent='❌ '+e.message;}
+  } catch(e){errEl.style.background='';errEl.style.color='';errEl.textContent='â '+e.message;}
 }
 async function doLogout(){await sb.auth.signOut();location.reload();}
 
 async function bootApp(user) {
-  const name = user.email.split('@')[0];
-  const pname = emailName.split('.')[0].charAt(0).toUpperCase()+emailName.split('.')[0].slice(1);
+  const emailPrefix = user.email.split('@')[0];
+  const pname = emailPrefix.split('.')[0].charAt(0).toUpperCase()+emailName.split('.')[0].slice(1);
   player = {id:user.id,name:displayName,email:user.email,is_admin:user.email==='lasse.stoltenberg@gmail.com'};
   isAdmin = player.is_admin;
   document.getElementById('uname').textContent = displayName;
@@ -255,7 +255,7 @@ async function loadAll() {
   (s.data||[]).forEach(r=>settings[r.key]=r.value);
 }
 
-// ── NAV ─────────────────────────────────────────────────────────────────
+// ââ NAV âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function gotoPage(p) {
   // If leaving pred page with pending save, save now
   if (pendingPredSave) { clearTimeout(autosaveTimer); doAutosave(); }
@@ -293,7 +293,7 @@ function setRound(prefix,k,btn){
   if(prefix==='pred')renderPred(); else renderAdmin();
 }
 
-// ── SCORING ──────────────────────────────────────────────────────────────
+// ââ SCORING ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function calcScore(ph,pa,ah,aa,round){
   if(ph==null||pa==null||ah==null||aa==null)return null;
   const gs=round==='group';
@@ -304,7 +304,7 @@ function calcScore(ph,pa,ah,aa,round){
   return pr2===ar?rp:0;
 }
 
-// ── GROUP STANDINGS ───────────────────────────────────────────────────────
+// ââ GROUP STANDINGS âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function getTeamsForGroup(g){
   // Get teams from matches (respects updated names), fall back to settings, then defaults
   const fromMatches = [...new Set(
@@ -365,9 +365,9 @@ function renderGroups(){
   document.getElementById('groups-content').innerHTML=h+'</div>';
 }
 
-// ── LEADERBOARD ──────────────────────────────────────────────────────────
+// ââ LEADERBOARD ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function renderLB(){
-  document.getElementById('lb-content').innerHTML='<div class="spin">Loading…</div>';
+  document.getElementById('lb-content').innerHTML='<div class="spin">Loadingâ¦</div>';
   const {data:allPr}=await sb.from('predictions').select('*');
   const scores={};
   players.forEach(p=>{scores[p.id]={name:p.name,gs:0,ko:0,total:0};});
@@ -381,20 +381,20 @@ async function renderLB(){
   const ranked=Object.values(scores).sort((a,b)=>b.total-a.total);
   const leader=ranked[0]?.total||0;
   const played=matches.filter(m=>m.home_score!=null).length;
-  let h='<div class="lb-card"><div class="lb-hdr">⚽ World Cup 2026 — Family Standings</div>';
+  let h='<div class="lb-card"><div class="lb-hdr">â½ World Cup 2026 â Family Standings</div>';
   ranked.forEach((s,i)=>{
     const rank=i+1,cls=rank<=3?` r${rank}`:'',gap=rank===1?'Leader':((s.total-leader)+' pts');
     h+=`<div class="lb-row${cls}"><div class="lb-medal">${MEDALS[rank]||rank}</div><div style="flex:1"><div class="lb-name">${s.name}</div><div class="lb-sub">Group: ${s.gs} pts | KO: ${s.ko} pts</div></div><div style="text-align:right"><div class="lb-pts">${s.total} <small style="font-size:.6rem;color:#999">pts</small></div><div class="lb-gap">${gap}</div></div></div>`;
   });
-  h+=`</div><p style="text-align:center;font-size:.73rem;color:#999;margin-top:10px">📊 ${played} of ${matches.length} matches played</p>`;
+  h+=`</div><p style="text-align:center;font-size:.73rem;color:#999;margin-top:10px">ð ${played} of ${matches.length} matches played</p>`;
   document.getElementById('lb-content').innerHTML=h;
 }
 
-// ── PREDICTIONS ───────────────────────────────────────────────────────────
+// ââ PREDICTIONS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderPred(){
   // Check if this round is unlocked (group stage always open)
   if (predRound !== 'group' && !settings['unlock_'+predRound]) {
-    document.getElementById('pred-content').innerHTML = '<div style="text-align:center;padding:40px;color:#999"><div style="font-size:2rem;margin-bottom:12px">🔒</div><div style="font-size:1rem;font-weight:700;color:#1A3A5C">'+
+    document.getElementById('pred-content').innerHTML = '<div style="text-align:center;padding:40px;color:#999"><div style="font-size:2rem;margin-bottom:12px">ð</div><div style="font-size:1rem;font-weight:700;color:#1A3A5C">'+
       (ROUNDS.find(r=>r.k===predRound)?.l||predRound)+' predictions not open yet</div>'+
       '<div style="font-size:.82rem;margin-top:8px">Lasse will unlock this round when it's time to submit predictions.</div></div>';
     return;
@@ -414,7 +414,7 @@ function renderPred(){
     GRP_KEYS.forEach(g=>{
       if(!byG[g])return;
       const predSt=buildPredStandings(g,pm);
-      h+=`<div class="section"><div class="sec-hdr"><span>🔵 Group ${g}</span></div>`;
+      h+=`<div class="section"><div class="sec-hdr"><span>ðµ Group ${g}</span></div>`;
       h+=buildPredTable(byG[g],pm,true);
       h+=buildPredStandingsTable(g,predSt,st[g]||[]);
       h+='</div>';
@@ -445,11 +445,11 @@ function buildPredStandingsTable(grp,predSt,actualSt){
   const actualRank={};actualSt.forEach((r,i)=>{actualRank[r.team]=i+1;});
   const COLS=['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];const noPreds=predSt.every(r=>r.p===0);
   let h=`<div style="padding:8px 12px;background:#F8FBFF;border-top:1px solid #D6EAF8">
-    <div style="font-size:.75rem;font-weight:700;color:#1A3A5C;margin-bottom:6px">📊 My predicted standings — Actual # shown once played</div>
+    <div style="font-size:.75rem;font-weight:700;color:#1A3A5C;margin-bottom:6px">ð My predicted standings â Actual # shown once played</div>
     <table><thead><tr><th class="num" style="width:22px">#</th><th class="tl">Team</th><th>P</th><th>Pts</th><th>GD</th><th>Actual #</th></tr></thead><tbody>`;
   predSt.forEach((r,i)=>{
     const rank=i+1,bg=COLS[Math.min(rank-1,3)],tc=rank<=2?'color:#fff':'';
-    const aR=actualRank[r.team]?`<b>#${actualRank[r.team]}</b>`:'–';
+    const aR=actualRank[r.team]?`<b>#${actualRank[r.team]}</b>`:'â';
     h+=`<tr style="background:${bg};${tc}"><td class="num" style="font-weight:700">${rank}</td><td style="font-weight:600">${r.team}</td><td class="num">${r.p}</td><td class="num" style="font-weight:700">${r.pts}</td><td class="num">${r.gd>0?'+':''}${r.gd}</td><td class="num">${aR}</td></tr>`;
   });
   return h+'</tbody></table></div>';
@@ -461,10 +461,10 @@ function buildPredTable(ms,pm,isGS){
   ms.forEach(m=>{
     const pr=pm[m.id],ph=pr?.home_score??'',pa=pr?.away_score??'';
     const ah=m.home_score,aa=m.away_score;
-    let pts='–',ptsStyle='color:#999';
+    let pts='â',ptsStyle='color:#999';
     if(pr&&ah!=null){const p=calcScore(+ph,+pa,ah,aa,m.round);pts=p;ptsStyle=p===(settings[isGS?'gs_exact':'ko_exact']||5)?'color:#2D7A2D;font-weight:700':p>0?'color:#B07800;font-weight:700':'color:#C9041C;font-weight:700';}
-    let actHtml='–';
-    if(ah!=null){const bg=ah>aa?'#D6EAF8':ah<aa?'#FDE8E8':'#F5F5F5';actHtml=`<span style="background:${bg};padding:2px 5px;border-radius:4px;font-weight:700">${ah}–${aa}</span>`;}
+    let actHtml='â';
+    if(ah!=null){const bg=ah>aa?'#D6EAF8':ah<aa?'#FDE8E8':'#F5F5F5';actHtml=`<span style="background:${bg};padding:2px 5px;border-radius:4px;font-weight:700">${ah}â${aa}</span>`;}
     const isDraw=ph!==''&&pa!==''&&+ph===+pa;
     const hc=(!m.home_team||m.home_team.includes('TBD'))?'tbd':'',ac=(!m.away_team||m.away_team.includes('TBD'))?'tbd':'';
     h+=`<tr>
@@ -504,27 +504,27 @@ function updatePtsCells(){
     const pts=calcScore(pr.home_score,pr.away_score,m.home_score,m.away_score,m.round);
     const ptsCell=row.cells[row.cells.length-2]; // pts is second-to-last col
     if(!ptsCell)return;
-    ptsCell.textContent=pts??'–';
+    ptsCell.textContent=pts??'â';
     ptsCell.style.cssText=pts==ep?'color:#2D7A2D;font-weight:700;text-align:center':pts>0?'color:#B07800;font-weight:700;text-align:center':'color:#C9041C;font-weight:700;text-align:center';
     // Update actual score cell too
     const actCell=row.cells[row.cells.length-1];
     if(actCell&&m.home_score!=null){
       const bg=m.home_score>m.away_score?'#D6EAF8':m.home_score<m.away_score?'#FDE8E8':'#F5F5F5';
-      actCell.innerHTML='<span style="background:'+bg+';padding:2px 5px;border-radius:4px;font-weight:700">'+m.home_score+'–'+m.away_score+'</span>';
+      actCell.innerHTML='<span style="background:'+bg+';padding:2px 5px;border-radius:4px;font-weight:700">'+m.home_score+'â'+m.away_score+'</span>';
     }
   });
 }
 
-// ── AUTOSAVE ──────────────────────────────────────────────────────────────
+// ââ AUTOSAVE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function setAutosaveStatus(state,text){
   const dot=document.getElementById('autosave-dot'),txt=document.getElementById('autosave-text');
   dot.className='autosave-dot'+(state==='saving'?' saving':state==='saved'?' saved':'');
-  txt.textContent=text||(state==='saving'?'Saving…':state==='saved'?'All changes saved':'All changes saved');
+  txt.textContent=text||(state==='saving'?'Savingâ¦':state==='saved'?'All changes saved':'All changes saved');
 }
 
 function scheduleAutosave(){
   pendingPredSave=true;
-  setAutosaveStatus('saving','Unsaved changes…');
+  setAutosaveStatus('saving','Unsaved changesâ¦');
   clearTimeout(autosaveTimer);
   autosaveTimer=setTimeout(doAutosave,2000);
 }
@@ -535,7 +535,7 @@ async function doAutosave(){
 }
 
 async function savePred(showFeedback=true){
-  setAutosaveStatus('saving','Saving…');
+  setAutosaveStatus('saving','Savingâ¦');
   const rows=[];
   document.querySelectorAll('#pred-content [data-side="h"]').forEach(hEl=>{
     if(hEl.value==='')return;
@@ -545,16 +545,16 @@ async function savePred(showFeedback=true){
   });
   if(!rows.length){setAutosaveStatus('saved');return;}
   const {error}=await sb.from('predictions').upsert(rows,{onConflict:'player_id,match_id'});
-  if(error){setAutosaveStatus('','❌ Save failed: '+error.message);return;}
+  if(error){setAutosaveStatus('','â Save failed: '+error.message);return;}
   const {data}=await sb.from('predictions').select('*').eq('player_id',player.id);
   preds=data||[];
-  setAutosaveStatus('saved','✅ Saved just now');
+  setAutosaveStatus('saved','â Saved just now');
   // Update pts cells in-place without re-rendering (preserves DOM + predicted standings)
   updatePtsCells();
   if(showFeedback) setTimeout(()=>setAutosaveStatus('idle','All changes saved'),3000);
 }
 
-// ── ADMIN (RESULTS) ───────────────────────────────────────────────────────
+// ââ ADMIN (RESULTS) âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderAdmin(){
   const ms=matches.filter(m=>m.round===adminRound);
   if(!ms.length){document.getElementById('admin-content').innerHTML='<div class="section"><div style="padding:20px;text-align:center;color:#999">No matches in this round.</div></div>';return;}
@@ -570,7 +570,7 @@ function renderAdmin(){
       <td class="num"><input class="si" type="number" min="0" max="20" data-mid="${m.id}" data-side="a" value="${m.away_score??''}" style="background:${played?'#D6EAF8':'#C6EFCE'}" oninput="onAdminInput(this)"></td>
       <td class="team-cell ${ac}">${m.away_team||'TBD'}</td>
       <td class="num"><select class="et" data-mid="${m.id}" data-side="et" ${isDraw?'':'disabled'}><option value="">-</option><option value="H" ${m.et_winner==='H'?'selected':''}>H</option><option value="A" ${m.et_winner==='A'?'selected':''}>A</option></select></td>
-      <td style="text-align:center;font-size:.8rem">${played?'✅':'⏳'}</td>
+      <td style="text-align:center;font-size:.8rem">${played?'â':'â³'}</td>
     </tr>`;
   });
   h+='</tbody></table></div>';
@@ -584,7 +584,7 @@ function onAdminInput(el){
 
 async function saveResults(){
   const st=document.getElementById('admin-status');
-  st.textContent='Saving…';st.className='sstatus';
+  st.textContent='Savingâ¦';st.className='sstatus';
   const updates=[];
   document.querySelectorAll('#admin-content [data-side="h"]').forEach(hEl=>{
     if(hEl.value==='')return;
@@ -595,16 +595,16 @@ async function saveResults(){
   if(!updates.length){st.textContent='Nothing to save.';return;}
   for(const u of updates){
     const {error}=await sb.from('matches').update({home_score:u.home_score,away_score:u.away_score,et_winner:u.et_winner,status:u.status}).eq('id',u.id);
-    if(error){st.textContent='❌ '+error.message;return;}
+    if(error){st.textContent='â '+error.message;return;}
   }
   const {data}=await sb.from('matches').select('*').order('match_number');
   matches=data||[];
-  st.textContent='✅ Saved!';st.className='sstatus ok';
+  st.textContent='â Saved!';st.className='sstatus ok';
   renderAdmin();
   setTimeout(()=>{st.textContent='';},3000);
 }
 
-// ── PLAYERS ──────────────────────────────────────────────────────────────
+// ââ PLAYERS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 
 function addPlayerRow(){
@@ -615,8 +615,8 @@ function addPlayerRow(){
   div.innerHTML=`
     <input type="text" placeholder="Name e.g. Linn" data-field="name">
     <input type="email" placeholder="email@example.com" data-field="email">
-    <span class="player-status status-pending">⏳ New</span>
-    <button class="btn-invite" onclick="sendInvite(this)">✉️ Send Invite</button>
+    <span class="player-status status-pending">â³ New</span>
+    <button class="btn-invite" onclick="sendInvite(this)">âï¸ Send Invite</button>
   `;
   list.appendChild(div);
 }
@@ -641,13 +641,13 @@ async function removePlayer(btn) {
   const email = btn.dataset.email;
   const pid   = btn.dataset.pid;
   if (!confirm('Remove ' + email + ' from the competition?')) return;
-  btn.disabled = true; btn.textContent = '…';
+  btn.disabled = true; btn.textContent = 'â¦';
   const { error } = await sb.from('players').delete().eq('id', pid);
-  if (error) { alert('Error: ' + error.message); btn.disabled=false; btn.textContent='🗑️'; return; }
+  if (error) { alert('Error: ' + error.message); btn.disabled=false; btn.textContent='ðï¸'; return; }
   btn.closest('tr').remove();
   players = players.filter(p => p.id !== pid);
   const m = document.getElementById('invite-msg');
-  if (m) { m.style.cssText='padding:8px 12px;border-radius:6px;background:#C6EFCE;color:#1A5C1A;font-size:.8rem;margin-top:8px'; m.textContent='✅ Player removed.'; setTimeout(()=>m.textContent='',4000); }
+  if (m) { m.style.cssText='padding:8px 12px;border-radius:6px;background:#C6EFCE;color:#1A5C1A;font-size:.8rem;margin-top:8px'; m.textContent='â Player removed.'; setTimeout(()=>m.textContent='',4000); }
 }
 
 async function sendInvite(btn){
@@ -655,10 +655,10 @@ async function sendInvite(btn){
   const ename=row.querySelector('[data-field="name"]').value.trim();
   const email=row.querySelector('[data-field="email"]').value.trim();
   const resultEl=document.getElementById('invite-result');
-  if(!name||!email){resultEl.innerHTML='<div class="invite-result invite-err">⚠️ Name and email are required.</div>';return;}
-  btn.disabled=true;btn.textContent='Sending…';
+  if(!name||!email){resultEl.innerHTML='<div class="invite-result invite-err">â ï¸ Name and email are required.</div>';return;}
+  btn.disabled=true;btn.textContent='Sendingâ¦';
   resultEl.innerHTML='';
-  // Use Supabase magic link (OTP) — sends a login email, no password needed
+  // Use Supabase magic link (OTP) â sends a login email, no password needed
   // This creates the user if they don't exist
   const {error}=await sb.auth.signInWithOtp({
     email,
@@ -669,8 +669,8 @@ async function sendInvite(btn){
     }
   });
   if(error){
-    btn.disabled=false;btn.textContent='✉️ Send Invite';
-    resultEl.innerHTML=`<div class="invite-result invite-err">❌ ${error.message}</div>`;
+    btn.disabled=false;btn.textContent='âï¸ Send Invite';
+    resultEl.innerHTML=`<div class="invite-result invite-err">â ${error.message}</div>`;
     return;
   }
   // Save/update the player record in DB
@@ -686,20 +686,20 @@ async function sendInvite(btn){
     await sb.from('players').update({name}).eq('email',email);
     existing.name=name;
   }
-  btn.disabled=false;btn.textContent='✉️ Re-invite';
+  btn.disabled=false;btn.textContent='âï¸ Re-invite';
   row.querySelector('.player-status').className='player-status status-pending';
-  row.querySelector('.player-status').textContent='📧 Invited';
+  row.querySelector('.player-status').textContent='ð§ Invited';
   row.dataset.playerid='existing';
-  resultEl.innerHTML=`<div class="invite-result invite-ok">✅ Invite sent to <b>${email}</b>! They'll receive a login link by email.</div>`;
+  resultEl.innerHTML=`<div class="invite-result invite-ok">â Invite sent to <b>${email}</b>! They'll receive a login link by email.</div>`;
   setTimeout(()=>{resultEl.innerHTML='';},8000);
 }
 
-// ── SETTINGS ─────────────────────────────────────────────────────────────
+// ââ SETTINGS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderSettings(){
   document.getElementById('settings-save-bar').style.display='flex';
 
-  // ── Players ──
-  let h = '<div class="settings-section"><h3>👥 Players &amp; Invitations</h3>';
+  // ââ Players ââ
+  let h = '<div class="settings-section"><h3>ð¥ Players &amp; Invitations</h3>';
   h += '<p style="font-size:.78rem;color:#666;margin-bottom:12px">Add a name and email, then click Send Invite. They get a magic login link by email.</p>';
   h += '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1A3A5C;color:#fff"><th style="padding:7px 10px;text-align:left;font-size:.75rem">Name</th><th style="padding:7px 10px;text-align:left;font-size:.75rem">Email</th><th style="padding:7px 10px;font-size:.75rem">Status</th><th style="padding:7px 10px;font-size:.75rem">Action</th></tr></thead><tbody id="players-tbody">';
   players.forEach(p => {
@@ -707,39 +707,39 @@ function renderSettings(){
     h += '<tr style="border-bottom:1px solid #E4EEF7">' +
       '<td style="padding:6px 8px"><input style="width:110px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem;background:'+(isMe?'#F8FBFF':'#fff')+'" value="'+(p.name||'')+'" data-field="name" '+(isMe?'readonly':'')+' data-pid="'+p.id+'"></td>' +
       '<td style="padding:6px 8px"><input style="width:190px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem;background:'+(isMe?'#F8FBFF':'#fff')+'" value="'+(p.email||'')+'" data-field="email" '+(isMe?'readonly':'')+' data-pid="'+p.id+'"></td>' +
-      '<td style="padding:6px 8px;text-align:center"><span style="background:#C6EFCE;color:#1A5C1A;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">✅ Active</span></td>' +
-      '<td style="padding:6px 8px"><button class="btn-save" style="padding:4px 10px;font-size:.78rem" onclick="sendInvite(this)">✉️ Re-invite</button>'+(isMe?'':'<button style="background:#FDEAEA;color:#C9041C;border:none;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:.78rem" data-pid="'+p.id+'" data-email="'+p.email+'" onclick="removePlayer(this)">🗑️</button>')+'</td>' +
+      '<td style="padding:6px 8px;text-align:center"><span style="background:#C6EFCE;color:#1A5C1A;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">â Active</span></td>' +
+      '<td style="padding:6px 8px"><button class="btn-save" style="padding:4px 10px;font-size:.78rem" onclick="sendInvite(this)">âï¸ Re-invite</button>'+(isMe?'':'<button style="background:#FDEAEA;color:#C9041C;border:none;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:.78rem" data-pid="'+p.id+'" data-email="'+p.email+'" onclick="removePlayer(this)">ðï¸</button>')+'</td>' +
       '</tr>';
   });
   h += '</tbody></table>';
   h += '<div id="invite-msg"></div>';
-  h += '<button class="btn-add-match" style="margin-top:10px" onclick="addPlayerRow()">➕ Add Player</button>';
+  h += '<button class="btn-add-match" style="margin-top:10px" onclick="addPlayerRow()">â Add Player</button>';
   h += '</div>';
 
   const S=[
-    {key:'gs_exact',   label:'Group Stage — Exact Score',       desc:'Points for predicting the exact score'},
-    {key:'gs_result',  label:'Group Stage — Correct Result',    desc:'Points for correct W/D/L (wrong score)'},
-    {key:'ko_exact',   label:'Knockout — Exact Score',          desc:'Points for exact score in KO rounds'},
-    {key:'ko_result',  label:'Knockout — Correct Result',       desc:'Points for correct result in KO rounds'},
-    {key:'bonus_r16',  label:'Bonus — Round of 16',             desc:'Bonus for predicting a team reaches R16'},
-    {key:'bonus_qf',   label:'Bonus — Quarter-Final',           desc:'Bonus for predicting a team reaches QF'},
-    {key:'bonus_sf',   label:'Bonus — Semi-Final',              desc:'Bonus for predicting a team reaches SF'},
-    {key:'bonus_final',label:'Bonus — Final',                   desc:'Bonus for predicting a team reaches Final'},
+    {key:'gs_exact',   label:'Group Stage â Exact Score',       desc:'Points for predicting the exact score'},
+    {key:'gs_result',  label:'Group Stage â Correct Result',    desc:'Points for correct W/D/L (wrong score)'},
+    {key:'ko_exact',   label:'Knockout â Exact Score',          desc:'Points for exact score in KO rounds'},
+    {key:'ko_result',  label:'Knockout â Correct Result',       desc:'Points for correct result in KO rounds'},
+    {key:'bonus_r16',  label:'Bonus â Round of 16',             desc:'Bonus for predicting a team reaches R16'},
+    {key:'bonus_qf',   label:'Bonus â Quarter-Final',           desc:'Bonus for predicting a team reaches QF'},
+    {key:'bonus_sf',   label:'Bonus â Semi-Final',              desc:'Bonus for predicting a team reaches SF'},
+    {key:'bonus_final',label:'Bonus â Final',                   desc:'Bonus for predicting a team reaches Final'},
     {key:'bonus_champion',label:'Champion Bonus',               desc:'Bonus for predicting the champion'},
     {key:'bonus_bronze',  label:'Bronze Medal Bonus',           desc:'Bonus for predicting bronze medal winner'},
   ];
 
-  // ── Players ──
+  // ââ Players ââ
   
-  // ── Scoring ──
-  h+=`<div class="settings-section"><h3>🎯 Scoring System</h3><div class="score-grid">`;
+  // ââ Scoring ââ
+  h+=`<div class="settings-section"><h3>ð¯ Scoring System</h3><div class="score-grid">`;
   S.forEach(s=>{
     h+=`<div class="score-item"><label>${s.label}</label><div class="desc">${s.desc}</div><input class="score-inp" type="number" min="0" max="20" data-key="${s.key}" value="${settings[s.key]??''}"></div>`;
   });
   h+=`</div></div>`;
 
-  // ── Team Names by Group ──
-  h+=`<div class="settings-section"><h3>🌍 Team Names by Group</h3>
+  // ââ Team Names by Group ââ
+  h+=`<div class="settings-section"><h3>ð Team Names by Group</h3>
   <p style="font-size:.78rem;color:#666;margin-bottom:12px">Update team names here for groups where the qualifier is not yet confirmed. Changes are saved with the main Save button.</p>
   <div class="teams-grid">`;
   GRP_KEYS.forEach(g=>{
@@ -753,16 +753,16 @@ function renderSettings(){
   });
   h+=`</div></div>`;
 
-  // ── KO Round Unlock Toggles + Match List ──
+  // ââ KO Round Unlock Toggles + Match List ââ
   const koRounds=[
-    {k:'R32',l:'Round of 32',dates:'Jun 28 – Jul 3'},
-    {k:'R16',l:'Round of 16',dates:'Jul 4 – 7'},
-    {k:'QF', l:'Quarter-Finals',dates:'Jul 9 – 11'},
-    {k:'SF', l:'Semi-Finals',dates:'Jul 14 – 15'},
+    {k:'R32',l:'Round of 32',dates:'Jun 28 â Jul 3'},
+    {k:'R16',l:'Round of 16',dates:'Jul 4 â 7'},
+    {k:'QF', l:'Quarter-Finals',dates:'Jul 9 â 11'},
+    {k:'SF', l:'Semi-Finals',dates:'Jul 14 â 15'},
     {k:'bronze',l:'Bronze Final',dates:'Jul 18'},
     {k:'final',l:'Final',dates:'Jul 19'},
   ];
-  h += '<div class="settings-section"><h3>🔓 Round Unlock</h3>';
+  h += '<div class="settings-section"><h3>ð Round Unlock</h3>';
   h += '<p style="font-size:.78rem;color:#666;margin-bottom:12px">Toggle each round on to allow players to submit predictions for it. Turn off to lock the round.</p>';
   h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">';
   koRounds.forEach(r => {
@@ -780,11 +780,11 @@ function renderSettings(){
   });
   h += '</div></div>';
 
-  // ── KO Match Team Names ──
+  // ââ KO Match Team Names ââ
   koRounds.forEach(r => {
     const ms = matches.filter(m=>m.round===r.k).sort((a,b)=>a.match_number-b.match_number);
     if (!ms.length) return;
-    h += `<div class="settings-section"><h3>✏️ ${r.l} — Update Team Names</h3>
+    h += `<div class="settings-section"><h3>âï¸ ${r.l} â Update Team Names</h3>
     <p style="font-size:.78rem;color:#666;margin-bottom:10px">As results come in, update the actual team names below. Save with the main Save button.</p>
     <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1A3A5C;color:#fff">
       <th style="padding:6px 8px;font-size:.73rem;text-align:center">M#</th>
@@ -816,7 +816,7 @@ function koMatchRow(m,round){
     <input type="text" data-field="away" value="${m.away_team||''}" placeholder="Away team (TBD)">
     <input type="text" data-field="date" value="${m.match_date||''}" placeholder="Date" style="width:110px">
     <input type="number" data-field="num" value="${m.match_number||''}" placeholder="M#" style="width:60px">
-    <button class="del-btn" onclick="removeKOMatch(this,'${round}',${m.id||0})">✕</button>
+    <button class="del-btn" onclick="removeKOMatch(this,'${round}',${m.id||0})">â</button>
   </div>`;
 }
 
@@ -840,18 +840,18 @@ async function removeKOMatch(btn,round,id){
 
 async function saveAllSettings(){
   const st=document.getElementById('settings-status');
-  st.textContent='Saving…';st.className='sstatus';
+  st.textContent='Savingâ¦';st.className='sstatus';
 
   // 1. Save scoring settings
   const scoreInputs=document.querySelectorAll('.score-inp');
   for(const el of scoreInputs){
     if(el.value==='')continue;
     const {error}=await sb.from('settings').upsert({key:el.dataset.key,value:+el.value},{onConflict:'key',ignoreDuplicates:false});
-    if(error){st.textContent='❌ '+error.message;return;}
+    if(error){st.textContent='â '+error.message;return;}
     settings[el.dataset.key]=+el.value;
   }
 
-  // 2. Save team names — update match records for group stage
+  // 2. Save team names â update match records for group stage
   const teamInputs=document.querySelectorAll('.team-inp');
   const groupUpdates={};
   teamInputs.forEach(el=>{
@@ -878,7 +878,7 @@ async function saveAllSettings(){
         if(m.home_team===oldName)upd.home_team=teams[i];
         if(m.away_team===oldName)upd.away_team=teams[i];
         const {error}=await sb.from('matches').update(upd).eq('id',m.id);
-        if(error){st.textContent='❌ '+error.message;return;}
+        if(error){st.textContent='â '+error.message;return;}
       }
     }
   }
@@ -895,7 +895,7 @@ async function saveAllSettings(){
     if (ht) upd.home_team = ht;
     if (at) upd.away_team = at;
     const {error} = await sb.from('matches').update(upd).eq('id', mid);
-    if (error) { st.textContent='❌ '+error.message; return; }
+    if (error) { st.textContent='â '+error.message; return; }
   }
 
   // Reload matches
@@ -906,11 +906,11 @@ async function saveAllSettings(){
   matches=newMatches||[];
   const {data:newSettings}=await sb.from('settings').select('*');
   settings={};(newSettings||[]).forEach(r=>settings[r.key]=r.value);
-  st.textContent='✅ All settings saved!';st.className='sstatus ok';
+  st.textContent='â All settings saved!';st.className='sstatus ok';
   setTimeout(()=>{st.textContent='';},4000);
 }
 
-// ── BOOT ──────────────────────────────────────────────────────────────────
+// ââ BOOT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 (async()=>{
   const {data:{session}}=await sb.auth.getSession();
   if(session)await bootApp(session.user);
