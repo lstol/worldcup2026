@@ -392,6 +392,13 @@ async function renderLB(){
 
 // ── PREDICTIONS ───────────────────────────────────────────────────────────
 function renderPred(){
+  // Check if this round is unlocked (group stage always open)
+  if (predRound !== 'group' && !settings['unlock_'+predRound]) {
+    document.getElementById('pred-content').innerHTML = '<div style="text-align:center;padding:40px;color:#999"><div style="font-size:2rem;margin-bottom:12px">🔒</div><div style="font-size:1rem;font-weight:700;color:#1A3A5C">'+
+      (ROUNDS.find(r=>r.k===predRound)?.l||predRound)+' predictions not open yet</div>'+
+      '<div style="font-size:.82rem;margin-top:8px">Lasse will unlock this round when it's time to submit predictions.</div></div>';
+    return;
+  }
   const ms=matches.filter(m=>m.round===predRound);
   if(!ms.length){
     document.getElementById('pred-content').innerHTML='<div class="section"><div style="padding:20px;text-align:center;color:#999">No matches in this round yet.</div></div>';
@@ -614,6 +621,22 @@ function addPlayerRow(){
   list.appendChild(div);
 }
 
+
+async function saveRoundToggle(checkbox) {
+  const key = checkbox.dataset.key;
+  const val = checkbox.checked ? 1 : 0;
+  const {error} = await sb.from('settings').upsert({key, value: val}, {onConflict:'key'});
+  if (error) { alert('Error saving toggle: '+error.message); checkbox.checked = !checkbox.checked; return; }
+  settings[key] = val;
+  // Update visual
+  const card = checkbox.closest('div[style]');
+  if (card) {
+    card.style.background = val ? '#C6EFCE' : '#F8FBFF';
+    card.style.border = '2px solid '+(val?'#2D7A2D':'#9DC3E6');
+    const lbl = checkbox.previousElementSibling;
+    if (lbl) { lbl.textContent = val ? 'Open' : 'Locked'; lbl.style.color = val ? '#2D7A2D' : '#999'; }
+  }
+}
 async function removePlayer(btn) {
   const email = btn.dataset.email;
   const pid   = btn.dataset.pid;
@@ -730,20 +753,57 @@ function renderSettings(){
   });
   h+=`</div></div>`;
 
-  // ── KO Match Entry ──
-  const koRounds=['R32','R16','QF','SF','final','bronze'];
-  koRounds.forEach(round=>{
-    const rLabel=ROUNDS.find(r=>r.k===round)?.l||round;
-    const ms=matches.filter(m=>m.round===round).sort((a,b)=>a.match_number-b.match_number);
-    h+=`<div class="settings-section"><h3>⚡ ${rLabel} Matches</h3>
-    <p style="font-size:.78rem;color:#666;margin-bottom:10px">Add or edit matches for this round. Team names will be filled in once results are known.</p>
-    <div id="ko-rows-${round}">`;
-    ms.forEach(m=>{
-      h+=koMatchRow(m,round);
-    });
-    h+=`</div>
-    <button class="btn-add-match" onclick="addKOMatch('${round}')">➕ Add Match</button>
+  // ── KO Round Unlock Toggles + Match List ──
+  const koRounds=[
+    {k:'R32',l:'Round of 32',dates:'Jun 28 – Jul 3'},
+    {k:'R16',l:'Round of 16',dates:'Jul 4 – 7'},
+    {k:'QF', l:'Quarter-Finals',dates:'Jul 9 – 11'},
+    {k:'SF', l:'Semi-Finals',dates:'Jul 14 – 15'},
+    {k:'bronze',l:'Bronze Final',dates:'Jul 18'},
+    {k:'final',l:'Final',dates:'Jul 19'},
+  ];
+  h += '<div class="settings-section"><h3>🔓 Round Unlock</h3>';
+  h += '<p style="font-size:.78rem;color:#666;margin-bottom:12px">Toggle each round on to allow players to submit predictions for it. Turn off to lock the round.</p>';
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">';
+  koRounds.forEach(r => {
+    const unlocked = settings['unlock_'+r.k] == 1 || settings['unlock_'+r.k] === '1';
+    h += `<div style="background:${unlocked?'#C6EFCE':'#F8FBFF'};border:2px solid ${unlocked?'#2D7A2D':'#9DC3E6'};border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700;font-size:.85rem">${r.l}</div>
+        <div style="font-size:.72rem;color:#666">${r.dates}</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <span style="font-size:.78rem;color:${unlocked?'#2D7A2D':'#999'}">${unlocked?'Open':'Locked'}</span>
+        <input type="checkbox" data-key="unlock_${r.k}" ${unlocked?'checked':''} onchange="saveRoundToggle(this)" style="width:18px;height:18px;cursor:pointer">
+      </label>
     </div>`;
+  });
+  h += '</div></div>';
+
+  // ── KO Match Team Names ──
+  koRounds.forEach(r => {
+    const ms = matches.filter(m=>m.round===r.k).sort((a,b)=>a.match_number-b.match_number);
+    if (!ms.length) return;
+    h += `<div class="settings-section"><h3>✏️ ${r.l} — Update Team Names</h3>
+    <p style="font-size:.78rem;color:#666;margin-bottom:10px">As results come in, update the actual team names below. Save with the main Save button.</p>
+    <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1A3A5C;color:#fff">
+      <th style="padding:6px 8px;font-size:.73rem;text-align:center">M#</th>
+      <th style="padding:6px 8px;font-size:.73rem;text-align:left">Date</th>
+      <th style="padding:6px 8px;font-size:.73rem;text-align:left">Home</th>
+      <th style="padding:6px 8px;font-size:.73rem;text-align:center">vs</th>
+      <th style="padding:6px 8px;font-size:.73rem;text-align:left">Away</th>
+    </tr></thead><tbody>`;
+    ms.forEach((m,i) => {
+      const bg = i%2===0?'#fff':'#EBF4FB';
+      h += `<tr style="background:${bg}">
+        <td style="padding:6px 8px;text-align:center;font-weight:700;font-size:.78rem">M${m.match_number}</td>
+        <td style="padding:6px 8px;font-size:.78rem;color:#666">${m.match_date||''}</td>
+        <td style="padding:6px 8px"><input style="width:160px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.8rem;background:#FFFDE7" data-mid="${m.id}" data-side="ht" value="${m.home_team||''}"></td>
+        <td style="padding:6px 8px;text-align:center;color:#999;font-size:.85rem">vs</td>
+        <td style="padding:6px 8px"><input style="width:160px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.8rem;background:#FFFDE7" data-mid="${m.id}" data-side="at" value="${m.away_team||''}"></td>
+      </tr>`;
+    });
+    h += '</tbody></table></div>';
   });
 
   document.getElementById('settings-content').innerHTML=h;
@@ -823,26 +883,19 @@ async function saveAllSettings(){
     }
   }
 
-  // 3. Save KO matches (new and updated)
-  const koSections=document.querySelectorAll('[id^="ko-rows-"]');
-  for(const section of koSections){
-    const round=section.id.replace('ko-rows-','');
-    const rows=section.querySelectorAll('.ko-match-row');
-    for(const row of rows){
-      const mid=row.dataset.mid;
-      const home=row.querySelector('[data-field="home"]').value.trim();
-      const away=row.querySelector('[data-field="away"]').value.trim();
-      const date=row.querySelector('[data-field="date"]').value.trim();
-      const num=+row.querySelector('[data-field="num"]').value;
-      if(!home&&!away&&!num)continue;
-      if(mid&&mid!=='new'&&mid!=='null'){
-        const {error}=await sb.from('matches').update({home_team:home||null,away_team:away||null,match_date:date||null,match_number:num||null}).eq('id',+mid);
-        if(error){st.textContent='❌ '+error.message;return;}
-      } else if(num){
-        const {error}=await sb.from('matches').insert({match_number:num,round,home_team:home||null,away_team:away||null,match_date:date||null,status:'open',group_letter:null});
-        if(error){st.textContent='❌ '+error.message;return;}
-      }
-    }
+  // 3. Save KO team name edits (update existing matches only, never insert)
+  const koTeamInputs = document.querySelectorAll('[data-mid][data-side="ht"]');
+  for (const htEl of koTeamInputs) {
+    const mid = +htEl.dataset.mid;
+    if (!mid) continue;
+    const atEl = document.querySelector('[data-mid="'+mid+'"][data-side="at"]');
+    const ht = htEl.value.trim(), at = atEl?.value.trim();
+    if (!ht && !at) continue;
+    const upd = {};
+    if (ht) upd.home_team = ht;
+    if (at) upd.away_team = at;
+    const {error} = await sb.from('matches').update(upd).eq('id', mid);
+    if (error) { st.textContent='❌ '+error.message; return; }
   }
 
   // Reload matches
