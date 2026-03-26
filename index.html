@@ -652,7 +652,7 @@ async function removePlayer(btn) {
 
 async function sendInvite(btn){
   const row=btn.closest('.player-row');
-  const name=row.querySelector('[data-field="name"]').value.trim();
+  const ename=row.querySelector('[data-field="name"]').value.trim();
   const email=row.querySelector('[data-field="email"]').value.trim();
   const resultEl=document.getElementById('invite-result');
   if(!name||!email){resultEl.innerHTML='<div class="invite-result invite-err">⚠️ Name and email are required.</div>';return;}
