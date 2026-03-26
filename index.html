@@ -78,6 +78,19 @@ td.team-cell{font-weight:600}
 .ko-match-row input:focus{outline:none;border-color:#1565C0}
 .ko-match-row .mnum{font-size:.75rem;color:#666;text-align:center}
 .ko-match-row .del-btn{background:#FDEAEA;color:#C9041C;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:.75rem}
+.player-row{display:grid;grid-template-columns:1fr 1.5fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.player-row input{padding:6px 10px;border:1px solid #9DC3E6;border-radius:6px;font-size:.83rem;background:#fff}
+.player-row input:focus{outline:none;border-color:#1565C0}
+.player-status{font-size:.72rem;padding:2px 8px;border-radius:10px;font-weight:700;text-align:center}
+.status-active{background:#C6EFCE;color:#1A5C1A}
+.status-pending{background:#FFF3CD;color:#856404}
+.btn-invite{background:#1565C0;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-invite:hover{background:#0D2137}
+.btn-invite:disabled{opacity:.5;cursor:not-allowed}
+.btn-remove-player{background:#FDEAEA;color:#C9041C;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:.8rem}
+.invite-result{font-size:.78rem;margin-top:4px;padding:6px 10px;border-radius:6px}
+.invite-ok{background:#C6EFCE;color:#1A5C1A}
+.invite-err{background:#FDEAEA;color:#C9041C}
 .btn-add-match{background:#2D7A2D;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:8px}
 .settings-save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #9DC3E6;padding:10px 16px;display:none;align-items:center;gap:12px;z-index:99}
 .settings-save-bar.show{display:flex}
@@ -110,12 +123,12 @@ td.team-cell{font-weight:600}
     <div class="login-title">World Cup 2026</div>
     <div class="login-sub">Family Prediction Competition 🏆</div>
     <label class="lbl">Email</label>
-    <input id="lemail" class="inp" type="email" placeholder="yourname@worldcup2026.local" autocomplete="email">
+    <input id="lemail" class="inp" type="email" placeholder="your@email.com" autocomplete="email">
     <label class="lbl">Password</label>
     <input id="lpass" class="inp" type="password" placeholder="••••••••" autocomplete="current-password">
     <button class="btn-primary" onclick="doLogin()">⚽ Sign In</button>
     <div id="lerr" class="err"></div>
-    <div class="hint">yourname@worldcup2026.local<br>Password given by Lasse</div>
+    <div class="hint">Enter your email address<br>Use the link from your invitation email</div>
   </div>
 </div>
 
@@ -584,6 +597,80 @@ async function saveResults(){
   setTimeout(()=>{st.textContent='';},3000);
 }
 
+// ── PLAYERS ──────────────────────────────────────────────────────────────
+function renderPlayerRows(){
+  let h='';
+  // Show existing players first
+  players.forEach(p=>{
+    const isMe = p.id===player.id;
+    h+=`<div class="player-row" data-playerid="${p.id}">
+      <input type="text" placeholder="Name" value="${p.name||''}" data-field="name" style="background:${isMe?'#F8FBFF':'#fff'}">
+      <input type="email" placeholder="email@example.com" value="${p.email||''}" data-field="email" ${isMe?'disabled':''} style="background:${isMe?'#F8FBFF':'#fff'}">
+      <span class="player-status status-active">✅ Active</span>
+      <button class="btn-invite" onclick="sendInvite(this)">✉️ Re-invite</button>
+    </div>`;
+  });
+  return h;
+}
+
+function addPlayerRow(){
+  const list=document.getElementById('players-list');
+  const div=document.createElement('div');
+  div.className='player-row';
+  div.dataset.playerid='new';
+  div.innerHTML=`
+    <input type="text" placeholder="Name e.g. Linn" data-field="name">
+    <input type="email" placeholder="email@example.com" data-field="email">
+    <span class="player-status status-pending">⏳ New</span>
+    <button class="btn-invite" onclick="sendInvite(this)">✉️ Send Invite</button>
+  `;
+  list.appendChild(div);
+}
+
+async function sendInvite(btn){
+  const row=btn.closest('.player-row');
+  const name=row.querySelector('[data-field="name"]').value.trim();
+  const email=row.querySelector('[data-field="email"]').value.trim();
+  const resultEl=document.getElementById('invite-result');
+  if(!name||!email){resultEl.innerHTML='<div class="invite-result invite-err">⚠️ Name and email are required.</div>';return;}
+  btn.disabled=true;btn.textContent='Sending…';
+  resultEl.innerHTML='';
+  // Use Supabase magic link (OTP) — sends a login email, no password needed
+  // This creates the user if they don't exist
+  const {error}=await sb.auth.signInWithOtp({
+    email,
+    options:{
+      shouldCreateUser:true,
+      emailRedirectTo:'https://lstol.github.io/worldcup2026',
+      data:{display_name:name}
+    }
+  });
+  if(error){
+    btn.disabled=false;btn.textContent='✉️ Send Invite';
+    resultEl.innerHTML=`<div class="invite-result invite-err">❌ ${error.message}</div>`;
+    return;
+  }
+  // Save/update the player record in DB
+  // Check if this email already exists in players
+  const existing=players.find(p=>p.email===email);
+  if(!existing){
+    // Insert a placeholder player record (will be linked when they first log in)
+    await sb.from('players').upsert({name,email,is_admin:false},{onConflict:'email'});
+    // Refresh players list
+    const {data}=await sb.from('players').select('*').order('name');
+    players=data||[];
+  } else if(existing.name!==name){
+    await sb.from('players').update({name}).eq('email',email);
+    existing.name=name;
+  }
+  btn.disabled=false;btn.textContent='✉️ Re-invite';
+  row.querySelector('.player-status').className='player-status status-pending';
+  row.querySelector('.player-status').textContent='📧 Invited';
+  row.dataset.playerid='existing';
+  resultEl.innerHTML=`<div class="invite-result invite-ok">✅ Invite sent to <b>${email}</b>! They'll receive a login link by email.</div>`;
+  setTimeout(()=>{resultEl.innerHTML='';},8000);
+}
+
 // ── SETTINGS ─────────────────────────────────────────────────────────────
 function renderSettings(){
   document.getElementById('settings-save-bar').style.display='flex';
@@ -600,8 +687,21 @@ function renderSettings(){
     {key:'bonus_bronze',  label:'Bronze Medal Bonus',           desc:'Bonus for predicting bronze medal winner'},
   ];
 
+  // ── Players ──
+  let h='<div class="settings-section"><h3>👥 Players & Invitations</h3>';
+  h+='<p style="font-size:.78rem;color:#666;margin-bottom:14px">Assign a display name and email to each player. Click <b>Send Invite</b> to email them a login link. They click it, set a password, and they're in.</p>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1.5fr 100px auto;gap:8px;align-items:center;margin-bottom:6px;padding:0 2px">';
+  h+='<span style="font-size:.72rem;font-weight:700;color:#666">Name</span>';
+  h+='<span style="font-size:.72rem;font-weight:700;color:#666">Email</span>';
+  h+='<span style="font-size:.72rem;font-weight:700;color:#666">Status</span>';
+  h+='<span></span></div>';
+  h+='<div id="players-list">'+renderPlayerRows()+'</div>';
+  h+='<div id="invite-result"></div>';
+  h+='<button class="btn-add-match" onclick="addPlayerRow()" style="margin-top:10px">➕ Add Player</button>';
+  h+='</div>';
+
   // ── Scoring ──
-  let h=`<div class="settings-section"><h3>🎯 Scoring System</h3><div class="score-grid">`;
+  h+=`<div class="settings-section"><h3>🎯 Scoring System</h3><div class="score-grid">`;
   S.forEach(s=>{
     h+=`<div class="score-item"><label>${s.label}</label><div class="desc">${s.desc}</div><input class="score-inp" type="number" min="0" max="20" data-key="${s.key}" value="${settings[s.key]??''}"></div>`;
   });
