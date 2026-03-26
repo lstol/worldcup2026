@@ -598,20 +598,7 @@ async function saveResults(){
 }
 
 // ── PLAYERS ──────────────────────────────────────────────────────────────
-function renderPlayerRows(){
-  let h='';
-  // Show existing players first
-  players.forEach(p=>{
-    const isMe = p.id===player.id;
-    h+=`<div class="player-row" data-playerid="${p.id}">
-      <input type="text" placeholder="Name" value="${p.name||''}" data-field="name" style="background:${isMe?'#F8FBFF':'#fff'}">
-      <input type="email" placeholder="email@example.com" value="${p.email||''}" data-field="email" ${isMe?'disabled':''} style="background:${isMe?'#F8FBFF':'#fff'}">
-      <span class="player-status status-active">✅ Active</span>
-      <button class="btn-invite" onclick="sendInvite(this)">✉️ Re-invite</button>
-    </div>`;
-  });
-  return h;
-}
+
 
 function addPlayerRow(){
   const list=document.getElementById('players-list');
