@@ -614,6 +614,19 @@ function addPlayerRow(){
   list.appendChild(div);
 }
 
+async function removePlayer(btn) {
+  const email = btn.dataset.email;
+  const pid   = btn.dataset.pid;
+  if (!confirm('Remove ' + email + ' from the competition?')) return;
+  btn.disabled = true; btn.textContent = '…';
+  const { error } = await sb.from('players').delete().eq('id', pid);
+  if (error) { alert('Error: ' + error.message); btn.disabled=false; btn.textContent='🗑️'; return; }
+  btn.closest('tr').remove();
+  players = players.filter(p => p.id !== pid);
+  const m = document.getElementById('invite-msg');
+  if (m) { m.style.cssText='padding:8px 12px;border-radius:6px;background:#C6EFCE;color:#1A5C1A;font-size:.8rem;margin-top:8px'; m.textContent='✅ Player removed.'; setTimeout(()=>m.textContent='',4000); }
+}
+
 async function sendInvite(btn){
   const row=btn.closest('.player-row');
   const name=row.querySelector('[data-field="name"]').value.trim();
@@ -672,7 +685,7 @@ function renderSettings(){
       '<td style="padding:6px 8px"><input style="width:110px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem;background:'+(isMe?'#F8FBFF':'#fff')+'" value="'+(p.name||'')+'" data-field="name" '+(isMe?'readonly':'')+' data-pid="'+p.id+'"></td>' +
       '<td style="padding:6px 8px"><input style="width:190px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem;background:'+(isMe?'#F8FBFF':'#fff')+'" value="'+(p.email||'')+'" data-field="email" '+(isMe?'readonly':'')+' data-pid="'+p.id+'"></td>' +
       '<td style="padding:6px 8px;text-align:center"><span style="background:#C6EFCE;color:#1A5C1A;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">✅ Active</span></td>' +
-      '<td style="padding:6px 8px"><button class="btn-save" style="padding:4px 12px;font-size:.78rem" onclick="sendInvite(this)">✉️ Re-invite</button></td>' +
+      '<td style="padding:6px 8px"><button class="btn-save" style="padding:4px 10px;font-size:.78rem" onclick="sendInvite(this)">✉️ Re-invite</button>'+(isMe?'':'<button style="background:#FDEAEA;color:#C9041C;border:none;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:.78rem" data-pid="'+p.id+'" data-email="'+p.email+'" onclick="removePlayer(this)">🗑️</button>')+'</td>' +
       '</tr>';
   });
   h += '</tbody></table>';
