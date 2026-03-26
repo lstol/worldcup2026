@@ -87,10 +87,14 @@ td.tc{font-weight:600}
 .tc-card{background:#F8FBFF;border:1px solid #D6EAF8;border-radius:8px;padding:12px}
 .msg-ok{padding:8px 12px;border-radius:6px;background:#C6EFCE;color:#1A5C1A;font-size:.8rem;margin-top:8px}
 .msg-err{padding:8px 12px;border-radius:6px;background:#FDEAEA;color:#C9041C;font-size:.8rem;margin-top:8px}
-.pred-group-inner{display:flex;align-items:flex-start}
+.pred-group-inner{display:flex;align-items:stretch}
 .pred-matches{flex:1;min-width:0;overflow-x:auto}
-.pred-standings{width:250px;flex-shrink:0;border-left:2px solid #E4EEF7;background:#F8FBFF}
-@media(max-width:700px){.pred-group-inner{flex-direction:column}.pred-standings{width:100%;border-left:none;border-top:2px solid #E4EEF7}}
+.pred-matches tbody tr{height:40px}
+.pred-standings{width:320px;flex-shrink:0;border-left:2px solid #1A3A5C;display:flex;flex-direction:column}
+.pred-standings-hdr{background:#0D2137;color:#fff;font-size:.82rem;font-weight:700;padding:9px 12px}
+.pred-standings table{flex:1;width:100%}
+.pred-standings tbody tr{height:40px}
+@media(max-width:700px){.pred-group-inner{flex-direction:column}.pred-standings{width:100%;border-left:none;border-top:2px solid #1A3A5C}}
 @media(max-width:600px){thead th,tbody td{padding:5px 4px;font-size:.72rem}.si{width:34px}.lb-pts{font-size:1rem}}
 </style>
 </head>
@@ -379,7 +383,7 @@ function renderPred() {
       h += '<div class="section"><div class="sec-hdr">Group ' + g + '</div>';
       h += '<div class="pred-group-inner">';
       h += '<div class="pred-matches">' + buildPredTable(byG[g], pm, true) + '</div>';
-      h += '<div class="pred-standings">' + buildPredStTable(g, pm, st[g] || []) + '</div>';
+      h += '<div class="pred-standings" style="overflow:hidden">' + buildPredStTable(g, pm, st[g] || []) + '</div>';
       h += '</div></div>';
     });
   } else {
@@ -404,8 +408,8 @@ function buildPredStTable(grp, pm, actualSt) {
   const sorted = Object.values(pst).sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.team.localeCompare(b.team));
   const aRank = {}; actualSt.forEach((r, i) => { aRank[r.team] = i + 1; });
   const COLS = ['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];
-  let h = '<div style="padding:8px 12px;background:#F8FBFF;">';
-  h += '<div style="font-size:.75rem;font-weight:700;color:#1A3A5C;margin-bottom:6px">Predicted standings</div>';
+  let h = '<div class="pred-standings-hdr">Predicted standings</div>';
+  h += '<div style="padding:0">';
   h += '<table><thead><tr><th class="num" style="width:22px">#</th><th class="tl">Team</th><th>P</th><th>Pts</th><th>GD</th><th>Actual</th></tr></thead><tbody>';
   sorted.forEach((r, i) => {
     const rk = i + 1;
