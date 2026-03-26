@@ -410,7 +410,7 @@ function buildPredStTable(grp, pm, actualSt) {
   const COLS = ['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];
   let h = '<div class="pred-standings-hdr">Predicted standings</div>';
   h += '<div style="padding:0">';
-  h += '<table><thead><tr><th class="num" style="width:22px">#</th><th class="tl">Team</th><th>P</th><th>Pts</th><th>GD</th><th>Actual</th></tr></thead><tbody>';
+  h += '<table><tbody>';
   sorted.forEach((r, i) => {
     const rk = i + 1;
     const bg = COLS[Math.min(rk - 1, 3)];
