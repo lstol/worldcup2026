@@ -87,6 +87,10 @@ td.tc{font-weight:600}
 .tc-card{background:#F8FBFF;border:1px solid #D6EAF8;border-radius:8px;padding:12px}
 .msg-ok{padding:8px 12px;border-radius:6px;background:#C6EFCE;color:#1A5C1A;font-size:.8rem;margin-top:8px}
 .msg-err{padding:8px 12px;border-radius:6px;background:#FDEAEA;color:#C9041C;font-size:.8rem;margin-top:8px}
+.pred-group-inner{display:flex;align-items:flex-start}
+.pred-matches{flex:1;min-width:0;overflow-x:auto}
+.pred-standings{width:250px;flex-shrink:0;border-left:2px solid #E4EEF7;background:#F8FBFF}
+@media(max-width:700px){.pred-group-inner{flex-direction:column}.pred-standings{width:100%;border-left:none;border-top:2px solid #E4EEF7}}
 @media(max-width:600px){thead th,tbody td{padding:5px 4px;font-size:.72rem}.si{width:34px}.lb-pts{font-size:1rem}}
 </style>
 </head>
@@ -373,9 +377,10 @@ function renderPred() {
     GRP.forEach(g => {
       if (!byG[g]) return;
       h += '<div class="section"><div class="sec-hdr">Group ' + g + '</div>';
-      h += buildPredTable(byG[g], pm, true);
-      h += buildPredStTable(g, pm, st[g] || []);
-      h += '</div>';
+      h += '<div class="pred-group-inner">';
+      h += '<div class="pred-matches">' + buildPredTable(byG[g], pm, true) + '</div>';
+      h += '<div class="pred-standings">' + buildPredStTable(g, pm, st[g] || []) + '</div>';
+      h += '</div></div>';
     });
   } else {
     h = '<div class="section">' + buildPredTable(ms, pm, false) + '</div>';
@@ -399,8 +404,8 @@ function buildPredStTable(grp, pm, actualSt) {
   const sorted = Object.values(pst).sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.team.localeCompare(b.team));
   const aRank = {}; actualSt.forEach((r, i) => { aRank[r.team] = i + 1; });
   const COLS = ['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];
-  let h = '<div style="padding:8px 12px;background:#F8FBFF;border-top:1px solid #D6EAF8">';
-  h += '<div style="font-size:.75rem;font-weight:700;color:#1A3A5C;margin-bottom:6px">My predicted standings</div>';
+  let h = '<div style="padding:8px 12px;background:#F8FBFF;">';
+  h += '<div style="font-size:.75rem;font-weight:700;color:#1A3A5C;margin-bottom:6px">Predicted standings</div>';
   h += '<table><thead><tr><th class="num" style="width:22px">#</th><th class="tl">Team</th><th>P</th><th>Pts</th><th>GD</th><th>Actual</th></tr></thead><tbody>';
   sorted.forEach((r, i) => {
     const rk = i + 1;
