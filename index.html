@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚽ World Cup 2026 — Family Predictions</title>
+<title>World Cup 2026 - Family Predictions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -89,11 +89,10 @@ td.tc{font-weight:600}
 .msg-err{padding:8px 12px;border-radius:6px;background:#FDEAEA;color:#C9041C;font-size:.8rem;margin-top:8px}
 .pred-group-inner{display:flex;align-items:stretch}
 .pred-matches{flex:1;min-width:0;overflow-x:auto}
-.pred-matches tbody tr{height:40px}
-.pred-standings{width:320px;flex-shrink:0;border-left:2px solid #1A3A5C;display:flex;flex-direction:column}
-.pred-standings-hdr{background:#0D2137;color:#fff;font-size:.82rem;font-weight:700;padding:9px 12px}
-.pred-standings table{flex:1;width:100%}
+.pred-standings{width:320px;flex-shrink:0;border-left:2px solid #1A3A5C;display:flex;flex-direction:column;overflow:hidden}
+.pred-standings table{width:100%}
 .pred-standings tbody tr{height:40px}
+.pred-matches tbody tr{height:40px}
 @media(max-width:700px){.pred-group-inner{flex-direction:column}.pred-standings{width:100%;border-left:none;border-top:2px solid #1A3A5C}}
 @media(max-width:600px){thead th,tbody td{padding:5px 4px;font-size:.72rem}.si{width:34px}.lb-pts{font-size:1rem}}
 </style>
@@ -102,9 +101,9 @@ td.tc{font-weight:600}
 
 <div id="login-screen" class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">&#x26BD;</div>
+    <div class="login-logo">&#26BD;</div>
     <div class="login-title">World Cup 2026</div>
-    <div class="login-sub">Family Prediction Competition &#x1F3C6;</div>
+    <div class="login-sub">Family Prediction Competition</div>
     <label class="lbl">Email</label>
     <input id="lemail" class="inp" type="email" placeholder="your@email.com" autocomplete="email">
     <label class="lbl">Password</label>
@@ -121,7 +120,7 @@ td.tc{font-weight:600}
       <div><div class="hdr-title">World Cup 2026</div><div class="hdr-sub">Family Predictions</div></div>
       <div style="display:flex;align-items:center;gap:6px">
         <span id="adminpill" class="admin-pill" style="display:none">ADMIN</span>
-        <button class="user-pill" onclick="doLogout()">&#x1F464; <span id="uname"></span> &larr;</button>
+        <button class="user-pill" onclick="doLogout()">&#128100; <span id="uname"></span> &larr;</button>
       </div>
     </div>
     <nav id="mainnav">
@@ -177,22 +176,15 @@ const ROUNDS = [
   {k:'R16',l:'Round of 16'},{k:'QF',l:'Quarter-Finals'},
   {k:'SF',l:'Semi-Finals'},{k:'final',l:'Final'},{k:'bronze',l:'Bronze Final'},
 ];
-const KO_ROUNDS = ['R32','R16','QF','SF','final','bronze'];
 const GRP = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 const MEDALS = ['','1st','2nd','3rd','4th','5th'];
 const DEF_TEAMS = {
-  A:['Mexico','USA','Canada','New Zealand'],
-  B:['Spain','Croatia','Morocco','Belgium'],
-  C:['Brazil','Germany','Japan','South Africa'],
-  D:['Argentina','Ecuador','Australia','Hungary'],
-  E:['France','Netherlands','Saudi Arabia','Iraq'],
-  F:['England','Iran','Senegal','Slovakia'],
-  G:['Portugal','Czechia','Cameroon','Chile'],
-  H:['Colombia','South Korea','Poland','Paraguay'],
-  I:['Italy','Norway','Peru','DR Congo'],
-  J:['Uruguay','Nigeria','Ivory Coast','Slovenia'],
-  K:['Serbia','Switzerland','Guatemala','Costa Rica'],
-  L:['Denmark','Qatar','Algeria','Bolivia'],
+  A:['Mexico','USA','Canada','New Zealand'],B:['Spain','Croatia','Morocco','Belgium'],
+  C:['Brazil','Germany','Japan','South Africa'],D:['Argentina','Ecuador','Australia','Hungary'],
+  E:['France','Netherlands','Saudi Arabia','Iraq'],F:['England','Iran','Senegal','Slovakia'],
+  G:['Portugal','Czechia','Cameroon','Chile'],H:['Colombia','South Korea','Poland','Paraguay'],
+  I:['Italy','Norway','Peru','DR Congo'],J:['Uruguay','Nigeria','Ivory Coast','Slovenia'],
+  K:['Serbia','Switzerland','Guatemala','Costa Rica'],L:['Denmark','Qatar','Algeria','Bolivia'],
 };
 
 let player = null, isAdmin = false;
@@ -220,8 +212,8 @@ async function doLogout() { await sb.auth.signOut(); location.reload(); }
 async function bootApp(user) {
   const {data: pRow} = await sb.from('players').select('name,is_admin').eq('id', user.id).single();
   const firstPart = user.email.split('@')[0].split('.')[0];
-  const displayName = pRow?.name || (firstPart.charAt(0).toUpperCase() + firstPart.slice(1));
-  player = {id: user.id, name: displayName, email: user.email, is_admin: pRow?.is_admin || user.email === ADMIN_EMAIL};
+  const displayName = pRow ? pRow.name : (firstPart.charAt(0).toUpperCase() + firstPart.slice(1));
+  player = {id: user.id, name: displayName, email: user.email, is_admin: (pRow && pRow.is_admin) || user.email === ADMIN_EMAIL};
   isAdmin = player.is_admin;
   document.getElementById('uname').textContent = displayName;
   if (isAdmin) {
@@ -244,13 +236,13 @@ async function loadAll() {
     sb.from('settings').select('*'),
   ]);
   matches = m.data || []; preds = pr.data || []; players = pl.data || []; settings = {};
-  (s.data || []).forEach(r => settings[r.key] = r.value);
+  (s.data || []).forEach(function(r) { settings[r.key] = r.value; });
 }
 
 function gotoPage(p) {
   if (pendingSave) { clearTimeout(asTimer); doAutosave(); }
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('nav button').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('page-' + p).classList.add('active');
   const navBtns = document.querySelectorAll('nav button');
   const idx = {lb:0, groups:1, pred:2, admin:3, settings:4}[p];
@@ -266,17 +258,17 @@ function gotoPage(p) {
 }
 
 function buildTabs() {
-  ['pred','admin'].forEach(prefix => {
+  ['pred','admin'].forEach(function(prefix) {
     const el = document.getElementById(prefix + '-tabs'); if (!el) return;
-    el.innerHTML = ROUNDS.map(r =>
-      '<button class="rtab' + (r.k === 'group' ? ' active' : '') + '" onclick="setRound(\'' + prefix + '\',\'' + r.k + '\',this)">' + r.l + '</button>'
-    ).join('');
+    el.innerHTML = ROUNDS.map(function(r) {
+      return '<button class="rtab' + (r.k === 'group' ? ' active' : '') + '" onclick="setRound(\'' + prefix + '\',\'' + r.k + '\',this)">' + r.l + '</button>';
+    }).join('');
   });
 }
 
 function setRound(prefix, k, btn) {
   if (prefix === 'pred') predRound = k; else adminRound = k;
-  document.getElementById(prefix + '-tabs').querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.getElementById(prefix + '-tabs').querySelectorAll('.rtab').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   if (prefix === 'pred') renderPred(); else renderAdmin();
 }
@@ -293,14 +285,22 @@ function calcScore(ph, pa, ah, aa, round) {
 }
 
 function getTeams(g) {
-  const fromMatches = [...new Set(matches.filter(m => m.group_letter === g && m.round === 'group').flatMap(m => [m.home_team, m.away_team]).filter(Boolean))];
-  return fromMatches.length >= 4 ? fromMatches : DEF_TEAMS[g] || [];
+  const fromMatches = [];
+  const seen = {};
+  matches.filter(function(m) { return m.group_letter === g && m.round === 'group'; }).forEach(function(m) {
+    if (m.home_team && !seen[m.home_team]) { seen[m.home_team] = 1; fromMatches.push(m.home_team); }
+    if (m.away_team && !seen[m.away_team]) { seen[m.away_team] = 1; fromMatches.push(m.away_team); }
+  });
+  return fromMatches.length >= 4 ? fromMatches : (DEF_TEAMS[g] || []);
 }
 
 function calcStandings() {
   const st = {};
-  GRP.forEach(g => { st[g] = {}; getTeams(g).forEach(t => { st[g][t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; }); });
-  matches.filter(m => m.round === 'group' && m.home_score != null).forEach(m => {
+  GRP.forEach(function(g) {
+    st[g] = {};
+    getTeams(g).forEach(function(t) { st[g][t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; });
+  });
+  matches.filter(function(m) { return m.round === 'group' && m.home_score != null; }).forEach(function(m) {
     const g = m.group_letter; if (!g || !st[g]) return;
     if (!st[g][m.home_team]) st[g][m.home_team] = {team:m.home_team,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0};
     if (!st[g][m.away_team]) st[g][m.away_team] = {team:m.away_team,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0};
@@ -311,23 +311,25 @@ function calcStandings() {
     else if (m.home_score < m.away_score) { a.w++; a.pts += 3; h.l++; }
     else { h.d++; h.pts++; a.d++; a.pts++; }
   });
-  GRP.forEach(g => { st[g] = Object.values(st[g]).sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.team.localeCompare(b.team)); });
+  GRP.forEach(function(g) {
+    st[g] = Object.values(st[g]).sort(function(a, b) { return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.team.localeCompare(b.team); });
+  });
   return st;
 }
 
 function renderGroups() {
   const st = calcStandings();
   let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">';
-  GRP.forEach(g => {
+  GRP.forEach(function(g) {
     const rows = st[g] || [];
-    const played = matches.filter(m => m.group_letter === g && m.home_score != null).length;
-    const total = matches.filter(m => m.group_letter === g).length;
+    const played = matches.filter(function(m) { return m.group_letter === g && m.home_score != null; }).length;
+    const total = matches.filter(function(m) { return m.group_letter === g; }).length;
     h += '<div class="section"><div class="sec-hdr"><span>Group ' + g + '</span><span style="font-size:.72rem;opacity:.75">' + played + '/' + total + ' played</span></div>';
     h += '<table><thead><tr><th class="num" style="width:22px">#</th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>';
-    rows.forEach((r, i) => {
-      const rk = i + 1;
-      const bg = rk === 1 ? 'background:#1F6BB0;color:#fff' : rk === 2 ? 'background:#5BA3D9;color:#fff' : rk === 3 ? 'background:#BDD7EE' : '';
-      h += '<tr style="' + bg + '"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.ga + '</td><td class="num">' + (r.gd > 0 ? '+' : '') + r.gd + '</td><td class="num" style="font-weight:700">' + r.pts + '</td></tr>';
+    rows.forEach(function(r, i) {
+      const rk = i+1;
+      const bg = rk===1 ? 'background:#1F6BB0;color:#fff' : rk===2 ? 'background:#5BA3D9;color:#fff' : rk===3 ? 'background:#BDD7EE' : '';
+      h += '<tr style="' + bg + '"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.ga + '</td><td class="num">' + (r.gd>0?'+':'') + r.gd + '</td><td class="num" style="font-weight:700">' + r.pts + '</td></tr>';
     });
     h += '</tbody></table></div>';
   });
@@ -336,12 +338,13 @@ function renderGroups() {
 
 async function renderLB() {
   document.getElementById('lb-content').innerHTML = '<div class="spin">Loading...</div>';
-  const {data: allPr} = await sb.from('predictions').select('*');
+  const res = await sb.from('predictions').select('*');
+  const allPr = res.data || [];
   const scores = {};
-  players.forEach(p => { scores[p.id] = {name: p.name, gs: 0, ko: 0, total: 0}; });
-  if (!scores[player.id]) scores[player.id] = {name: player.name, gs: 0, ko: 0, total: 0};
-  (allPr || []).forEach(pr => {
-    const m = matches.find(x => x.id === pr.match_id);
+  players.forEach(function(p) { scores[p.id] = {name:p.name, gs:0, ko:0, total:0}; });
+  if (!scores[player.id]) scores[player.id] = {name:player.name, gs:0, ko:0, total:0};
+  allPr.forEach(function(pr) {
+    const m = matches.find(function(x) { return x.id === pr.match_id; });
     if (!m || m.home_score == null || !scores[pr.player_id]) return;
     const pts = calcScore(pr.home_score, pr.away_score, m.home_score, m.away_score, m.round);
     if (pts != null) {
@@ -349,15 +352,16 @@ async function renderLB() {
       scores[pr.player_id].total += pts;
     }
   });
-  const ranked = Object.values(scores).sort((a, b) => b.total - a.total);
-  const leader = ranked[0]?.total || 0;
-  const played = matches.filter(m => m.home_score != null).length;
-  let h = '<div class="lb-card"><div class="lb-hdr">World Cup 2026 — Family Standings</div>';
-  ranked.forEach((s, i) => {
-    const rank = i + 1;
-    const cls = rank <= 3 ? ' r' + rank : '';
+  const ranked = Object.values(scores).sort(function(a,b) { return b.total-a.total; });
+  const leader = ranked[0] ? ranked[0].total : 0;
+  const played = matches.filter(function(m) { return m.home_score != null; }).length;
+  let h = '<div class="lb-card"><div class="lb-hdr">World Cup 2026 - Family Standings</div>';
+  ranked.forEach(function(s, i) {
+    const rank = i+1;
+    const cls = rank <= 3 ? ' r'+rank : '';
     const gap = rank === 1 ? 'Leader' : (s.total - leader) + ' pts';
-    h += '<div class="lb-row' + cls + '"><div style="font-size:1.4rem;width:36px;text-align:center">' + (MEDALS[rank] || rank) + '</div>';
+    h += '<div class="lb-row'+cls+'">';
+    h += '<div style="font-size:1.4rem;width:36px;text-align:center">' + (MEDALS[rank] || rank) + '</div>';
     h += '<div style="flex:1"><div class="lb-name">' + s.name + '</div><div class="lb-sub">Group: ' + s.gs + ' pts | KO: ' + s.ko + ' pts</div></div>';
     h += '<div style="text-align:right"><div class="lb-pts">' + s.total + ' <small style="font-size:.6rem;color:#999">pts</small></div><div style="font-size:.75rem;color:#999">' + gap + '</div></div></div>';
   });
@@ -367,23 +371,25 @@ async function renderLB() {
 
 function renderPred() {
   if (predRound !== 'group' && !settings['unlock_' + predRound]) {
-    const rLabel = ROUNDS.find(r => r.k === predRound)?.l || predRound;
-    document.getElementById('pred-content').innerHTML = '<div style="text-align:center;padding:40px;color:#999"><div style="font-size:2rem;margin-bottom:12px">&#x1F512;</div><div style="font-size:1rem;font-weight:700;color:#1A3A5C">' + rLabel + ' predictions not open yet</div><div style="font-size:.82rem;margin-top:8px">Lasse will unlock this round when it\'s time.</div></div>';
+    const rLabel = (ROUNDS.find(function(r) { return r.k === predRound; }) || {}).l || predRound;
+    document.getElementById('pred-content').innerHTML = '<div style="text-align:center;padding:40px;color:#999"><div style="font-size:2rem;margin-bottom:12px">&#128274;</div><div style="font-size:1rem;font-weight:700;color:#1A3A5C">' + rLabel + ' predictions not open yet</div><div style="font-size:.82rem;margin-top:8px">Lasse will unlock this round when it\'s time.</div></div>';
     return;
   }
-  const ms = matches.filter(m => m.round === predRound);
+  const ms = matches.filter(function(m) { return m.round === predRound; });
   if (!ms.length) { document.getElementById('pred-content').innerHTML = '<div class="section"><div style="padding:20px;text-align:center;color:#999">No matches in this round yet.</div></div>'; return; }
-  const pm = {}; preds.forEach(p => { pm[p.match_id] = p; });
+  const pm = {};
+  preds.forEach(function(p) { pm[p.match_id] = p; });
   const st = calcStandings();
   let h = '';
   if (predRound === 'group') {
-    const byG = {}; ms.forEach(m => { const g = m.group_letter || '?'; if (!byG[g]) byG[g] = []; byG[g].push(m); });
-    GRP.forEach(g => {
+    const byG = {};
+    ms.forEach(function(m) { const g = m.group_letter || '?'; if (!byG[g]) byG[g] = []; byG[g].push(m); });
+    GRP.forEach(function(g) {
       if (!byG[g]) return;
       h += '<div class="section"><div class="sec-hdr">Group ' + g + '</div>';
       h += '<div class="pred-group-inner">';
       h += '<div class="pred-matches">' + buildPredTable(byG[g], pm, true) + '</div>';
-      h += '<div class="pred-standings" style="overflow:hidden">' + buildPredStTable(g, pm, st[g] || []) + '</div>';
+      h += '<div class="pred-standings">' + buildPredStTable(g, pm, st[g] || []) + '</div>';
       h += '</div></div>';
     });
   } else {
@@ -394,27 +400,49 @@ function renderPred() {
 }
 
 function buildPredStTable(grp, pm, actualSt) {
-  let h = '<table><thead><tr>' +
-    '<th class="num" style="width:22px">#</th>' +
-    '<th class="tl"><span style="display:block;font-size:.63rem;font-weight:400;opacity:.8;letter-spacing:.02em;margin-bottom:1px">Predicted standings</span>Team</th>' +
-    '<th>P</th><th>Pts</th><th>GD</th><th>Actual</th>' +
-    '</tr></thead><tbody>';
-';
-  sorted.forEach((r, i) => {
-    const rk = i + 1;
-    const bg = COLS[Math.min(rk - 1, 3)];
-    const tc = rk <= 2 ? 'color:#fff' : '';
-    const noPred = sorted.every(x => x.p === 0);
-    const aR = aRank[r.team] ? '#' + aRank[r.team] : '-';
-    h += '<tr style="background:' + bg + ';' + tc + '"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num" style="font-weight:700">' + (noPred ? '-' : r.pts) + '</td><td class="num">' + (noPred ? '-' : (r.gd > 0 ? '+' : '') + r.gd) + '</td><td class="num">' + aR + '</td></tr>';
+  const teams = getTeams(grp);
+  const pst = {};
+  teams.forEach(function(t) { pst[t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; });
+  matches.filter(function(m) { return m.group_letter === grp && m.round === 'group'; }).forEach(function(m) {
+    const pr = pm[m.id]; if (!pr || pr.home_score == null) return;
+    const h = pst[m.home_team], a = pst[m.away_team]; if (!h || !a) return;
+    h.p++; a.p++; h.gf += pr.home_score; h.ga += pr.away_score; h.gd = h.gf - h.ga;
+    a.gf += pr.away_score; a.ga += pr.home_score; a.gd = a.gf - a.ga;
+    if (pr.home_score > pr.away_score) { h.w++; h.pts += 3; a.l++; }
+    else if (pr.home_score < pr.away_score) { a.w++; a.pts += 3; h.l++; }
+    else { h.d++; h.pts++; a.d++; a.pts++; }
   });
-  return h + '</tbody></table></div>';
+  const sorted = Object.values(pst).sort(function(a,b) { return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.team.localeCompare(b.team); });
+  const aRank = {};
+  actualSt.forEach(function(r, i) { aRank[r.team] = i+1; });
+  const COLS = ['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];
+  let h = '<table><thead><tr>';
+  h += '<th class="num" style="width:22px">#</th>';
+  h += '<th class="tl"><span style="display:block;font-size:.63rem;font-weight:400;opacity:.8;letter-spacing:.02em;margin-bottom:1px">Predicted standings</span>Team</th>';
+  h += '<th>P</th><th>Pts</th><th>GD</th><th>Actual</th>';
+  h += '</tr></thead><tbody>';
+  sorted.forEach(function(r, i) {
+    const rk = i+1;
+    const bg = COLS[Math.min(rk-1,3)];
+    const tc = rk <= 2 ? 'color:#fff' : '';
+    const noPred = sorted.every(function(x) { return x.p === 0; });
+    const aR = aRank[r.team] ? '#'+aRank[r.team] : '-';
+    h += '<tr style="background:' + bg + ';' + tc + '"><td class="num" style="font-weight:700">' + rk + '</td>';
+    h += '<td style="font-weight:600">' + r.team + '</td>';
+    h += '<td class="num">' + r.p + '</td>';
+    h += '<td class="num" style="font-weight:700">' + (noPred ? '-' : r.pts) + '</td>';
+    h += '<td class="num">' + (noPred ? '-' : (r.gd>0?'+':'') + r.gd) + '</td>';
+    h += '<td class="num">' + aR + '</td></tr>';
+  });
+  return h + '</tbody></table>';
 }
 
 function buildPredTable(ms, pm, isGS) {
   let h = '<table><thead><tr><th class="tl">Match</th><th class="tl">Home</th><th>H</th><th>A</th><th class="tl">Away</th>' + (!isGS ? '<th>ET</th>' : '') + '<th>Pts</th><th>Actual</th></tr></thead><tbody>';
-  ms.forEach(m => {
-    const pr = pm[m.id], ph = pr?.home_score ?? '', pa = pr?.away_score ?? '';
+  ms.forEach(function(m) {
+    const pr = pm[m.id];
+    const ph = pr ? (pr.home_score != null ? pr.home_score : '') : '';
+    const pa = pr ? (pr.away_score != null ? pr.away_score : '') : '';
     const ah = m.home_score, aa = m.away_score;
     const ep = +(settings[isGS ? 'gs_exact' : 'ko_exact'] || 5);
     let pts = '-', ptsStyle = 'color:#999';
@@ -422,15 +450,19 @@ function buildPredTable(ms, pm, isGS) {
       const p = calcScore(+ph, +pa, ah, aa, m.round);
       pts = p; ptsStyle = p === ep ? 'color:#2D7A2D;font-weight:700' : p > 0 ? 'color:#B07800;font-weight:700' : 'color:#C9041C;font-weight:700';
     }
-    const actHtml = ah != null ? '<span style="background:' + (ah > aa ? '#D6EAF8' : ah < aa ? '#FDE8E8' : '#F5F5F5') + ';padding:2px 5px;border-radius:4px;font-weight:700">' + ah + '-' + aa + '</span>' : '-';
+    const actHtml = ah != null ? '<span style="background:' + (ah>aa?'#D6EAF8':ah<aa?'#FDE8E8':'#F5F5F5') + ';padding:2px 5px;border-radius:4px;font-weight:700">' + ah + '-' + aa + '</span>' : '-';
     const isDraw = ph !== '' && pa !== '' && +ph === +pa;
-    h += '<tr><td style="font-size:.75rem;color:#999">M' + m.match_number + '<br><small>' + (m.match_date || '') + '</small></td>';
-    h += '<td class="tc' + (!m.home_team || m.home_team.startsWith('Winner') || m.home_team.startsWith('Runner') || m.home_team.startsWith('Best') || m.home_team.startsWith('Loser') ? ' tbd' : '') + '">' + (m.home_team || 'TBD') + '</td>';
-    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="' + m.id + '" data-side="h" value="' + ph + '" oninput="onPredInput(this)"></td>';
-    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="' + m.id + '" data-side="a" value="' + pa + '" oninput="onPredInput(this)"></td>';
-    h += '<td class="tc' + (!m.away_team || m.away_team.startsWith('Winner') || m.away_team.startsWith('Runner') || m.away_team.startsWith('Best') || m.away_team.startsWith('Loser') ? ' tbd' : '') + '">' + (m.away_team || 'TBD') + '</td>';
-    if (!isGS) h += '<td class="num"><select class="et" data-mid="' + m.id + '" data-side="et"' + (isDraw ? '' : ' disabled') + '><option value="">-</option><option value="H"' + (pr?.et_winner === 'H' ? ' selected' : '') + '>H</option><option value="A"' + (pr?.et_winner === 'A' ? ' selected' : '') + '>A</option></select></td>';
-    h += '<td class="num" style="' + ptsStyle + '">' + pts + '</td><td class="num">' + actHtml + '</td></tr>';
+    const htbd = !m.home_team || m.home_team.indexOf('Winner')===0 || m.home_team.indexOf('Runner')===0 || m.home_team.indexOf('Best')===0 || m.home_team.indexOf('Loser')===0;
+    const atbd = !m.away_team || m.away_team.indexOf('Winner')===0 || m.away_team.indexOf('Runner')===0 || m.away_team.indexOf('Best')===0 || m.away_team.indexOf('Loser')===0;
+    h += '<tr>';
+    h += '<td style="font-size:.75rem;color:#999">M'+m.match_number+'<br><small>'+(m.match_date||'')+'</small></td>';
+    h += '<td class="tc' + (htbd?' tbd':'') + '">' + (m.home_team||'TBD') + '</td>';
+    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="'+m.id+'" data-side="h" value="'+ph+'" oninput="onPredInput(this)"></td>';
+    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="'+m.id+'" data-side="a" value="'+pa+'" oninput="onPredInput(this)"></td>';
+    h += '<td class="tc' + (atbd?' tbd':'') + '">' + (m.away_team||'TBD') + '</td>';
+    if (!isGS) h += '<td class="num"><select class="et" data-mid="'+m.id+'" data-side="et"' + (isDraw?'':' disabled') + '><option value="">-</option><option value="H"' + (pr&&pr.et_winner==='H'?' selected':'') + '>H</option><option value="A"' + (pr&&pr.et_winner==='A'?' selected':'') + '>A</option></select></td>';
+    h += '<td class="num" style="' + ptsStyle + '">' + pts + '</td>';
+    h += '<td class="num">' + actHtml + '</td></tr>';
   });
   return h + '</tbody></table>';
 }
@@ -438,101 +470,104 @@ function buildPredTable(ms, pm, isGS) {
 function onPredInput(el) {
   const row = el.closest('tr');
   const hEl = row.querySelector('[data-side="h"]'), aEl = row.querySelector('[data-side="a"]'), etEl = row.querySelector('[data-side="et"]');
-  if (etEl) { const d = hEl.value !== '' && aEl.value !== '' && +hEl.value === +aEl.value; etEl.disabled = !d; if (!d) etEl.value = ''; }
+  if (etEl) { const d = hEl.value!==''&&aEl.value!==''&&+hEl.value===+aEl.value; etEl.disabled=!d; if(!d)etEl.value=''; }
   scheduleAS();
 }
 
 function setAS(state, text) {
   const dot = document.getElementById('asdot'), txt = document.getElementById('astext');
-  dot.className = 'asdot' + (state === 'saving' ? ' saving' : state === 'saved' ? ' saved' : '');
-  txt.textContent = text || (state === 'saving' ? 'Saving...' : 'All changes saved');
+  dot.className = 'asdot' + (state==='saving'?' saving':state==='saved'?' saved':'');
+  txt.textContent = text || (state==='saving' ? 'Saving...' : 'All changes saved');
 }
-function scheduleAS() { pendingSave = true; setAS('saving', 'Unsaved changes...'); clearTimeout(asTimer); asTimer = setTimeout(doAutosave, 2000); }
-async function doAutosave() { pendingSave = false; await savePred(false); }
+function scheduleAS() { pendingSave=true; setAS('saving','Unsaved changes...'); clearTimeout(asTimer); asTimer=setTimeout(doAutosave,2000); }
+async function doAutosave() { pendingSave=false; await savePred(false); }
 
 async function savePred(showFb) {
-  setAS('saving', 'Saving...');
+  setAS('saving','Saving...');
   const rows = [];
-  document.querySelectorAll('#pred-content [data-side="h"]').forEach(hEl => {
-    if (hEl.value === '') return;
+  document.querySelectorAll('#pred-content [data-side="h"]').forEach(function(hEl) {
+    if (hEl.value==='') return;
     const row = hEl.closest('tr'), aEl = row.querySelector('[data-side="a"]'), etEl = row.querySelector('[data-side="et"]');
-    if (aEl.value === '') return;
-    rows.push({player_id: player.id, match_id: +hEl.dataset.mid, home_score: +hEl.value, away_score: +aEl.value, et_winner: etEl?.value || null});
+    if (aEl.value==='') return;
+    rows.push({player_id:player.id, match_id:+hEl.dataset.mid, home_score:+hEl.value, away_score:+aEl.value, et_winner:(etEl&&etEl.value)||null});
   });
   if (!rows.length) { setAS('saved'); return; }
-  const {error} = await sb.from('predictions').upsert(rows, {onConflict: 'player_id,match_id'});
-  if (error) { setAS('', 'Error: ' + error.message); return; }
-  const {data} = await sb.from('predictions').select('*').eq('player_id', player.id);
-  preds = data || [];
-  setAS('saved', 'Saved');
-  if (showFb) setTimeout(() => setAS('idle'), 3000);
+  const {error} = await sb.from('predictions').upsert(rows, {onConflict:'player_id,match_id'});
+  if (error) { setAS('','Error: '+error.message); return; }
+  const res = await sb.from('predictions').select('*').eq('player_id', player.id);
+  preds = res.data || [];
+  setAS('saved','Saved');
+  if (showFb) setTimeout(function() { setAS('idle'); }, 3000);
 }
 
 function renderAdmin() {
-  const ms = matches.filter(m => m.round === adminRound);
-  if (!ms.length) { document.getElementById('admin-content').innerHTML = '<div class="section"><div style="padding:20px;text-align:center;color:#999">No matches in this round yet.</div></div>'; return; }
+  const ms = matches.filter(function(m) { return m.round===adminRound; });
+  if (!ms.length) { document.getElementById('admin-content').innerHTML='<div class="section"><div style="padding:20px;text-align:center;color:#999">No matches in this round yet.</div></div>'; return; }
   let h = '<div class="section"><table><thead><tr><th class="tl">Match</th><th class="tl">Home</th><th>HG</th><th>AG</th><th class="tl">Away</th><th>ET</th><th>Done</th></tr></thead><tbody>';
-  ms.forEach(m => {
+  ms.forEach(function(m) {
     const played = m.home_score != null;
-    const isDraw = played && m.home_score === m.away_score && adminRound !== 'group';
-    h += '<tr><td style="font-size:.75rem;color:#999">M' + m.match_number + '<br><small>' + (m.match_date || '') + '</small></td>';
-    h += '<td class="tc">' + (m.home_team || 'TBD') + '</td>';
-    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="' + m.id + '" data-side="h" value="' + (m.home_score ?? '') + '" style="background:' + (played ? '#D6EAF8' : '#C6EFCE') + '" oninput="onAdminInput(this)"></td>';
-    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="' + m.id + '" data-side="a" value="' + (m.away_score ?? '') + '" style="background:' + (played ? '#D6EAF8' : '#C6EFCE') + '" oninput="onAdminInput(this)"></td>';
-    h += '<td class="tc">' + (m.away_team || 'TBD') + '</td>';
-    h += '<td class="num"><select class="et" data-mid="' + m.id + '" data-side="et"' + (isDraw ? '' : ' disabled') + '><option value="">-</option><option value="H"' + (m.et_winner === 'H' ? ' selected' : '') + '>H</option><option value="A"' + (m.et_winner === 'A' ? ' selected' : '') + '>A</option></select></td>';
-    h += '<td style="text-align:center;font-size:.8rem">' + (played ? 'Yes' : '-') + '</td></tr>';
+    const isDraw = played && m.home_score===m.away_score && adminRound!=='group';
+    h += '<tr>';
+    h += '<td style="font-size:.75rem;color:#999">M'+m.match_number+'<br><small>'+(m.match_date||'')+'</small></td>';
+    h += '<td class="tc">'+(m.home_team||'TBD')+'</td>';
+    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="'+m.id+'" data-side="h" value="'+(m.home_score!=null?m.home_score:'')+'" style="background:'+(played?'#D6EAF8':'#C6EFCE')+'" oninput="onAdminInput(this)"></td>';
+    h += '<td class="num"><input class="si" type="number" min="0" max="20" data-mid="'+m.id+'" data-side="a" value="'+(m.away_score!=null?m.away_score:'')+'" style="background:'+(played?'#D6EAF8':'#C6EFCE')+'" oninput="onAdminInput(this)"></td>';
+    h += '<td class="tc">'+(m.away_team||'TBD')+'</td>';
+    h += '<td class="num"><select class="et" data-mid="'+m.id+'" data-side="et"'+(isDraw?'':' disabled')+'><option value="">-</option><option value="H"'+(m.et_winner==='H'?' selected':'')+'>H</option><option value="A"'+(m.et_winner==='A'?' selected':'')+'>A</option></select></td>';
+    h += '<td style="text-align:center;font-size:.8rem">'+(played?'Yes':'-')+'</td></tr>';
   });
   h += '</tbody></table></div>';
   document.getElementById('admin-content').innerHTML = h;
 }
 
 function onAdminInput(el) {
-  const row = el.closest('tr'), hEl = row.querySelector('[data-side="h"]'), aEl = row.querySelector('[data-side="a"]'), etEl = row.querySelector('[data-side="et"]');
-  if (etEl && adminRound !== 'group') { const d = hEl.value !== '' && aEl.value !== '' && +hEl.value === +aEl.value; etEl.disabled = !d; if (!d) etEl.value = ''; }
+  const row=el.closest('tr'),hEl=row.querySelector('[data-side="h"]'),aEl=row.querySelector('[data-side="a"]'),etEl=row.querySelector('[data-side="et"]');
+  if (etEl&&adminRound!=='group') { const d=hEl.value!==''&&aEl.value!==''&&+hEl.value===+aEl.value; etEl.disabled=!d; if(!d)etEl.value=''; }
 }
 
 async function saveResults() {
   const st = document.getElementById('admin-status');
-  st.textContent = 'Saving...'; st.className = 'sstatus';
+  st.textContent='Saving...'; st.className='sstatus';
   const updates = [];
-  document.querySelectorAll('#admin-content [data-side="h"]').forEach(hEl => {
-    if (hEl.value === '') return;
-    const row = hEl.closest('tr'), aEl = row.querySelector('[data-side="a"]'), etEl = row.querySelector('[data-side="et"]');
-    if (aEl.value === '') return;
-    updates.push({id: +hEl.dataset.mid, home_score: +hEl.value, away_score: +aEl.value, et_winner: etEl?.value || null, status: 'played'});
+  document.querySelectorAll('#admin-content [data-side="h"]').forEach(function(hEl) {
+    if (hEl.value==='') return;
+    const row=hEl.closest('tr'),aEl=row.querySelector('[data-side="a"]'),etEl=row.querySelector('[data-side="et"]');
+    if (aEl.value==='') return;
+    updates.push({id:+hEl.dataset.mid, home_score:+hEl.value, away_score:+aEl.value, et_winner:(etEl&&etEl.value)||null, status:'played'});
   });
-  if (!updates.length) { st.textContent = 'Nothing to save.'; return; }
-  for (const u of updates) {
-    const {error} = await sb.from('matches').update({home_score: u.home_score, away_score: u.away_score, et_winner: u.et_winner, status: u.status}).eq('id', u.id);
-    if (error) { st.textContent = 'Error: ' + error.message; return; }
+  if (!updates.length) { st.textContent='Nothing to save.'; return; }
+  for (let i=0;i<updates.length;i++) {
+    const u = updates[i];
+    const {error} = await sb.from('matches').update({home_score:u.home_score,away_score:u.away_score,et_winner:u.et_winner,status:u.status}).eq('id',u.id);
+    if (error) { st.textContent='Error: '+error.message; return; }
   }
-  const {data} = await sb.from('matches').select('*').order('match_number');
-  matches = data || [];
-  st.textContent = 'Saved!'; st.className = 'sstatus ok';
+  const res = await sb.from('matches').select('*').order('match_number');
+  matches = res.data || [];
+  st.textContent='Saved!'; st.className='sstatus ok';
   renderAdmin();
-  setTimeout(() => { st.textContent = ''; }, 3000);
+  setTimeout(function() { st.textContent=''; }, 3000);
 }
 
 function renderSettings() {
   document.getElementById('settings-savebar').style.display = 'flex';
   let h = '';
 
-  // Players
   h += '<div class="ss"><h3>Players &amp; Invitations</h3>';
   h += '<p style="font-size:.78rem;color:#666;margin-bottom:12px">Add name and email, click Send Invite. They receive a magic login link by email.</p>';
   h += '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1A3A5C;color:#fff"><th style="padding:7px 10px;text-align:left;font-size:.75rem">Name</th><th style="padding:7px 10px;text-align:left;font-size:.75rem">Email</th><th style="padding:7px 10px;font-size:.75rem">Status</th><th style="padding:7px 10px;font-size:.75rem">Actions</th></tr></thead><tbody id="players-tbody">';
-  players.forEach(p => {
+  players.forEach(function(p) {
     const isMe = p.id === player.id;
-    h += '<tr style="border-bottom:1px solid #E4EEF7"><td style="padding:6px 8px"><input style="width:110px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" value="' + (p.name || '') + '" data-field="name" ' + (isMe ? 'readonly' : '') + '></td>';
-    h += '<td style="padding:6px 8px"><input style="width:190px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" value="' + (p.email || '') + '" data-field="email" ' + (isMe ? 'readonly' : '') + '></td>';
+    h += '<tr style="border-bottom:1px solid #E4EEF7">';
+    h += '<td style="padding:6px 8px"><input style="width:110px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" value="'+(p.name||'')+'" data-field="name"'+(isMe?' readonly':'')+'></td>';
+    h += '<td style="padding:6px 8px"><input style="width:190px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" value="'+(p.email||'')+'" data-field="email"'+(isMe?' readonly':'')+'></td>';
     h += '<td style="padding:6px 8px;text-align:center"><span style="background:#C6EFCE;color:#1A5C1A;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">Active</span></td>';
-    h += '<td style="padding:6px 8px;display:flex;gap:5px"><button class="btn-sm" onclick="sendInvite(this)">Re-invite</button>' + (!isMe ? '<button class="btn-del" onclick="removePlayer(this)" data-pid="' + p.id + '" data-email="' + p.email + '">Remove</button>' : '') + '</td></tr>';
+    h += '<td style="padding:6px 8px;display:flex;gap:5px"><button class="btn-sm" onclick="sendInvite(this)">Re-invite</button>';
+    if (!isMe) h += '<button class="btn-del" onclick="removePlayer(this)" data-pid="'+p.id+'" data-email="'+p.email+'">Remove</button>';
+    h += '</td></tr>';
   });
   h += '</tbody></table><div id="invite-msg"></div>';
   h += '<button style="background:#2D7A2D;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:10px" onclick="addPlayerRow()">+ Add Player</button></div>';
 
-  // Scoring
   const SCORES = [
     {key:'gs_exact',label:'Group Stage Exact Score'},{key:'gs_result',label:'Group Stage Correct Result'},
     {key:'ko_exact',label:'Knockout Exact Score'},{key:'ko_result',label:'Knockout Correct Result'},
@@ -541,24 +576,22 @@ function renderSettings() {
     {key:'bonus_champion',label:'Champion Bonus'},{key:'bonus_bronze',label:'Bronze Bonus'},
   ];
   h += '<div class="ss"><h3>Scoring System</h3><div class="sg">';
-  SCORES.forEach(s => {
-    h += '<div><label style="display:block;font-size:.78rem;font-weight:700;color:#666;margin-bottom:6px">' + s.label + '</label><input class="si2" type="number" min="0" max="20" data-key="' + s.key + '" value="' + (settings[s.key] || '') + '"></div>';
+  SCORES.forEach(function(s) {
+    h += '<div><label style="display:block;font-size:.78rem;font-weight:700;color:#666;margin-bottom:6px">'+s.label+'</label><input class="si2" type="number" min="0" max="20" data-key="'+s.key+'" value="'+(settings[s.key]||'')+'"></div>';
   });
   h += '</div></div>';
 
-  // Team Names by Group
   h += '<div class="ss"><h3>Team Names by Group</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">';
-  GRP.forEach(g => {
+  GRP.forEach(function(g) {
     const teams = getTeams(g);
-    h += '<div class="tc-card"><h4 style="font-size:.82rem;font-weight:700;color:#0D2137;margin-bottom:8px">Group ' + g + '</h4>';
-    for (let i = 0; i < 4; i++) {
-      h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:.72rem;color:#999;width:16px">' + (i+1) + '</span><input class="ti" type="text" data-group="' + g + '" data-pos="' + i + '" value="' + (teams[i] || '') + '"></div>';
+    h += '<div class="tc-card"><h4 style="font-size:.82rem;font-weight:700;color:#0D2137;margin-bottom:8px">Group '+g+'</h4>';
+    for (let i=0;i<4;i++) {
+      h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:.72rem;color:#999;width:16px">'+(i+1)+'</span><input class="ti" type="text" data-group="'+g+'" data-pos="'+i+'" value="'+(teams[i]||'')+'"></div>';
     }
     h += '</div>';
   });
   h += '</div></div>';
 
-  // Round Unlock Toggles
   const KO_INFO = [
     {k:'R32',l:'Round of 32',d:'Jun 28 - Jul 3'},{k:'R16',l:'Round of 16',d:'Jul 4-7'},
     {k:'QF',l:'Quarter-Finals',d:'Jul 9-11'},{k:'SF',l:'Semi-Finals',d:'Jul 14-15'},
@@ -566,27 +599,27 @@ function renderSettings() {
   ];
   h += '<div class="ss"><h3>Round Unlock</h3><p style="font-size:.78rem;color:#666;margin-bottom:12px">Toggle each KO round on to allow players to submit predictions.</p>';
   h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">';
-  KO_INFO.forEach(r => {
-    const unlocked = settings['unlock_' + r.k] == 1 || settings['unlock_' + r.k] === '1';
-    h += '<div style="background:' + (unlocked ? '#C6EFCE' : '#F8FBFF') + ';border:2px solid ' + (unlocked ? '#2D7A2D' : '#9DC3E6') + ';border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center" id="unlock-card-' + r.k + '">';
-    h += '<div><div style="font-weight:700;font-size:.85rem">' + r.l + '</div><div style="font-size:.72rem;color:#666">' + r.d + '</div></div>';
-    h += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><span style="font-size:.78rem;color:' + (unlocked ? '#2D7A2D' : '#999') + '" id="unlock-lbl-' + r.k + '">' + (unlocked ? 'Open' : 'Locked') + '</span>';
-    h += '<input type="checkbox" data-key="unlock_' + r.k + '" ' + (unlocked ? 'checked' : '') + ' onchange="saveRoundToggle(this)" style="width:18px;height:18px;cursor:pointer"></label></div>';
+  KO_INFO.forEach(function(r) {
+    const unlocked = settings['unlock_'+r.k]==1 || settings['unlock_'+r.k]==='1';
+    h += '<div style="background:'+(unlocked?'#C6EFCE':'#F8FBFF')+';border:2px solid '+(unlocked?'#2D7A2D':'#9DC3E6')+';border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center" id="unlock-card-'+r.k+'">';
+    h += '<div><div style="font-weight:700;font-size:.85rem">'+r.l+'</div><div style="font-size:.72rem;color:#666">'+r.d+'</div></div>';
+    h += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><span style="font-size:.78rem;color:'+(unlocked?'#2D7A2D':'#999')+'" id="unlock-lbl-'+r.k+'">'+(unlocked?'Open':'Locked')+'</span>';
+    h += '<input type="checkbox" data-key="unlock_'+r.k+'" '+(unlocked?'checked':'')+' onchange="saveRoundToggle(this)" style="width:18px;height:18px;cursor:pointer"></label></div>';
   });
   h += '</div></div>';
 
-  // KO Team Names
-  KO_INFO.forEach(r => {
-    const ms = matches.filter(m => m.round === r.k).sort((a, b) => a.match_number - b.match_number);
+  KO_INFO.forEach(function(r) {
+    const ms = matches.filter(function(m) { return m.round===r.k; }).sort(function(a,b) { return a.match_number-b.match_number; });
     if (!ms.length) return;
-    h += '<div class="ss"><h3>' + r.l + ' - Update Team Names</h3>';
+    h += '<div class="ss"><h3>'+r.l+' - Update Team Names</h3>';
     h += '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1A3A5C;color:#fff"><th style="padding:6px 8px;font-size:.73rem;text-align:center">M#</th><th style="padding:6px 8px;font-size:.73rem;text-align:left">Date</th><th style="padding:6px 8px;font-size:.73rem">Home</th><th style="padding:6px 8px;font-size:.73rem;text-align:center">vs</th><th style="padding:6px 8px;font-size:.73rem">Away</th></tr></thead><tbody>';
-    ms.forEach((m, i) => {
-      h += '<tr style="background:' + (i % 2 === 0 ? '#fff' : '#EBF4FB') + '"><td style="padding:6px 8px;text-align:center;font-weight:700;font-size:.78rem">M' + m.match_number + '</td>';
-      h += '<td style="padding:6px 8px;font-size:.78rem;color:#666">' + (m.match_date || '') + '</td>';
-      h += '<td style="padding:6px 8px"><input class="ti" style="width:160px" data-mid="' + m.id + '" data-side="ht" value="' + (m.home_team || '') + '"></td>';
+    ms.forEach(function(m, i) {
+      h += '<tr style="background:'+(i%2===0?'#fff':'#EBF4FB')+'">';
+      h += '<td style="padding:6px 8px;text-align:center;font-weight:700;font-size:.78rem">M'+m.match_number+'</td>';
+      h += '<td style="padding:6px 8px;font-size:.78rem;color:#666">'+(m.match_date||'')+'</td>';
+      h += '<td style="padding:6px 8px"><input class="ti" style="width:160px" data-mid="'+m.id+'" data-side="ht" value="'+(m.home_team||'')+'"></td>';
       h += '<td style="padding:6px 8px;text-align:center;color:#999">vs</td>';
-      h += '<td style="padding:6px 8px"><input class="ti" style="width:160px" data-mid="' + m.id + '" data-side="at" value="' + (m.away_team || '') + '"></td></tr>';
+      h += '<td style="padding:6px 8px"><input class="ti" style="width:160px" data-mid="'+m.id+'" data-side="at" value="'+(m.away_team||'')+'"></td></tr>';
     });
     h += '</tbody></table></div>';
   });
@@ -596,59 +629,66 @@ function renderSettings() {
 
 async function saveRoundToggle(cb) {
   const key = cb.dataset.key, val = cb.checked ? 1 : 0;
-  const {error} = await sb.from('settings').upsert({key, value: val}, {onConflict: 'key'});
-  if (error) { alert('Error: ' + error.message); cb.checked = !cb.checked; return; }
+  const {error} = await sb.from('settings').upsert({key:key, value:val}, {onConflict:'key'});
+  if (error) { alert('Error: '+error.message); cb.checked=!cb.checked; return; }
   settings[key] = val;
-  const rk = key.replace('unlock_', '');
-  const card = document.getElementById('unlock-card-' + rk);
-  const lbl = document.getElementById('unlock-lbl-' + rk);
-  if (card) { card.style.background = val ? '#C6EFCE' : '#F8FBFF'; card.style.border = '2px solid ' + (val ? '#2D7A2D' : '#9DC3E6'); }
-  if (lbl) { lbl.textContent = val ? 'Open' : 'Locked'; lbl.style.color = val ? '#2D7A2D' : '#999'; }
+  const rk = key.replace('unlock_','');
+  const card = document.getElementById('unlock-card-'+rk);
+  const lbl = document.getElementById('unlock-lbl-'+rk);
+  if (card) { card.style.background=val?'#C6EFCE':'#F8FBFF'; card.style.border='2px solid '+(val?'#2D7A2D':'#9DC3E6'); }
+  if (lbl) { lbl.textContent=val?'Open':'Locked'; lbl.style.color=val?'#2D7A2D':'#999'; }
 }
 
 async function saveAllSettings() {
   const st = document.getElementById('settings-status');
-  st.textContent = 'Saving...'; st.className = 'sstatus';
-  for (const el of document.querySelectorAll('.si2')) {
-    if (el.value === '') continue;
-    const {error} = await sb.from('settings').upsert({key: el.dataset.key, value: +el.value}, {onConflict: 'key'});
-    if (error) { st.textContent = 'Error: ' + error.message; return; }
+  st.textContent='Saving...'; st.className='sstatus';
+  const si2s = document.querySelectorAll('.si2');
+  for (let i=0;i<si2s.length;i++) {
+    const el = si2s[i];
+    if (!el.value) continue;
+    const {error} = await sb.from('settings').upsert({key:el.dataset.key, value:+el.value}, {onConflict:'key'});
+    if (error) { st.textContent='Error: '+error.message; return; }
     settings[el.dataset.key] = +el.value;
   }
   const teamInputs = document.querySelectorAll('.ti[data-group]');
   const byGroup = {};
-  teamInputs.forEach(el => { const g = el.dataset.group, pos = +el.dataset.pos, name = el.value.trim(); if (!g) return; if (!byGroup[g]) byGroup[g] = []; byGroup[g][pos] = name; });
-  for (const [g, teams] of Object.entries(byGroup)) {
-    const currentTeams = getTeams(g);
-    const grpMs = matches.filter(m => m.group_letter === g && m.round === 'group');
-    for (let i = 0; i < 4 && i < teams.length; i++) {
-      if (!teams[i] || teams[i] === currentTeams[i]) continue;
-      for (const m of grpMs.filter(m => m.home_team === currentTeams[i] || m.away_team === currentTeams[i])) {
+  teamInputs.forEach(function(el) { const g=el.dataset.group,pos=+el.dataset.pos,nm=el.value.trim(); if(!g)return; if(!byGroup[g])byGroup[g]=[]; byGroup[g][pos]=nm; });
+  const gKeys = Object.keys(byGroup);
+  for (let gi=0;gi<gKeys.length;gi++) {
+    const g = gKeys[gi], teams = byGroup[g], currentTeams = getTeams(g);
+    const grpMs = matches.filter(function(m) { return m.group_letter===g && m.round==='group'; });
+    for (let i=0;i<4&&i<teams.length;i++) {
+      if (!teams[i] || teams[i]===currentTeams[i]) continue;
+      for (let mi=0;mi<grpMs.length;mi++) {
+        const m = grpMs[mi];
+        if (m.home_team!==currentTeams[i] && m.away_team!==currentTeams[i]) continue;
         const upd = {};
-        if (m.home_team === currentTeams[i]) upd.home_team = teams[i];
-        if (m.away_team === currentTeams[i]) upd.away_team = teams[i];
-        const {error} = await sb.from('matches').update(upd).eq('id', m.id);
-        if (error) { st.textContent = 'Error: ' + error.message; return; }
+        if (m.home_team===currentTeams[i]) upd.home_team=teams[i];
+        if (m.away_team===currentTeams[i]) upd.away_team=teams[i];
+        const {error} = await sb.from('matches').update(upd).eq('id',m.id);
+        if (error) { st.textContent='Error: '+error.message; return; }
       }
     }
   }
-  for (const htEl of document.querySelectorAll('[data-mid][data-side="ht"]')) {
+  const koInputs = document.querySelectorAll('[data-mid][data-side="ht"]');
+  for (let ki=0;ki<koInputs.length;ki++) {
+    const htEl = koInputs[ki];
     const mid = +htEl.dataset.mid; if (!mid) continue;
-    const atEl = document.querySelector('[data-mid="' + mid + '"][data-side="at"]');
-    const ht = htEl.value.trim(), at = atEl?.value.trim();
+    const atEl = document.querySelector('[data-mid="'+mid+'"][data-side="at"]');
+    const ht = htEl.value.trim(), at = atEl ? atEl.value.trim() : '';
     if (!ht && !at) continue;
     const upd = {};
     if (ht) upd.home_team = ht;
     if (at) upd.away_team = at;
-    const {error} = await sb.from('matches').update(upd).eq('id', mid);
-    if (error) { st.textContent = 'Error: ' + error.message; return; }
+    const {error} = await sb.from('matches').update(upd).eq('id',mid);
+    if (error) { st.textContent='Error: '+error.message; return; }
   }
-  const {data: newM} = await sb.from('matches').select('*').order('match_number');
-  matches = newM || [];
-  const {data: newS} = await sb.from('settings').select('*');
-  settings = {}; (newS || []).forEach(r => settings[r.key] = r.value);
-  st.textContent = 'Saved!'; st.className = 'sstatus ok';
-  setTimeout(() => { st.textContent = ''; }, 4000);
+  const res1 = await sb.from('matches').select('*').order('match_number');
+  matches = res1.data || [];
+  const res2 = await sb.from('settings').select('*');
+  settings = {}; (res2.data||[]).forEach(function(r) { settings[r.key]=r.value; });
+  st.textContent='Saved!'; st.className='sstatus ok';
+  setTimeout(function() { st.textContent=''; }, 4000);
 }
 
 function addPlayerRow() {
@@ -661,36 +701,36 @@ function addPlayerRow() {
 
 async function sendInvite(btn) {
   const row = btn.closest('tr');
-  const name = row.querySelector('[data-field="name"]').value.trim();
+  const nm = row.querySelector('[data-field="name"]').value.trim();
   const email = row.querySelector('[data-field="email"]').value.trim();
   const msgEl = document.getElementById('invite-msg');
-  if (!name || !email) { msgEl.className = 'msg-err'; msgEl.textContent = 'Name and email are required.'; return; }
-  btn.disabled = true; btn.textContent = 'Sending...'; msgEl.textContent = '';
-  const {error} = await sb.auth.signInWithOtp({email, options: {shouldCreateUser: true, emailRedirectTo: 'https://lstol.github.io/worldcup2026', data: {name}}});
-  if (error) { btn.disabled = false; btn.textContent = 'Send Invite'; msgEl.className = 'msg-err'; msgEl.textContent = 'Error: ' + error.message; return; }
-  await sb.from('players').upsert({name, email, is_admin: false}, {onConflict: 'email'});
-  const {data: pl} = await sb.from('players').select('*').order('name');
-  players = pl || [];
-  btn.disabled = false; btn.textContent = 'Re-invite';
-  msgEl.className = 'msg-ok'; msgEl.textContent = 'Invite sent to ' + email + '!';
-  setTimeout(() => { msgEl.textContent = ''; }, 8000);
+  if (!nm || !email) { msgEl.className='msg-err'; msgEl.textContent='Name and email are required.'; return; }
+  btn.disabled=true; btn.textContent='Sending...'; msgEl.textContent='';
+  const {error} = await sb.auth.signInWithOtp({email:email, options:{shouldCreateUser:true, emailRedirectTo:'https://lstol.github.io/worldcup2026', data:{name:nm}}});
+  if (error) { btn.disabled=false; btn.textContent='Send Invite'; msgEl.className='msg-err'; msgEl.textContent='Error: '+error.message; return; }
+  await sb.from('players').upsert({name:nm, email:email, is_admin:false}, {onConflict:'email'});
+  const res = await sb.from('players').select('*').order('name');
+  players = res.data || [];
+  btn.disabled=false; btn.textContent='Re-invite';
+  msgEl.className='msg-ok'; msgEl.textContent='Invite sent to '+email+'!';
+  setTimeout(function() { msgEl.textContent=''; }, 8000);
 }
 
 async function removePlayer(btn) {
   const email = btn.dataset.email, pid = btn.dataset.pid;
-  if (!confirm('Remove ' + email + ' from the competition?')) return;
-  btn.disabled = true; btn.textContent = '...';
-  const {error} = await sb.from('players').delete().eq('id', pid);
-  if (error) { alert('Error: ' + error.message); btn.disabled = false; btn.textContent = 'Remove'; return; }
+  if (!confirm('Remove '+email+' from the competition?')) return;
+  btn.disabled=true; btn.textContent='...';
+  const {error} = await sb.from('players').delete().eq('id',pid);
+  if (error) { alert('Error: '+error.message); btn.disabled=false; btn.textContent='Remove'; return; }
   btn.closest('tr').remove();
-  players = players.filter(p => p.id !== pid);
+  players = players.filter(function(p) { return p.id!==pid; });
   const m = document.getElementById('invite-msg');
-  if (m) { m.className = 'msg-ok'; m.textContent = 'Player removed.'; setTimeout(() => { m.textContent = ''; }, 4000); }
+  if (m) { m.className='msg-ok'; m.textContent='Player removed.'; setTimeout(function(){m.textContent='';},4000); }
 }
 
-(async () => {
-  const {data: {session}} = await sb.auth.getSession();
-  if (session) await bootApp(session.user);
+(async function() {
+  const res = await sb.auth.getSession();
+  if (res.data && res.data.session) await bootApp(res.data.session.user);
 })();
 </script>
 </body>
