@@ -89,11 +89,11 @@ td.tc{font-weight:600}
 .msg-err{padding:8px 12px;border-radius:6px;background:#FDEAEA;color:#C9041C;font-size:.8rem;margin-top:8px}
 .pred-group-inner{display:flex;align-items:stretch}
 .pred-matches{flex:1;min-width:0;overflow-x:auto}
-.pred-standings{width:320px;flex-shrink:0;border-left:2px solid #1A3A5C;display:flex;flex-direction:column;overflow:hidden}
+.pred-standings{width:320px;flex-shrink:0;border-left:4px solid #E4EEF7;display:flex;flex-direction:column;overflow:hidden}
 .pred-standings table{width:100%}
 .pred-standings tbody tr{height:40px}
 .pred-matches tbody tr{height:40px}
-@media(max-width:700px){.pred-group-inner{flex-direction:column}.pred-standings{width:100%;border-left:none;border-top:2px solid #1A3A5C}}
+@media(max-width:700px){.pred-group-inner{flex-direction:column}.pred-standings{width:100%;border-left:none;border-top:4px solid #E4EEF7}}
 @media(max-width:600px){thead th,tbody td{padding:5px 4px;font-size:.72rem}.si{width:34px}.lb-pts{font-size:1rem}}
 </style>
 </head>
@@ -418,7 +418,7 @@ function buildPredStTable(grp, pm, actualSt) {
   const COLS = ['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];
   let h = '<table><thead><tr>';
   h += '<th class="num" style="width:22px">#</th>';
-  h += '<th class="tl"><span style="display:block;font-size:.63rem;font-weight:400;opacity:.8;letter-spacing:.02em;margin-bottom:1px">Predicted standings</span>Team</th>';
+  h += '<th class="tl">Team</th>';
   h += '<th>P</th><th>Pts</th><th>GD</th><th>Actual</th>';
   h += '</tr></thead><tbody>';
   sorted.forEach(function(r, i) {
