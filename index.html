@@ -422,11 +422,10 @@ function buildPredStandings(grp,pm){
 }
 
 function buildPredStandingsTable(grp,predSt,actualSt){
-  if(!predSt.some(r=>r.p>0))return'';
   const actualRank={};actualSt.forEach((r,i)=>{actualRank[r.team]=i+1;});
-  const COLS=['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];
+  const COLS=['#1F6BB0','#5BA3D9','#BDD7EE','#fff'];const noPreds=predSt.every(r=>r.p===0);
   let h=`<div style="padding:8px 12px;background:#F8FBFF;border-top:1px solid #D6EAF8">
-    <div style="font-size:.75rem;font-weight:700;color:#1A3A5C;margin-bottom:6px">📊 My predicted standings</div>
+    <div style="font-size:.75rem;font-weight:700;color:#1A3A5C;margin-bottom:6px">📊 My predicted standings — Actual # shown once played</div>
     <table><thead><tr><th class="num" style="width:22px">#</th><th class="tl">Team</th><th>P</th><th>Pts</th><th>GD</th><th>Actual #</th></tr></thead><tbody>`;
   predSt.forEach((r,i)=>{
     const rank=i+1,bg=COLS[Math.min(rank-1,3)],tc=rank<=2?'color:#fff':'';
