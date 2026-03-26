@@ -226,7 +226,7 @@ async function doLogout(){await sb.auth.signOut();location.reload();}
 async function bootApp(user) {
   const name = user.email.split('@')[0];
   const displayName = name.charAt(0).toUpperCase()+name.slice(1);
-  player = {id:user.id,name:displayName,email:user.email,is_admin:user.email==='lasse@worldcup2026.local'};
+  player = {id:user.id,name:displayName,email:user.email,is_admin:user.email==='lasse.stoltenberg@gmail.com'};
   isAdmin = player.is_admin;
   document.getElementById('uname').textContent = displayName;
   if (isAdmin){
