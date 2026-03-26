@@ -661,6 +661,25 @@ async function sendInvite(btn){
 // ── SETTINGS ─────────────────────────────────────────────────────────────
 function renderSettings(){
   document.getElementById('settings-save-bar').style.display='flex';
+
+  // ── Players ──
+  let h = '<div class="settings-section"><h3>👥 Players &amp; Invitations</h3>';
+  h += '<p style="font-size:.78rem;color:#666;margin-bottom:12px">Add a name and email, then click Send Invite. They get a magic login link by email.</p>';
+  h += '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1A3A5C;color:#fff"><th style="padding:7px 10px;text-align:left;font-size:.75rem">Name</th><th style="padding:7px 10px;text-align:left;font-size:.75rem">Email</th><th style="padding:7px 10px;font-size:.75rem">Status</th><th style="padding:7px 10px;font-size:.75rem">Action</th></tr></thead><tbody id="players-tbody">';
+  players.forEach(p => {
+    const isMe = p.id === player.id;
+    h += '<tr style="border-bottom:1px solid #E4EEF7">' +
+      '<td style="padding:6px 8px"><input style="width:110px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem;background:'+(isMe?'#F8FBFF':'#fff')+'" value="'+(p.name||'')+'" data-field="name" '+(isMe?'readonly':'')+' data-pid="'+p.id+'"></td>' +
+      '<td style="padding:6px 8px"><input style="width:190px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem;background:'+(isMe?'#F8FBFF':'#fff')+'" value="'+(p.email||'')+'" data-field="email" '+(isMe?'readonly':'')+' data-pid="'+p.id+'"></td>' +
+      '<td style="padding:6px 8px;text-align:center"><span style="background:#C6EFCE;color:#1A5C1A;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">✅ Active</span></td>' +
+      '<td style="padding:6px 8px"><button class="btn-save" style="padding:4px 12px;font-size:.78rem" onclick="sendInvite(this)">✉️ Re-invite</button></td>' +
+      '</tr>';
+  });
+  h += '</tbody></table>';
+  h += '<div id="invite-msg"></div>';
+  h += '<button class="btn-add-match" style="margin-top:10px" onclick="addPlayerRow()">➕ Add Player</button>';
+  h += '</div>';
+
   const S=[
     {key:'gs_exact',   label:'Group Stage — Exact Score',       desc:'Points for predicting the exact score'},
     {key:'gs_result',  label:'Group Stage — Correct Result',    desc:'Points for correct W/D/L (wrong score)'},
