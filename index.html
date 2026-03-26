@@ -675,18 +675,7 @@ function renderSettings(){
   ];
 
   // ── Players ──
-  let h='<div class="settings-section"><h3>👥 Players & Invitations</h3>';
-  h+='<p style="font-size:.78rem;color:#666;margin-bottom:14px">Assign a display name and email to each player. Click <b>Send Invite</b> to email them a login link. They click it, set a password, and they're in.</p>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1.5fr 100px auto;gap:8px;align-items:center;margin-bottom:6px;padding:0 2px">';
-  h+='<span style="font-size:.72rem;font-weight:700;color:#666">Name</span>';
-  h+='<span style="font-size:.72rem;font-weight:700;color:#666">Email</span>';
-  h+='<span style="font-size:.72rem;font-weight:700;color:#666">Status</span>';
-  h+='<span></span></div>';
-  h+='<div id="players-list">'+renderPlayerRows()+'</div>';
-  h+='<div id="invite-result"></div>';
-  h+='<button class="btn-add-match" onclick="addPlayerRow()" style="margin-top:10px">➕ Add Player</button>';
-  h+='</div>';
-
+  
   // ── Scoring ──
   h+=`<div class="settings-section"><h3>🎯 Scoring System</h3><div class="score-grid">`;
   S.forEach(s=>{
