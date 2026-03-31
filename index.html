@@ -232,9 +232,8 @@ var viewPredRound = 'group';
 var viewPredAllPreds = [];
 
 async function renderViewPred() {
-  // Load all predictions if not yet loaded
-  var res = await sb.from('predictions').select('*');
-  viewPredAllPreds = res.data || [];
+  var content = document.getElementById('viewpred-content');
+  if (!content) return;
 
   // Default to first other player
   if (!viewPredPlayerId || !players.find(function(p){return p.id===viewPredPlayerId;})) {
@@ -242,7 +241,7 @@ async function renderViewPred() {
     viewPredPlayerId = others.length ? others[0].id : player.id;
   }
 
-  // Player tabs
+  // Render tabs scaffold immediately (sync) so UI isn't stuck
   var ptabs = '<div class="rtabs" id="viewpred-player-tabs">';
   players.forEach(function(p) {
     var active = p.id === viewPredPlayerId ? ' active' : '';
@@ -250,7 +249,6 @@ async function renderViewPred() {
   });
   ptabs += '</div>';
 
-  // Round tabs
   var rtabs = '<div class="rtabs" id="viewpred-round-tabs">';
   ROUNDS.forEach(function(r) {
     var active = r.k === viewPredRound ? ' active' : '';
@@ -258,7 +256,11 @@ async function renderViewPred() {
   });
   rtabs += '</div>';
 
-  document.getElementById('viewpred-content').innerHTML = ptabs + rtabs + '<div id="viewpred-inner"><div class="spin">Loading...</div></div>';
+  content.innerHTML = ptabs + rtabs + '<div id="viewpred-inner"><div class="spin">Loading...</div></div>';
+
+  // Now fetch predictions async
+  var res = await sb.from('predictions').select('*');
+  viewPredAllPreds = res.data || [];
   renderViewPredInner();
 }
 
