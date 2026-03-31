@@ -118,7 +118,7 @@ function addPlayerRow() {
   if (!tbody) return;
   var tr = document.createElement('tr');
   tr.style.borderBottom = '1px solid #E4EEF7';
-  tr.innerHTML = '<td style="padding:6px 8px"><input style="width:110px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" placeholder="Name" data-field="name"></td><td style="padding:6px 8px"><input style="width:190px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" type="email" placeholder="email@example.com" data-field="email"></td><td style="padding:6px 8px;text-align:center"><span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">New</span></td><td style="padding:6px 8px;display:flex;gap:5px"><button class="btn-sm" onclick="sendInvite(this)">Send Invite</button><button class="btn-del" onclick="this.closest('tr').remove()">Cancel</button></td>';
+  tr.innerHTML = '<td style="padding:6px 8px"><input style="width:110px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" placeholder="Name" data-field="name"></td><td style="padding:6px 8px"><input style="width:190px;padding:4px 7px;border:1px solid #9DC3E6;border-radius:5px;font-size:.82rem" type="email" placeholder="email@example.com" data-field="email"></td><td style="padding:6px 8px;text-align:center"><span style="background:#FFF3CD;color:#856404;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700">New</span></td><td style="padding:6px 8px;display:flex;gap:5px"><button class="btn-sm" onclick="sendInvite(this)">Send Invite</button><button class="btn-del" onclick="this.closest(&apos;tr&apos;).remove()">Cancel</button></td>';
   tbody.appendChild(tr);
 }
 
