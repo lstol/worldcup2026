@@ -249,10 +249,14 @@ async function renderViewPred() {
 
   var rtabs = '<div class="rtabs" id="viewpred-round-tabs">';
   ROUNDS.forEach(function(r) {
+    if (r.k !== 'group' && !settings['unlock_'+r.k]) return;
     var active = r.k === viewPredRound ? ' active' : '';
     rtabs += '<button class="rtab'+active+'" onclick="setViewPredRound(&apos;'+r.k+'&apos;,this)">'+r.l+'</button>';
   });
   rtabs += '</div>';
+  // If current round is now hidden, reset to group
+  var roundVisible = viewPredRound === 'group' || (settings['unlock_'+viewPredRound]==1 || settings['unlock_'+viewPredRound]==='1');
+  if (!roundVisible) viewPredRound = 'group';
 
   content.innerHTML = ptabs + rtabs + '<div id="viewpred-inner"><div class="spin">Loading...</div></div>';
 
