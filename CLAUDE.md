@@ -3,15 +3,16 @@
 ## Project overview
 Single `index.html` file, vanilla JavaScript, no frameworks.
 Hosted on GitHub Pages at lstol.github.io/worldcup2026.
-Supabase backend for data persistence.
+Supabase backend for data persistence and authentication.
+DNS alias: vm2026.syndikatet.eu → GitHub Pages.
 
 ## Infrastructure
 - Supabase project URL: agreoglnwnesdekjbacu.supabase.co
 - GitHub repo: github.com/lstol/worldcup2026
-- Admin user: lasse.stoltenberg@gmail.com
+- Admin user: lasse.stoltenberg@gmail.com (ADMIN_EMAIL constant in code)
 
 ## Architecture
-- Single index.html contains all HTML, CSS and JavaScript
+- Single index.html contains all HTML, CSS and JavaScript inline
 - Vanilla JS only — no React, Vue or other frameworks
 - Supabase handles database, authentication and RLS policies
 - Family members log in and submit predictions via the web app
@@ -20,10 +21,148 @@ Supabase backend for data persistence.
 ## JavaScript conventions
 - No template literals or backticks in JS strings — use string concatenation
 - No arrow functions — use function() syntax throughout
-- Unescaped apostrophes inside single-quoted JS strings in onclick 
+- Unescaped apostrophes inside single-quoted JS strings in onclick
   attributes must use &apos;
 
 ## Working style
 - Validate JS syntax before every commit
 - Prefer complete, thorough changes over small incremental patches
 - Commit regularly with descriptive messages
+
+---
+
+## Database schema
+
+### `matches`
+| Column         | Type        | Notes                                      |
+|----------------|-------------|--------------------------------------------|
+| id             | UUID        | Primary key                                |
+| match_number   | int         | 1–104; used as display label and sort key  |
+| round          | text        | 'group', 'R32', 'R16', 'QF', 'SF', 'final', 'bronze' |
+| group_letter   | text        | A–L (group stage only)                     |
+| home_team      | text        | May be placeholder like 'Winner Group A'   |
+| away_team      | text        | May be placeholder                         |
+| home_score     | int         | NULL until result entered                  |
+| away_score     | int         | NULL until result entered                  |
+| match_date     | date        | DATE type — no time component              |
+| kickoff_utc    | TIMESTAMPTZ | Exact kickoff time in UTC (added later)    |
+
+### `predictions`
+| Column      | Type  | Notes                                               |
+|-------------|-------|-----------------------------------------------------|
+| id          | UUID  | Primary key                                         |
+| player_id   | UUID  | FK → players.id                                     |
+| match_id    | UUID  | FK → matches.id                                     |
+| home_score  | int   | Player's predicted home score                       |
+| away_score  | int   | Player's predicted away score                       |
+| et_winner   | text  | Knockout only — predicted team to win in extra time |
+
+### `players`
+| Column     | Type        | Notes                                           |
+|------------|-------------|-------------------------------------------------|
+| id         | UUID        | Should equal auth.users.id for that player      |
+| name       | text        | Display name                                    |
+| email      | text        | UNIQUE (two constraints: players_email_key and players_email_unique) |
+| is_admin   | bool        | Default false                                   |
+| created_at | TIMESTAMPTZ | Default now()                                   |
+
+**Important:** `players.id` must equal `auth.users.id` for RLS to work correctly.
+New players created via Settings → Add Player will have this set correctly.
+Some legacy players (Arne, lstol@equinor.com) have a mismatch — their
+`players.id` was set manually and differs from their `auth.users.id`.
+
+### `settings`
+Key/value table. Known keys:
+| Key            | Default | Meaning                                     |
+|----------------|---------|---------------------------------------------|
+| gs_exact       | 5       | Points for exact score in group stage       |
+| gs_result      | 2       | Points for correct result in group stage    |
+| ko_exact       | 5       | Points for exact score in knockout rounds   |
+| ko_result      | 2       | Points for correct result in knockout rounds|
+| bonus_r32      | -       | Bonus pts for predicting a team reaching R32 |
+| bonus_r16      | -       | Bonus pts for R16                           |
+| bonus_qf       | -       | Bonus pts for QF                            |
+| bonus_sf       | -       | Bonus pts for SF                            |
+| bonus_final    | -       | Bonus pts for Final                         |
+| preds_visible  | 0       | Whether all players can see each other's predictions |
+
+---
+
+## RLS policies (players table)
+- `read_all`: USING (true) — any authenticated user can read all rows
+- `admin_insert`: WITH CHECK: EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND is_admin = true)
+- `admin_update`: USING: same admin check
+- `admin_delete`: USING: same admin check
+- `self_update_name`: USING (id = auth.uid()) WITH CHECK (id = auth.uid()) — players can update their own row
+
+---
+
+## Key JavaScript functions
+
+### Authentication / boot
+- `padPassword(p)`: pads passwords shorter than 6 chars with underscores (Supabase enforces 6-char minimum). Applied in doLogin, doChangePassword, sendInvite.
+- `bootApp(user)`: called after login; loads all data, checks must_change_password flag.
+- `loadAll()`: fetches matches (with kickoff_utc), predictions for current player, all players, and settings in parallel.
+
+### Scoring
+- `calcScore(ph, pa, ah, aa, round)`: returns points for a prediction.
+  - Exact score → `gs_exact` (group) or `ko_exact` (knockout) points (default 5)
+  - Correct result (W/D/L) → `gs_result` or `ko_result` points (default 2)
+  - Wrong → 0
+- Bonus points for correctly predicting which teams reach each knockout round
+  are tracked separately via the `bonus_r*` settings keys.
+
+### Date/time display (all in Europe/Oslo / CEST)
+- `formatKickoff(m)`: returns full datetime string, e.g. "11.06 21:00"
+- `formatKickoffShort(m)`: returns compact date+time, e.g. "11.06 21:00" (no year)
+- Both fall back gracefully if `kickoff_utc` is null.
+
+### Prediction freeze
+- `isMatchFrozen(m)`: returns true if match has a score already, OR if it's within 10 minutes of kickoff_utc.
+- Frozen inputs render with `opacity:.45; pointer-events:none` and a 🔒 icon.
+- `startCountdownTimer()`: runs a 1-second interval showing time until next freeze; displayed in `#pred-countdown` bar on the predictions page.
+
+### Rounds and bracket
+Rounds in order: group → R32 → R16 → QF → SF → final / bronze
+
+**R32 bracket** (matches 73–88) is stored in `R32_BRACKET` object mapping
+match_number → { h: slot, a: slot } where slots are:
+- `W_X` = Winner of Group X
+- `R_X` = Runner-up of Group X
+- `T3` = Best third-place team (determined by `THIRD_PLACE_MAP`)
+
+`autoPopulateR32()` (called when admin saves group stage results) reads
+group standings, resolves bracket slots, and updates match home_team/away_team
+for R32 matches automatically.
+
+`THIRD_PLACE_MAP` is a large lookup table mapping which 8 of the 12 groups had
+third-place qualifiers (encoded as a string key like "ABCDEFGH") to an ordered
+array of which match slot each qualifier fills.
+
+### Player management (Settings → Add Player)
+`sendInvite(btn)` flow:
+1. `sb.auth.signUp()` first → gets the new user's auth UUID
+2. Insert into `players` with `{ id: authUUID, name, email, is_admin: false }`
+3. Reload player list and show success message
+
+Order matters: signUp first ensures `players.id = auth.uid()` and avoids RLS
+violations when inserting the player row.
+
+Initial password = player's name (padded to 6 chars if needed).
+`must_change_password: true` is set in user metadata; the app shows a
+password-change screen on first login.
+
+---
+
+## Tournament structure
+- 48 teams, 12 groups (A–L) of 4 teams each
+- 72 group stage matches (M1–M72)
+- Group stage: June 11 – June 26, 2026
+- R32: 16 matches (M73–M88), June 28 – July 3
+- R16: 8 matches (M89–M96), July 4–7
+- QF: 4 matches (M97–M100), July 9–11
+- SF: 2 matches (M101–M102), July 14–15
+- Bronze final: M103, July 18
+- Final: M104, July 19
+
+Top 2 from each group + 8 best third-place teams → 32 teams in R32.
