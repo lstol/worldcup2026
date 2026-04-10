@@ -286,25 +286,8 @@ async function sendInvite(btn) {
   btn.textContent = 'Sending...';
   msgEl.textContent = '';
 
-  // Step 1: Insert player row now so they appear even before first login.
-  // Uses INSERT ... ON CONFLICT (email) DO UPDATE SET name=EXCLUDED.name
-  var upsertRes = await sb.from('players').upsert(
-    {name: nm, email: email, is_admin: false},
-    {onConflict: 'email', ignoreDuplicates: false}
-  );
-  if (upsertRes.error && upsertRes.error.code !== '23505') {
-    // 23505 = unique violation - row exists, that is fine
-    msgEl.className = 'msg-err';
-    msgEl.textContent = 'DB error: ' + upsertRes.error.message;
-    btn.disabled = false;
-    btn.textContent = 'Send Invite';
-    return;
-  }
-
-  // Step 2: Send OTP invite. The email body is set in Supabase dashboard
-  // (Authentication > Email Templates > Magic Link). The custom message is
-  // passed as user metadata so you can reference it in the template via
-  // {{ .Data.invite_message }}, but it also gets shown below as confirmation.
+  // Step 1: Create auth user first so we get their UUID.
+  // This also sends the confirmation/welcome email via Supabase.
   var signUpRes = await sb.auth.signUp({
     email: email,
     password: padPassword(nm),
@@ -315,6 +298,24 @@ async function sendInvite(btn) {
     btn.textContent = 'Send Invite';
     msgEl.className = 'msg-err';
     msgEl.textContent = 'Account error: ' + signUpRes.error.message;
+    return;
+  }
+
+  // Step 2: Insert player row using the auth UUID so players.id = auth.uid()
+  // for every user from day one. This avoids RLS issues and ID mismatches.
+  var newId = signUpRes.data && signUpRes.data.user && signUpRes.data.user.id;
+  var playerRow = {name: nm, email: email, is_admin: false};
+  if (newId) playerRow.id = newId;
+  var upsertRes = await sb.from('players').upsert(
+    playerRow,
+    {onConflict: 'email', ignoreDuplicates: false}
+  );
+  if (upsertRes.error && upsertRes.error.code !== '23505') {
+    // 23505 = unique violation - row already exists, that is fine
+    msgEl.className = 'msg-err';
+    msgEl.textContent = 'DB error: ' + upsertRes.error.message;
+    btn.disabled = false;
+    btn.textContent = 'Send Invite';
     return;
   }
 
