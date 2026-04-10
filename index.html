@@ -399,17 +399,14 @@ async function askClaudeBtnPred(btn, mid) {
   var isKO = m.round !== 'group';
   var prompt = 'Predict the score for this 2026 FIFA World Cup match: '+m.home_team+' vs '+m.away_team+' (Round: '+m.round+'). Reply with ONLY a JSON object like {"home":1,"away":0'+(isKO?',"et_winner":null':'')+'}. For knockout rounds, if scores are equal, set et_winner to "H" or "A" for which side wins in extra time.';
   try {
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+    var session = (await sb.auth.getSession()).data.session;
+    var resp = await fetch(SB_URL+'/functions/v1/claude-predict', {
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-request-allowed':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:64,messages:[{role:'user',content:prompt}]})
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?session.access_token:'')},
+      body:JSON.stringify({home_team:m.home_team,away_team:m.away_team,round:m.round})
     });
-    var data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?data.error.message:resp.statusText);
-    var text = data.content&&data.content[0]&&data.content[0].text||'';
-    var m2 = text.match(/\{[^}]+\}/);
-    if (!m2) throw new Error('Bad response: '+text);
-    var pred = JSON.parse(m2[0]);
+    var pred = await resp.json();
+    if (!resp.ok || pred.error) throw new Error(pred.error||resp.statusText);
     var row = {player_id:CLAUDEBOT_ID,match_id:mid,home_score:+pred.home,away_score:+pred.away,et_winner:pred.et_winner||null};
     var {error} = await sb.from('predictions').upsert([row],{onConflict:'player_id,match_id'});
     if (error) throw new Error(error.message);
@@ -458,26 +455,14 @@ async function askClaudePred(btn, m) {
   var isKO = m.round !== 'group';
   var prompt = 'Predict the score for this 2026 FIFA World Cup match: ' + m.home_team + ' vs ' + m.away_team + ' (Round: ' + m.round + '). Reply with ONLY a JSON object like {"home":1,"away":0' + (isKO?',"et_winner":null':'') + '}. For knockout rounds, if scores are equal, set et_winner to the team name you think wins in extra time.';
   try {
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-request-allowed': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 64,
-        messages: [{role:'user',content:prompt}]
-      })
+    var session2 = (await sb.auth.getSession()).data.session;
+    var resp = await fetch(SB_URL+'/functions/v1/claude-predict', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session2?session2.access_token:'')},
+      body:JSON.stringify({home_team:m.home_team,away_team:m.away_team,round:m.round})
     });
-    var data = await resp.json();
-    if (!resp.ok) throw new Error(data.error ? data.error.message : resp.statusText);
-    var text = data.content && data.content[0] && data.content[0].text || '';
-    var match2 = text.match(/\{[^}]+\}/);
-    if (!match2) throw new Error('Could not parse response: '+text);
-    var pred = JSON.parse(match2[0]);
+    var pred = await resp.json();
+    if (!resp.ok || pred.error) throw new Error(pred.error||resp.statusText);
     var row = {player_id:CLAUDEBOT_ID, match_id:m.id, home_score:+pred.home, away_score:+pred.away, et_winner:pred.et_winner||null};
     var {error} = await sb.from('predictions').upsert([row], {onConflict:'player_id,match_id'});
     if (error) throw new Error(error.message);
