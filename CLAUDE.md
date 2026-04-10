@@ -86,19 +86,28 @@ keeps `players` and `auth.users` in sync — removing a player via the UI fully
 cleans up both tables, so the same email can be re-invited cleanly.
 
 ### `settings`
-Key/value table. Known keys:
-| Key            | Default | Meaning                                     |
-|----------------|---------|---------------------------------------------|
-| gs_exact       | 5       | Points for exact score in group stage       |
-| gs_result      | 2       | Points for correct result in group stage    |
-| ko_exact       | 5       | Points for exact score in knockout rounds   |
-| ko_result      | 2       | Points for correct result in knockout rounds|
-| bonus_r32      | -       | Bonus pts for predicting a team reaching R32 |
-| bonus_r16      | -       | Bonus pts for R16                           |
-| bonus_qf       | -       | Bonus pts for QF                            |
-| bonus_sf       | -       | Bonus pts for SF                            |
-| bonus_final    | -       | Bonus pts for Final                         |
-| preds_visible  | 0       | Whether all players can see each other's predictions |
+Key/value table. Has two value columns: `value` (integer, NOT NULL) and `text_value` (text, nullable).
+Known keys:
+| Key            | Default | Column      | Meaning                                     |
+|----------------|---------|-------------|---------------------------------------------|
+| gs_exact       | 5       | value       | Points for exact score in group stage       |
+| gs_result      | 2       | value       | Points for correct result in group stage    |
+| ko_exact       | 5       | value       | Points for exact score in knockout rounds   |
+| ko_result      | 2       | value       | Points for correct result in knockout rounds|
+| bonus_r32      | -       | value       | Bonus pts for predicting a team reaching R32 |
+| bonus_r16      | -       | value       | Bonus pts for R16                           |
+| bonus_qf       | -       | value       | Bonus pts for QF                            |
+| bonus_sf       | -       | value       | Bonus pts for SF                            |
+| bonus_final    | -       | value       | Bonus pts for Final                         |
+| preds_visible  | 0       | value       | Whether all players can see each other's predictions |
+| anthropic_key  | -       | text_value  | Anthropic API key for Claude bot (admin only) |
+
+In `loadAll`, settings are parsed as:
+```javascript
+settings[r.key] = r.value;
+if (r.text_value) settings[r.key + '__text'] = r.text_value;
+```
+So `anthropic_key__text` holds the API key and is auto-loaded into `anthropicKey` for admin on boot.
 
 ---
 
@@ -117,6 +126,8 @@ Key/value table. Known keys:
 - `players update own`: USING (player_id = auth.uid()) — players can update their own
 - `players delete own`: USING (player_id = auth.uid()) — players can delete their own
 - `Admin can delete any predictions`: USING (admin check) — admin can delete any row
+- `admin insert any predictions`: WITH CHECK (admin check) — admin can insert for any player_id (needed for bot players)
+- `admin update any predictions`: USING (admin check) — admin can update for any player_id
 
 ---
 
@@ -271,10 +282,46 @@ when admin saves group stage results.
 verification against the Wikipedia matrix table. Do not regenerate it without
 checking against the source — it is complex and error-prone.
 
+### Bot players
+Two fixed bot players exist in the `players` table with no corresponding `auth.users` entries:
+| Name       | UUID                                   |
+|------------|----------------------------------------|
+| RandomBot  | `00000000-0000-0000-0000-000000000001` |
+| Claude     | `00000000-0000-0000-0000-000000000002` |
+
+Constants in code: `RANDOMBOT_ID`, `CLAUDEBOT_ID`.
+
+Admin controls bots from the **My Predictions** page via three player-selector tabs
+("My Predictions | RandomBot | Claude") shown above the round tabs. When a bot tab
+is selected:
+- `predPlayerId` is set to the bot's UUID
+- `preds` is reloaded for that player
+- Inputs are never frozen (`isMatchFrozen` returns false for bots)
+- Round-lock is bypassed in `renderPred`
+- `savePred` saves with `predPlayerId` instead of `player.id`
+
+**RandomBot:** "Random" button fills random scores (0–3) for the current round.
+
+**Claude bot:** A purple toolbar appears at the top with:
+- "Ask Claude All" button — fetches predictions for all unpredicted matches in the round
+- "Ask" button per match row
+
+Claude predictions call the **`claude-predict` Supabase Edge Function** (not the
+Anthropic API directly — direct browser calls fail CORS on Safari). The function:
+- Reads the API key from `settings.text_value` where `key = 'anthropic_key'`
+- Calls `claude-haiku-4-5-20251001` with a match prediction prompt
+- Returns `{"home": N, "away": N, "et_winner": "H"|"A"|null}`
+- Is deployed with `verify_jwt: false`
+
 ### Player management
 `removePlayer(btn)` deletes predictions and the players row. The `on_player_delete`
 DB trigger then automatically deletes the auth.users entry, so the tables stay in
 sync. Removing and re-inviting the same email via the UI always works cleanly.
+
+**Note:** Bot players have no auth.users entries — do NOT remove them via the UI
+(the trigger would try to delete a non-existent auth user, which is harmless but
+the bots would then be gone from the leaderboard). If accidentally removed, re-insert
+them directly via SQL with their fixed UUIDs.
 
 ---
 
