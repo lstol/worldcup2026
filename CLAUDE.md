@@ -101,6 +101,7 @@ Known keys:
 | bonus_final    | -       | value       | Bonus pts for Final                         |
 | preds_visible  | 0       | value       | Whether all players can see each other's predictions |
 | anthropic_key  | -       | text_value  | Anthropic API key for Claude bot (admin only) |
+| invite_message | -       | text_value  | Body text of welcome email; use `{name}` as placeholder for player name |
 
 In `loadAll`, settings are parsed as:
 ```javascript
@@ -108,6 +109,7 @@ settings[r.key] = r.value;
 if (r.text_value) settings[r.key + '__text'] = r.text_value;
 ```
 So `anthropic_key__text` holds the API key and is auto-loaded into `anthropicKey` for admin on boot.
+And `invite_message__text` is the editable invite body text.
 
 ---
 
@@ -119,6 +121,11 @@ So `anthropic_key__text` holds the API key and is auto-loaded into `anthropicKey
 - `admin_update`: USING: same admin check
 - `admin_delete`: USING: same admin check
 - `self_update_name`: USING (id = auth.uid()) WITH CHECK (id = auth.uid()) — players can update their own row
+
+**Important:** The admin RLS policies check `players.is_admin = true` using `auth.uid()`. The app also
+grants admin rights via `ADMIN_EMAIL` constant in JS, but the DB row must have `is_admin = true` for
+DB-level operations (insert/update/delete other players) to work. Lasse's row (`lasse.stoltenberg@gmail.com`)
+has been confirmed set to `is_admin = true`.
 
 ### `predictions` table
 - `public read predictions`: USING (true) — all authenticated users can read
@@ -161,7 +168,10 @@ So `anthropic_key__text` holds the API key and is auto-loaded into `anthropicKey
    - Otherwise abort on auth errors.
 3. Restore admin session via `setSession()` — critical because `signUp()` with
    autoconfirm enabled auto-signs-in the new user, silently replacing the admin
-   session and causing the next DB write to fail RLS.
+   session and causing the next DB write to fail RLS. The result of `setSession`
+   is now checked and the function aborts with a clear error if it fails (e.g.
+   expired refresh token). If this happens, the admin should reload the page and
+   try again with a fresh session.
 4. Upsert into `players` with `{ id: authUUID, name, email, is_admin: false }`.
    Using the auth UUID ensures `players.id = auth.uid()` from day one.
 5. Call `sb.auth.resetPasswordForEmail(email)` to trigger the welcome email
@@ -176,8 +186,15 @@ password in the welcome email and never see the padding.
 Authentication → Email Templates → Reset Password. Template uses:
 - `{{ .Email }}` — player's email address
 - `{{ .Data.name }}` — player's name (set in signUp user metadata)
+- `{{ .Data.invite_message }}` — editable body text from `settings.invite_message`; use `{name}` placeholder in the settings field and it is replaced with the player's name before being passed to signUp metadata
 - Plain link to `https://vm2026.syndikatet.eu` (no magic link / recovery token)
 - No `{{ .ConfirmationURL }}` — players simply go to the login page directly.
+
+The invite message is stored as plain text with `\n` newlines. The template should render it with:
+```html
+<p style="white-space: pre-line">{{ .Data.invite_message }}</p>
+```
+This ensures line breaks typed in the Settings textarea appear as line breaks in the email.
 
 **First login** → `must_change_password: true` in user metadata →
 `bootApp` shows the Norwegian change-password screen ("Velg ditt eget passord").
