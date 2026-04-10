@@ -44,14 +44,14 @@
 <div id="chpass-screen" style="display:none;min-height:100vh;background:#060c14;align-items:center;justify-content:center;padding:32px 20px">
   <div style="width:100%;max-width:360px">
     <div style="text-align:center;font-size:1.9rem;margin-bottom:6px">&#x26BD;</div>
-    <div style="text-align:center;font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:4px">Welcome, <span id="chpass-name"></span>!</div>
-    <div style="text-align:center;font-size:.8rem;color:rgba(255,255,255,.45);margin-bottom:24px">Please set your own password to continue.</div>
-    <label class="lbl">New password</label>
-    <input id="chpass-new" class="inp" type="password" placeholder="Choose a password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doChangePassword()">
-    <label class="lbl" style="margin-top:12px">Confirm password</label>
-    <input id="chpass-confirm" class="inp" type="password" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doChangePassword()">
+    <div style="text-align:center;font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:4px">Velkommen, <span id="chpass-name"></span>!</div>
+    <div style="text-align:center;font-size:.8rem;color:rgba(255,255,255,.6);margin-bottom:24px">Velg ditt eget passord for &aring; fortsette. Ingen krav til styrke.</div>
+    <label class="lbl">Nytt passord</label>
+    <input id="chpass-new" class="inp" type="password" placeholder="Velg et passord" autocomplete="new-password" onkeydown="if(event.key==='Enter')doChangePassword()">
+    <label class="lbl" style="margin-top:12px">Bekreft passord</label>
+    <input id="chpass-confirm" class="inp" type="password" placeholder="Gjenta passord" autocomplete="new-password" onkeydown="if(event.key==='Enter')doChangePassword()">
     <div id="chpass-err" class="err"></div>
-    <button id="chpass-btn" class="btn-primary" onclick="doChangePassword()">Set Password &amp; Continue</button>
+    <button id="chpass-btn" class="btn-primary" onclick="doChangePassword()">Sett passord &amp; fortsett</button>
   </div>
 </div>
 
@@ -342,10 +342,10 @@ async function sendInvite(btn) {
     return;
   }
 
-  // Step 4: Send invite email via password-reset link.
-  // Supabase does not send any email when autoconfirm is on, so we trigger
-  // a "reset password" email ourselves. The player clicks the link and lands
-  // on the app where the PASSWORD_RECOVERY handler shows the set-password screen.
+  // Step 4: Trigger the welcome email. Since autoconfirm is on Supabase sends
+  // no signup email, so we use resetPasswordForEmail as the delivery mechanism.
+  // The Supabase "Reset Password" email template is customised to be a welcome
+  // invite (no magic link — just the login URL and the initial password hint).
   var appUrl = window.location.origin + window.location.pathname;
   await sb.auth.resetPasswordForEmail(email, { redirectTo: appUrl });
 
@@ -355,7 +355,7 @@ async function sendInvite(btn) {
   btn.disabled = false;
   btn.textContent = 'Re-invite';
   msgEl.className = 'msg-ok';
-  msgEl.textContent = 'Invite sent to ' + email + '. They will receive an email with a link to set their password.';
+  msgEl.textContent = 'Welcome email sent to ' + email + '. Initial password is their name: "' + nm + '".';
   setTimeout(function() { msgEl.textContent = ''; }, 8000);
 
   // If this was a new row (no data-pid), refresh the settings panel
@@ -524,23 +524,5 @@ function updateCountdown() {
 updateCountdown();
 setInterval(updateCountdown, 30000);
 
-// Handle invite links: when a player clicks the emailed link, Supabase
-// fires PASSWORD_RECOVERY. We show the set-password screen directly.
-sb.auth.onAuthStateChange(async function(event, session) {
-  if (event === 'PASSWORD_RECOVERY' && session && session.user) {
-    var u = session.user;
-    var pRes = await sb.from('players').select('name,is_admin').eq('id', u.id).single();
-    var pRow = pRes.data;
-    var firstPart = u.email.split('@')[0].split('.')[0];
-    var displayName = pRow ? pRow.name : (firstPart.charAt(0).toUpperCase() + firstPart.slice(1));
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('chpass-screen').style.display = 'flex';
-    document.getElementById('chpass-name').textContent = displayName;
-    // Store user so doChangePassword can call loadAll afterwards
-    player = {id: u.id, name: displayName, email: u.email, is_admin: (pRow && pRow.is_admin) || u.email === ADMIN_EMAIL};
-    isAdmin = player.is_admin;
-  }
-});
 
 (async function() { const res = await sb.auth.getUser(); if (res.data && res.data.user) await bootApp(res.data.user); })(); </script> </body> </html>
