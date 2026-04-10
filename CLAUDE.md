@@ -71,6 +71,12 @@ New players created via Settings → Add Player will have this set correctly.
 Some legacy players (Arne, lstol@equinor.com) have a mismatch — their
 `players.id` was set manually and differs from their `auth.users.id`.
 
+**Invariant enforced by trigger:** A database trigger (`on_player_delete`) fires
+`AFTER DELETE ON players` and automatically deletes the corresponding `auth.users`
+row via `public.delete_auth_user_on_player_delete()` (SECURITY DEFINER). This
+keeps `players` and `auth.users` in sync — removing a player via the UI fully
+cleans up both tables, so the same email can be re-invited cleanly.
+
 ### `settings`
 Key/value table. Known keys:
 | Key            | Default | Meaning                                     |
@@ -116,7 +122,14 @@ Key/value table. Known keys:
 `sendInvite(btn)` steps:
 1. Save the admin's current session tokens (`getSession()`).
 2. Call `sb.auth.signUp()` with the player's email and `padPassword(name)`.
-   - If "already registered" error, treat as soft error and continue (retry case).
+   - If "already registered" error AND this is a Re-invite (row has `data-pid`):
+     treat as soft error and continue — just update name in players row.
+   - If "already registered" error AND this is a new Add Player row (no `data-pid`):
+     abort with an error. The auth account exists but we cannot recover its UUID
+     from the client. This prevents creating a players row with a mismatched UUID
+     (which would silently break login). The right fix is to Remove the player
+     first (which now also deletes the auth account via the DB trigger), then
+     re-add them.
    - Otherwise abort on auth errors.
 3. Restore admin session via `setSession()` — critical because `signUp()` with
    autoconfirm enabled auto-signs-in the new user, silently replacing the admin
@@ -180,7 +193,9 @@ third-place qualifiers (encoded as a string key like "ABCDEFGH") to an ordered
 array of which match slot each qualifier fills.
 
 ### Player management
-See "Player invite flow" under Authentication above.
+`removePlayer(btn)` deletes predictions and the players row. The `on_player_delete`
+DB trigger then automatically deletes the auth.users entry, so the tables stay in
+sync. Removing and re-inviting the same email via the UI always works cleanly.
 
 ---
 
