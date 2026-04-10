@@ -100,9 +100,49 @@ Key/value table. Known keys:
 ## Key JavaScript functions
 
 ### Authentication / boot
-- `padPassword(p)`: pads passwords shorter than 6 chars with underscores (Supabase enforces 6-char minimum). Applied in doLogin, doChangePassword, sendInvite.
-- `bootApp(user)`: called after login; loads all data, checks must_change_password flag.
-- `loadAll()`: fetches matches (with kickoff_utc), predictions for current player, all players, and settings in parallel.
+- `padPassword(p)`: pads passwords shorter than 6 chars with underscores
+  (Supabase enforces 6-char minimum server-side). Applied transparently in
+  `doLogin`, `doChangePassword`, and `sendInvite` — players never see underscores.
+- `bootApp(user)`: called after login. Fetches the player's row; if no row
+  exists (deleted/ghost account) and email ≠ ADMIN_EMAIL, signs out immediately.
+  Checks `user.user_metadata.must_change_password` and shows the change-password
+  screen on first login.
+- `loadAll()`: fetches matches (with kickoff_utc), predictions for current
+  player, all players, and settings in parallel.
+- Startup uses `sb.auth.getUser()` (not `getSession()`) so deleted auth users
+  are rejected server-side rather than booting from a stale cached token.
+
+### Player invite flow (Settings → Add Player)
+`sendInvite(btn)` steps:
+1. Save the admin's current session tokens (`getSession()`).
+2. Call `sb.auth.signUp()` with the player's email and `padPassword(name)`.
+   - If "already registered" error, treat as soft error and continue (retry case).
+   - Otherwise abort on auth errors.
+3. Restore admin session via `setSession()` — critical because `signUp()` with
+   autoconfirm enabled auto-signs-in the new user, silently replacing the admin
+   session and causing the next DB write to fail RLS.
+4. Upsert into `players` with `{ id: authUUID, name, email, is_admin: false }`.
+   Using the auth UUID ensures `players.id = auth.uid()` from day one.
+5. Call `sb.auth.resetPasswordForEmail(email)` to trigger the welcome email
+   (Supabase sends no email on signUp when autoconfirm is on; this is the
+   delivery mechanism).
+
+**Initial password** = player's name as entered by admin (e.g. "Alma"),
+padded with underscores if under 6 chars. Players are told their initial
+password in the welcome email and never see the padding.
+
+**Welcome email template** is configured in Supabase dashboard under
+Authentication → Email Templates → Reset Password. Template uses:
+- `{{ .Email }}` — player's email address
+- `{{ .Data.name }}` — player's name (set in signUp user metadata)
+- Plain link to `https://vm2026.syndikatet.eu` (no magic link / recovery token)
+- No `{{ .ConfirmationURL }}` — players simply go to the login page directly.
+
+**First login** → `must_change_password: true` in user metadata →
+`bootApp` shows the Norwegian change-password screen ("Velg ditt eget passord").
+No password strength rules in the UI; Supabase's 6-char minimum is handled
+invisibly by `padPassword`. After setting a new password `must_change_password`
+is cleared and the player lands in the app.
 
 ### Scoring
 - `calcScore(ph, pa, ah, aa, round)`: returns points for a prediction.
@@ -139,18 +179,8 @@ for R32 matches automatically.
 third-place qualifiers (encoded as a string key like "ABCDEFGH") to an ordered
 array of which match slot each qualifier fills.
 
-### Player management (Settings → Add Player)
-`sendInvite(btn)` flow:
-1. `sb.auth.signUp()` first → gets the new user's auth UUID
-2. Insert into `players` with `{ id: authUUID, name, email, is_admin: false }`
-3. Reload player list and show success message
-
-Order matters: signUp first ensures `players.id = auth.uid()` and avoids RLS
-violations when inserting the player row.
-
-Initial password = player's name (padded to 6 chars if needed).
-`must_change_password: true` is set in user metadata; the app shows a
-password-change screen on first login.
+### Player management
+See "Player invite flow" under Authentication above.
 
 ---
 
