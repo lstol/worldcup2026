@@ -203,19 +203,73 @@ is cleared and the player lands in the app.
 ### Rounds and bracket
 Rounds in order: group → R32 → R16 → QF → SF → final / bronze
 
-**R32 bracket** (matches 73–88) is stored in `R32_BRACKET` object mapping
-match_number → { h: slot, a: slot } where slots are:
-- `W_X` = Winner of Group X
-- `R_X` = Runner-up of Group X
-- `T3` = Best third-place team (determined by `THIRD_PLACE_MAP`)
+Source of truth: https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_knockout_stage
 
-`autoPopulateR32()` (called when admin saves group stage results) reads
-group standings, resolves bracket slots, and updates match home_team/away_team
-for R32 matches automatically.
+#### R32 bracket (M73–M88) — `R32_BRACKET` in code
+Slots: `W_X` = Winner Group X, `R_X` = Runner-up Group X, `T3` = best 3rd-place (8 slots)
 
-`THIRD_PLACE_MAP` is a large lookup table mapping which 8 of the 12 groups had
-third-place qualifiers (encoded as a string key like "ABCDEFGH") to an ordered
-array of which match slot each qualifier fills.
+| Match | Home          | Away         |
+|-------|---------------|--------------|
+| M73   | Runner-up A   | Runner-up B  |
+| M74   | Winner E      | T3           |
+| M75   | Winner F      | Runner-up C  |
+| M76   | Winner C      | Runner-up F  |
+| M77   | Winner I      | T3           |
+| M78   | Runner-up E   | Runner-up I  |
+| M79   | Winner A      | T3           |
+| M80   | Winner L      | T3           |
+| M81   | Winner D      | T3           |
+| M82   | Winner G      | T3           |
+| M83   | Runner-up K   | Runner-up L  |
+| M84   | Winner H      | Runner-up J  |
+| M85   | Winner B      | T3           |
+| M86   | Winner J      | Runner-up H  |
+| M87   | Winner K      | T3           |
+| M88   | Runner-up D   | Runner-up G  |
+
+T3 slots are in matches: M74, M77, M79, M80, M81, M82, M85, M87 (8 slots for 8 best 3rd-place teams).
+
+**Third-place matrix:** `THIRD_PLACE_MAP` is a compact encoded lookup table with 495 entries
+(one per combination of which 8 of the 12 groups provide a 3rd-place qualifier).
+Key = sorted 8-letter group string (e.g. "ABCDEFGH"), value = 8-char assignment string
+where each character at position p gives which group's 3rd-place team goes to the T3 slot
+in match `T3_POS[match]` (T3_POS: M74→pos3, M77→pos5, M79→pos0, M80→pos7,
+M81→pos2, M82→pos4, M85→pos1, M87→pos6).
+
+`autoPopulateR32()` resolves slots and updates match home_team/away_team automatically
+when admin saves group stage results.
+
+#### R16 (M89–M96) — `KO_BRACKET` in code
+| Match | Home       | Away       |
+|-------|------------|------------|
+| M89   | Winner M74 | Winner M77 |
+| M90   | Winner M73 | Winner M75 |
+| M91   | Winner M76 | Winner M78 |
+| M92   | Winner M79 | Winner M80 |
+| M93   | Winner M83 | Winner M84 |
+| M94   | Winner M81 | Winner M82 |
+| M95   | Winner M86 | Winner M88 |
+| M96   | Winner M85 | Winner M87 |
+
+#### QF (M97–M100)
+| Match | Home       | Away       |
+|-------|------------|------------|
+| M97   | Winner M89 | Winner M90 |
+| M98   | Winner M93 | Winner M94 |
+| M99   | Winner M91 | Winner M92 |
+| M100  | Winner M95 | Winner M96 |
+
+#### SF, Bronze, Final
+| Match | Home        | Away        |
+|-------|-------------|-------------|
+| M101  | Winner M97  | Winner M98  |
+| M102  | Winner M99  | Winner M100 |
+| M103  | Loser M101  | Loser M102  |
+| M104  | Winner M101 | Winner M102 |
+
+**Note:** The THIRD_PLACE_MAP (495 rows) was pre-populated in the code and needs
+verification against the Wikipedia matrix table. Do not regenerate it without
+checking against the source — it is complex and error-prone.
 
 ### Player management
 `removePlayer(btn)` deletes predictions and the players row. The `on_player_delete`
