@@ -598,10 +598,23 @@ async function sendInvite(btn) {
 
   // Step 2: Restore admin session so the DB insert runs with admin privileges.
   if (savedSession) {
-    await sb.auth.setSession({
+    var sessRes = await sb.auth.setSession({
       access_token: savedSession.access_token,
       refresh_token: savedSession.refresh_token
     });
+    if (sessRes.error) {
+      msgEl.className = 'msg-err';
+      msgEl.textContent = 'Session error: ' + sessRes.error.message + '. Please reload and try again.';
+      btn.disabled = false;
+      btn.textContent = 'Send Invite';
+      return;
+    }
+  } else {
+    msgEl.className = 'msg-err';
+    msgEl.textContent = 'Could not save admin session. Please reload and try again.';
+    btn.disabled = false;
+    btn.textContent = 'Send Invite';
+    return;
   }
 
   // Step 3: Insert player row. Use the new auth UUID if we have it so that
