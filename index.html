@@ -564,7 +564,7 @@ async function sendInvite(btn) {
   var signUpRes = await sb.auth.signUp({
     email: email,
     password: padPassword(nm),
-    options: { data: {name: nm, must_change_password: true, invite_message: (settings['invite_message__text'] || '').replace(/\{name\}/g, nm).replace(/\n/g, '<br>')} }
+    options: { data: {name: nm, must_change_password: true, invite_message: '<p>' + (settings['invite_message__text'] || '').replace(/\{name\}/g, nm).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>'} }
   });
 
   var newId = null;
