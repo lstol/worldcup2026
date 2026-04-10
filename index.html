@@ -286,24 +286,47 @@ async function sendInvite(btn) {
   btn.textContent = 'Sending...';
   msgEl.textContent = '';
 
-  // Step 1: Create auth user first so we get their UUID.
-  // This also sends the confirmation/welcome email via Supabase.
+  // Save admin session now — signUp() auto-signs-in the new user on projects
+  // with email confirmation disabled, which replaces the current session and
+  // causes subsequent DB writes to run as the new (non-admin) user → RLS fail.
+  var savedSession = (await sb.auth.getSession()).data.session;
+
+  // Step 1: Create auth user to get their UUID.
   var signUpRes = await sb.auth.signUp({
     email: email,
     password: padPassword(nm),
     options: { data: {name: nm, must_change_password: true} }
   });
+
+  var newId = null;
+  var alreadyExisted = false;
   if (signUpRes.error) {
-    btn.disabled = false;
-    btn.textContent = 'Send Invite';
-    msgEl.className = 'msg-err';
-    msgEl.textContent = 'Account error: ' + signUpRes.error.message;
-    return;
+    var errMsg = (signUpRes.error.message || '').toLowerCase();
+    if (errMsg.indexOf('already') !== -1 || errMsg.indexOf('registered') !== -1) {
+      // Auth user already exists (e.g. retry after a previous partial failure).
+      // Continue so we can still create/update the players row.
+      alreadyExisted = true;
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Send Invite';
+      msgEl.className = 'msg-err';
+      msgEl.textContent = 'Account error: ' + signUpRes.error.message;
+      return;
+    }
+  } else {
+    newId = signUpRes.data && signUpRes.data.user && signUpRes.data.user.id;
   }
 
-  // Step 2: Insert player row using the auth UUID so players.id = auth.uid()
-  // for every user from day one. This avoids RLS issues and ID mismatches.
-  var newId = signUpRes.data && signUpRes.data.user && signUpRes.data.user.id;
+  // Step 2: Restore admin session so the DB insert runs with admin privileges.
+  if (savedSession) {
+    await sb.auth.setSession({
+      access_token: savedSession.access_token,
+      refresh_token: savedSession.refresh_token
+    });
+  }
+
+  // Step 3: Insert player row. Use the new auth UUID if we have it so that
+  // players.id = auth.uid() from day one (avoids future RLS mismatches).
   var playerRow = {name: nm, email: email, is_admin: false};
   if (newId) playerRow.id = newId;
   var upsertRes = await sb.from('players').upsert(
@@ -311,7 +334,7 @@ async function sendInvite(btn) {
     {onConflict: 'email', ignoreDuplicates: false}
   );
   if (upsertRes.error && upsertRes.error.code !== '23505') {
-    // 23505 = unique violation - row already exists, that is fine
+    // 23505 = unique violation — row already exists, that is fine
     msgEl.className = 'msg-err';
     msgEl.textContent = 'DB error: ' + upsertRes.error.message;
     btn.disabled = false;
@@ -325,7 +348,11 @@ async function sendInvite(btn) {
   btn.disabled = false;
   btn.textContent = 'Re-invite';
   msgEl.className = 'msg-ok';
-  msgEl.textContent = 'Account created for ' + email + '. Initial password: "' + nm + '". They will be prompted to change it on first login.';
+  if (alreadyExisted) {
+    msgEl.textContent = 'Player added for ' + email + ' (auth account already existed). Initial password: "' + nm + '".';
+  } else {
+    msgEl.textContent = 'Account created for ' + email + '. Initial password: "' + nm + '". They will be prompted to change it on first login.';
+  }
   setTimeout(function() { msgEl.textContent = ''; }, 8000);
 
   // If this was a new row (no data-pid), refresh the settings panel
