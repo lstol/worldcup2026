@@ -25,7 +25,8 @@ DNS alias: vm2026.syndikatet.eu → GitHub Pages.
   attributes must use &apos;
 
 ## Working style
-- Validate JS syntax before every commit
+- Validate JS syntax before every commit using `npx acorn --ecma2020`
+  (extract inline script first: `re.findall(r'<script(?![^>]*src)[^>]*>(.*?)</script>', ...)`)
 - Prefer complete, thorough changes over small incremental patches
 - Commit regularly with descriptive messages
 
@@ -36,7 +37,7 @@ DNS alias: vm2026.syndikatet.eu → GitHub Pages.
 ### `matches`
 | Column         | Type        | Notes                                      |
 |----------------|-------------|--------------------------------------------|
-| id             | UUID        | Primary key                                |
+| id             | int         | Primary key (auto-increment, NOT sequential with match_number) |
 | match_number   | int         | 1–104; used as display label and sort key  |
 | round          | text        | 'group', 'R32', 'R16', 'QF', 'SF', 'final', 'bronze' |
 | group_letter   | text        | A–L (group stage only)                     |
@@ -47,15 +48,22 @@ DNS alias: vm2026.syndikatet.eu → GitHub Pages.
 | match_date     | date        | DATE type — no time component              |
 | kickoff_utc    | TIMESTAMPTZ | Exact kickoff time in UTC (added later)    |
 
+**Important:** `matches.id` is an auto-increment integer and is NOT equal to
+`match_number`. E.g. match_number=1 has id=73. Code uses `m.id` for FK references
+(predictions, admin inputs) and `m.match_number` only for display.
+
 ### `predictions`
-| Column      | Type  | Notes                                               |
-|-------------|-------|-----------------------------------------------------|
-| id          | UUID  | Primary key                                         |
-| player_id   | UUID  | FK → players.id                                     |
-| match_id    | UUID  | FK → matches.id                                     |
-| home_score  | int   | Player's predicted home score                       |
-| away_score  | int   | Player's predicted away score                       |
-| et_winner   | text  | Knockout only — predicted team to win in extra time |
+| Column       | Type  | Notes                                               |
+|--------------|-------|-----------------------------------------------------|
+| id           | int   | Primary key (auto-increment)                        |
+| player_id    | UUID  | FK → players.id                                     |
+| match_id     | int   | FK → matches.id (NOT match_number)                  |
+| home_score   | int   | Player's predicted home score                       |
+| away_score   | int   | Player's predicted away score                       |
+| et_winner    | char  | Knockout only — 'H' or 'A'                         |
+| submitted_at | TIMESTAMPTZ | Set automatically                             |
+
+Unique constraint: `(player_id, match_id)` — used as the upsert conflict target.
 
 ### `players`
 | Column     | Type        | Notes                                           |
@@ -94,12 +102,21 @@ Key/value table. Known keys:
 
 ---
 
-## RLS policies (players table)
+## RLS policies
+
+### `players` table
 - `read_all`: USING (true) — any authenticated user can read all rows
 - `admin_insert`: WITH CHECK: EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND is_admin = true)
 - `admin_update`: USING: same admin check
 - `admin_delete`: USING: same admin check
 - `self_update_name`: USING (id = auth.uid()) WITH CHECK (id = auth.uid()) — players can update their own row
+
+### `predictions` table
+- `public read predictions`: USING (true) — all authenticated users can read
+- `players insert own`: WITH CHECK (player_id = auth.uid()) — players can insert their own
+- `players update own`: USING (player_id = auth.uid()) — players can update their own
+- `players delete own`: USING (player_id = auth.uid()) — players can delete their own
+- `Admin can delete any predictions`: USING (admin check) — admin can delete any row
 
 ---
 
@@ -156,6 +173,14 @@ Authentication → Email Templates → Reset Password. Template uses:
 No password strength rules in the UI; Supabase's 6-char minimum is handled
 invisibly by `padPassword`. After setting a new password `must_change_password`
 is cleared and the player lands in the app.
+
+### Prediction save (`savePred`)
+- Collects all `data-mid` values from `#pred-content [data-side="h"]` inputs
+- For each match with empty inputs: deletes existing prediction from DB
+- For each match with non-empty inputs: upserts with `onConflict: 'player_id,match_id'`
+- Then re-fetches all predictions for the player to update global `preds`
+- `doAutosave()` is `async` — auto-saves 2 seconds after any input change
+- `data-mid` on prediction inputs is `m.id` (matches.id integer, e.g. 73), NOT match_number
 
 ### Scoring
 - `calcScore(ph, pa, ah, aa, round)`: returns points for a prediction.
