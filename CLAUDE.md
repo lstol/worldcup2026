@@ -354,3 +354,22 @@ them directly via SQL with their fixed UUIDs.
 - Final: M104, July 19
 
 Top 2 from each group + 8 best third-place teams → 32 teams in R32.
+
+## Keepalive ping
+A silent Supabase keepalive ping is implemented in index.html.
+Fires once every 4 days when the app is opened in a browser.
+Uses localStorage key: `wc2026_keepalive`
+Queries the matches table for a single row.
+Purpose: prevent Supabase free tier from pausing during
+inactive periods before the tournament.
+
+## Domain
+- Primary URL: https://vm2026.syndikatet.eu
+- DNS: CNAME vm2026 → lstol.github.io
+- HTTPS certificate: issued by GitHub via Let's Encrypt
+- Supabase allowed redirect URL: https://vm2026.syndikatet.eu
+
+## Deployment
+- git push to main branch → GitHub Pages auto-deploys
+- No manual upload needed when using Claude Code
+- In Claude Code just say: "commit and push to GitHub"
