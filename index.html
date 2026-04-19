@@ -1040,4 +1040,5 @@ updateCountdown();
 setInterval(updateCountdown, 30000);
 
 
+(function() { try { var lk = 'wc2026_keepalive'; var last = +localStorage.getItem(lk); if (!last || Date.now() - last > 4 * 24 * 60 * 60 * 1000) { sb.from('matches').select('id').limit(1).then(function() { localStorage.setItem(lk, Date.now()); }); } } catch(e) {} })();
 (async function() { const res = await sb.auth.getUser(); if (res.data && res.data.user) await bootApp(res.data.user); })(); </script> </body> </html>
