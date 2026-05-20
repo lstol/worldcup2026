@@ -733,13 +733,28 @@ async function saveRoundToggle(cb) { const key = cb.dataset.key, val = cb.checke
     var p = players.find(function(x) { return x.id === pid; });
     if (p) p.name = newName;
   }
+  // Also persist any unsaved new player rows (added via "+ Add Player").
+  var unsavedRows = document.querySelectorAll('#players-tbody tr:not([data-pid])');
+  var newSavedCount = 0;
+  for (var ui = 0; ui < unsavedRows.length; ui++) {
+    var urow = unsavedRows[ui];
+    var uname = urow.querySelector('[data-field="name"]');
+    var uemail = urow.querySelector('[data-field="email"]');
+    if (!uname || !uemail) continue;
+    if (!uname.value.trim() || !uemail.value.trim()) continue;
+    var sres = await savePlayerRow(urow);
+    if (sres.ok) newSavedCount++;
+    else errs.push(sres.error);
+  }
   if (errs.length) {
     st.style.color = '#C9041C';
     st.textContent = 'Error: ' + errs.join('; ');
   } else {
     st.style.color = '#2D7A2D';
-    st.textContent = 'Names saved!';
-    setTimeout(function() { st.textContent = ''; }, 3000);
+    st.textContent = newSavedCount > 0
+      ? (newSavedCount + ' new player(s) saved. Click Invite to send welcome emails.')
+      : 'Names saved!';
+    setTimeout(function() { st.textContent = ''; }, newSavedCount > 0 ? 8000 : 3000);
   }
 }
 
