@@ -373,3 +373,28 @@ inactive periods before the tournament.
 - git push to main branch → GitHub Pages auto-deploys
 - No manual upload needed when using Claude Code
 - In Claude Code just say: "commit and push to GitHub"
+
+## Workflow: claude.ai → Claude Code handoffs
+
+When claude.ai makes changes (edge functions, index.html, SQL, config), it will
+end the session with a handoff block. Your job is to apply those changes locally
+and push to GitHub.
+
+### Handoff format
+claude.ai will produce a message like:
+
+--- HANDOFF FOR CLAUDE CODE ---
+Changes made this session:
+- [file or system]: [what changed]
+
+Actions needed:
+1. [specific file to create/update with content, or action to take]
+2. git commit -m "[suggested commit message]"
+3. git push
+--- END HANDOFF ---
+
+Apply each change exactly as described, then commit and push.
+If a file is provided with full content, write it verbatim.
+If an edge function was deployed to Supabase, write the code to
+supabase/functions/<name>/index.ts.
+Always confirm with: "Handoff applied. Committed: [commit hash]"
