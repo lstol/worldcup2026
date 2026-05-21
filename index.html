@@ -788,20 +788,12 @@ async function savePlayerRow(row) {
   });
 
   var newId = null;
-  if (signUpRes.error) {
-    var errMsg = (signUpRes.error.message || '').toLowerCase();
-    if (errMsg.indexOf('already') !== -1 || errMsg.indexOf('registered') !== -1) {
-      if (!row.dataset.pid) {
-        return {ok: false, error: 'An auth account already exists for ' + email + '. If this player was previously removed, their UUID must be fixed in the Supabase dashboard before re-adding. Contact the admin.'};
-      }
-      // Existing row being re-saved — fall through to upsert by email.
-    } else {
-      return {ok: false, error: 'Account error: ' + signUpRes.error.message};
-    }
-  } else {
-    newId = signUpRes.data && signUpRes.data.user && signUpRes.data.user.id;
-  }
+  var orphanReconciled = false;
+  var signUpFailed = !!signUpRes.error;
 
+  // Always restore the admin session next — signUp() may have signed us in as
+  // the new user on autoconfirm projects, regardless of whether subsequent
+  // logic succeeds or errors.
   if (savedSession) {
     var sessRes = await sb.auth.setSession({
       access_token: savedSession.access_token,
@@ -812,11 +804,33 @@ async function savePlayerRow(row) {
     return {ok: false, error: 'Could not save admin session. Please reload and try again.'};
   }
 
-  var playerRow = {name: nm, email: email, is_admin: false};
-  if (newId) playerRow.id = newId;
-  var upsertRes = await sb.from('players').upsert(playerRow, {onConflict: 'email', ignoreDuplicates: false});
-  if (upsertRes.error && upsertRes.error.code !== '23505') {
-    return {ok: false, error: 'DB error: ' + upsertRes.error.message};
+  if (signUpFailed) {
+    var errMsg = (signUpRes.error.message || '').toLowerCase();
+    if (errMsg.indexOf('already') !== -1 || errMsg.indexOf('registered') !== -1) {
+      // Orphan auth user (or existing player). Reconcile via admin RPC: it
+      // looks up the auth UUID and ensures a matching players row exists.
+      // This enforces the invariant "players table is the source of truth".
+      var rpcRes = await sb.rpc('admin_create_player', {p_email: email, p_name: nm});
+      if (rpcRes.error) return {ok: false, error: 'Reconcile error: ' + rpcRes.error.message};
+      if (!rpcRes.data) return {ok: false, error: 'Auth user lookup failed for ' + email + '.'};
+      newId = rpcRes.data;
+      orphanReconciled = true;
+    } else {
+      return {ok: false, error: 'Account error: ' + signUpRes.error.message};
+    }
+  } else {
+    newId = signUpRes.data && signUpRes.data.user && signUpRes.data.user.id;
+  }
+
+  // admin_create_player has already inserted/updated the players row, so we
+  // only upsert from the client on the happy signUp path.
+  if (!orphanReconciled) {
+    var playerRow = {name: nm, email: email, is_admin: false};
+    if (newId) playerRow.id = newId;
+    var upsertRes = await sb.from('players').upsert(playerRow, {onConflict: 'email', ignoreDuplicates: false});
+    if (upsertRes.error && upsertRes.error.code !== '23505') {
+      return {ok: false, error: 'DB error: ' + upsertRes.error.message};
+    }
   }
 
   if (newId && !row.dataset.pid) row.dataset.pid = newId;
