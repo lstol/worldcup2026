@@ -76,14 +76,19 @@ Unique constraint: `(player_id, match_id)` — used as the upsert conflict targe
 
 **Important:** `players.id` must equal `auth.users.id` for RLS to work correctly.
 New players created via Settings → Add Player will have this set correctly.
-Some legacy players (Arne, lstol@equinor.com) have a mismatch — their
-`players.id` was set manually and differs from their `auth.users.id`.
 
-**Invariant enforced by trigger:** A database trigger (`on_player_delete`) fires
-`AFTER DELETE ON players` and automatically deletes the corresponding `auth.users`
-row via `public.delete_auth_user_on_player_delete()` (SECURITY DEFINER). This
-keeps `players` and `auth.users` in sync — removing a player via the UI fully
-cleans up both tables, so the same email can be re-invited cleanly.
+**Source of truth:** The Settings player list (i.e. `public.players`) is
+authoritative. `auth.users` must mirror it — never the other way around.
+
+**Invariants enforced by the DB:**
+- A trigger (`on_player_delete`) fires `AFTER DELETE ON players` and deletes the
+  corresponding `auth.users` row via `public.delete_auth_user_on_player_delete()`
+  (SECURITY DEFINER). Removing a player via the UI fully cleans up both tables.
+- The RPC `public.admin_create_player(p_email, p_name)` (SECURITY DEFINER,
+  admin-only) absorbs any orphan in `auth.users` back into `players`. The client
+  calls it when `signUp()` reports "already registered" — it looks up the
+  existing auth UUID, inserts a matching `players` row with that UUID, and
+  returns it. Net effect: orphans no longer block re-adding the same email.
 
 ### `settings`
 Key/value table. Has two value columns: `value` (integer, NOT NULL) and `text_value` (text, nullable).
@@ -153,30 +158,32 @@ has been confirmed set to `is_admin = true`.
 - Startup uses `sb.auth.getUser()` (not `getSession()`) so deleted auth users
   are rejected server-side rather than booting from a stale cached token.
 
-### Player invite flow (Settings → Add Player)
-`sendInvite(btn)` steps:
+### Player save / invite flow (Settings → Add Player)
+Save and invite are separate actions. Persisting a player to the DB is done by
+`savePlayerRow(row)`; sending the welcome email is done by `sendInvite(btn)`.
+
+`savePlayerRow(row)` is called from:
+- `saveAllSettings()` and `savePlayerNames()` — bulk-save every row in
+  `#players-tbody` without `data-pid` that has both name and email filled.
+- `sendInvite(btn)` — when the row has no `data-pid` yet, save first, then
+  send the email.
+
+Steps inside `savePlayerRow`:
 1. Save the admin's current session tokens (`getSession()`).
 2. Call `sb.auth.signUp()` with the player's email and `padPassword(name)`.
-   - If "already registered" error AND this is a Re-invite (row has `data-pid`):
-     treat as soft error and continue — just update name in players row.
-   - If "already registered" error AND this is a new Add Player row (no `data-pid`):
-     abort with an error. The auth account exists but we cannot recover its UUID
-     from the client. This prevents creating a players row with a mismatched UUID
-     (which would silently break login). The right fix is to Remove the player
-     first (which now also deletes the auth account via the DB trigger), then
-     re-add them.
-   - Otherwise abort on auth errors.
-3. Restore admin session via `setSession()` — critical because `signUp()` with
-   autoconfirm enabled auto-signs-in the new user, silently replacing the admin
-   session and causing the next DB write to fail RLS. The result of `setSession`
-   is now checked and the function aborts with a clear error if it fails (e.g.
-   expired refresh token). If this happens, the admin should reload the page and
-   try again with a fresh session.
-4. Upsert into `players` with `{ id: authUUID, name, email, is_admin: false }`.
-   Using the auth UUID ensures `players.id = auth.uid()` from day one.
-5. Call `sb.auth.resetPasswordForEmail(email)` to trigger the welcome email
-   (Supabase sends no email on signUp when autoconfirm is on; this is the
-   delivery mechanism).
+3. Restore admin session via `setSession()` unconditionally — `signUp()` with
+   autoconfirm enabled auto-signs-in the new user even when subsequent steps
+   error, so the restore must happen on both the success and failure branches.
+4. If `signUp` returned "already registered" (orphan in `auth.users` or
+   existing player), call `sb.rpc('admin_create_player', {p_email, p_name})`.
+   The RPC ensures a `players` row exists for the auth UUID and returns it.
+5. Otherwise upsert `players` with `{ id: authUUID, name, email, is_admin: false }`.
+6. Flip the row UI: set `data-pid`, badge → "Saved" (green), button →
+   "Invite", drop the Cancel button, mark the email field readonly.
+
+`sendInvite(btn)` calls `sb.auth.resetPasswordForEmail(email)` — Supabase sends
+no email on `signUp()` when autoconfirm is on, so the customised "Reset
+Password" template is the welcome-invite delivery mechanism.
 
 **Initial password** = player's name as entered by admin (e.g. "Alma"),
 padded with underscores if under 6 chars. Players are told their initial
