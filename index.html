@@ -1016,7 +1016,7 @@ async function renderBonus() {
         h += '<td style="padding:5px 10px;color:#444">'+(pAns ? pAns.answer : '<em style="color:#ccc">No answer</em>')+'</td>';
         h += '<td style="padding:5px 10px;text-align:center">';
         if (pAns) {
-          h += '<input type="number" min="0" max="10" style="width:60px;padding:3px 7px;border:1px solid #9DC3E6;border-radius:5px;text-align:center;font-size:.82rem" value="'+(pAns.points != null ? pAns.points : (settings['bonus_q_pts']||''))+'" placeholder="pts" onchange="saveBonusPoints('+pAns.id+',this.value)">';
+          h += '<input type="number" min="0" max="10" style="width:60px;padding:3px 7px;border:1px solid #9DC3E6;border-radius:5px;text-align:center;font-size:.82rem" value="'+(pAns.points != null ? pAns.points : 0)+'" placeholder="pts" onchange="saveBonusPoints('+pAns.id+',this.value)">';
         } else {
           h += '<span style="color:#ccc;font-size:.78rem">&#8212;</span>';
         }
