@@ -1026,6 +1026,24 @@ async function renderBonus() {
     });
     h += '</div>';
   }
+  if (locked && !isAdmin) {
+    var everyoneRes = await sb.from('bonus_answers').select('*');
+    var everyoneAns = everyoneRes.data || [];
+    h += '<div class="ss"><h3>Everyone&apos;s Answers</h3>';
+    bonusQuestions.forEach(function(q) {
+      h += '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:.85rem;color:#1A3A5C;background:#EBF4FB;padding:8px 10px;border-radius:6px;margin-bottom:8px">'+q.sort_order+'. '+q.question+'</div>';
+      h += '<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr style="background:#1A3A5C;color:#fff"><th style="padding:6px 10px;text-align:left">Player</th><th style="padding:6px 10px;text-align:left">Answer</th></tr></thead><tbody>';
+      players.forEach(function(p) {
+        var pa = everyoneAns.find(function(a) { return a.player_id === p.id && a.question_id === q.id; });
+        h += '<tr style="border-bottom:1px solid #E4EEF7">';
+        h += '<td style="padding:5px 10px">'+p.name+'</td>';
+        h += '<td style="padding:5px 10px;color:#444">'+(pa ? pa.answer : '<em style="color:#ccc">No answer</em>')+'</td>';
+        h += '</tr>';
+      });
+      h += '</tbody></table></div>';
+    });
+    h += '</div>';
+  }
   el.innerHTML = h;
 }
 
