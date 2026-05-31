@@ -108,7 +108,7 @@ function formatKickoffShort(m) {
 }
 function formatClosing(m) {
   if (!m.kickoff_utc) return '';
-  var d = new Date(m.kickoff_utc);
+  var d = new Date(new Date(m.kickoff_utc).getTime() - 10*60*1000);
   var z = {timeZone:'Europe/Oslo'};
   var wd = d.toLocaleString('en-GB', Object.assign({weekday:'long'}, z));
   var day = d.toLocaleString('en-GB', Object.assign({day:'numeric'}, z));
