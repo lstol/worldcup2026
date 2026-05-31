@@ -61,11 +61,11 @@
   <div class="pg-title">View Predictions</div>
   <div id="viewpred-content"><div class="spin">Loading...</div></div>
 </div>
-<div id="page-admin" class="page"> <div class="pg-title">Enter Actual Results</div> <div class="info">Enter actual scores. All family members see updates immediately.</div> <div class="rtabs" id="admin-tabs"></div> <div id="admin-content"><div class="spin">Loading...</div></div> <div class="savebar show" id="admin-savebar"> <button class="btn-save" onclick="saveResults()">Save Results</button> <button class="btn-sm" style="background:#5A7A2D" onclick="fillRandomAdmin()">Random</button> <button class="btn-sm" style="background:#C9041C" onclick="clearAllAdmin()">Clear all</button> <span class="sstatus" id="admin-status"></span> </div> </div> <div id="page-settings" class="page"> <div class="pg-title">Settings</div> <div id="settings-content"><div class="spin">Loading...</div></div> <div class="savebar" id="settings-savebar"> <button class="btn-save" onclick="saveAllSettings()">Save All Settings</button> <span class="sstatus" id="settings-status"></span> </div> </div> </div> <div id="page-bonus" class="page"> <div class="pg-title">Bonus Questions</div> <div id="bonus-content"><div class="spin">Loading...</div></div> </div> <script> // @ts-nocheck
+<div id="page-admin" class="page"> <div class="pg-title">Enter Actual Results</div> <div class="info">Enter actual scores. All family members see updates immediately.</div> <div class="rtabs" id="admin-tabs"></div> <div id="admin-content"><div class="spin">Loading...</div></div> <div class="savebar show" id="admin-savebar"> <button class="btn-save" onclick="saveResults()">Save Results</button> <button class="btn-sm" style="background:#5A7A2D" onclick="fillRandomAdmin()">Random</button> <button class="btn-sm" style="background:#C9041C" onclick="clearAllAdmin()">Clear all</button> <span class="sstatus" id="admin-status"></span> </div> </div> <div id="page-settings" class="page"> <div class="pg-title">Settings</div> <div id="settings-content"><div class="spin">Loading...</div></div> <div class="savebar" id="settings-savebar"> <button class="btn-save" onclick="saveAllSettings()">Save All Settings</button> <span class="sstatus" id="settings-status"></span> </div> </div> </div> <div id="page-bonus" class="page"> <div class="pg-title">Bonus Questions</div> <div id="bonus-countdown" style="background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:1.05rem;font-weight:600;box-shadow:0 2px 8px rgba(21,101,192,.3);min-height:36px;display:none"></div> <div id="bonus-content"><div class="spin">Loading...</div></div> </div> <script> // @ts-nocheck
 /* exported doLogin, doLogout, setRound, onPredInput, onAdminInput, saveResults,
    saveRoundToggle, saveAllSettings, savePlayerNames, addPlayerRow, sendInvite,
    removePlayer, saveVisToggle, setViewPredPlayer, setViewPredRound, doChangePassword,
-   saveBonusAnswer, saveBonusPoints, saveBonusLockToggle */
+   saveBonusAnswer, saveBonusPoints */
 const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co'; const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncmVvZ2xud25lc2Rla2piYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjQ1NjgsImV4cCI6MjA4OTg0MDU2OH0.4P3YRTK4vW6IkSVNdLJnwbpzTT5kbtDE3pCqd-hSSyc'; const sb = supabase.createClient(SB_URL, SB_KEY); const ADMIN_EMAIL = 'lasse.stoltenberg@gmail.com'; const RANDOMBOT_ID = '00000000-0000-0000-0000-000000000001';
   const CLAUDEBOT_ID = '00000000-0000-0000-0000-000000000002';
   var botPreds = {randombot: {}, claude: {}};
@@ -148,6 +148,22 @@ function startCountdownTimer() {
       if (diff2 > 2*60*60*1000) { gb.style.display='none'; gb.textContent=''; return; }
       gb.style.display = 'block';
       gb.innerHTML = '&#x23F0; <strong>'+rLabel+'</strong> predictions close in <strong>'+fmtDiff(diff2,true)+'</strong> &mdash; <a onclick="gotoPage(&apos;pred&apos;)" style="cursor:pointer;color:#7C3A00;text-decoration:underline">Go to My Predictions</a>';
+    }
+    var bc = document.getElementById('bonus-countdown');
+    if (bc) {
+      var gfz = roundFreezeMs('group');
+      if (gfz == null) { bc.style.display='none'; bc.textContent=''; }
+      else {
+        var bdiff = gfz - Date.now();
+        if (bdiff > 0) {
+          bc.style.display='block';
+          bc.innerHTML = '&#x1F512; <span style="font-size:.78rem;opacity:.85;text-transform:uppercase;letter-spacing:.04em">Bonus answers lock in</span><br><span style="font-size:1.5rem;font-weight:800">'+fmtDiff(bdiff,true)+'</span><br><span style="font-size:.8rem;opacity:.9">'+fmtTime(gfz)+'</span>';
+        } else {
+          bc.style.display='block';
+          bc.style.background='#FDEAEA'; bc.style.color='#C9041C'; bc.style.boxShadow='none';
+          bc.innerHTML = '&#x1F512; <span style="font-size:1rem;font-weight:700">Bonus answers are locked</span>';
+        }
+      }
     }
   }, 1000);
 }
@@ -441,15 +457,6 @@ function calcRoundBonus(roundKey, predsList) { var bonusMap = {R16:"bonus_r16",Q
   h += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer">';
   h += '<span style="font-size:.78rem;color:'+(predsVisible?'#2D7A2D':'#999')+'" id="vis-lbl">'+(predsVisible?'On':'Off')+'</span>';
   h += '<input type="checkbox" data-key="preds_visible" '+(predsVisible?'checked':'')+' onchange="saveVisToggle(this)" style="width:18px;height:18px;cursor:pointer">';
-  h += '</label></div></div>';
-
-  var bonusLocked = settings['bonus_locked']==1 || settings['bonus_locked']==='1';
-  h += '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:'+(bonusLocked?'#FDEAEA':'#F8FBFF')+';border:2px solid '+(bonusLocked?'#C9041C':'#9DC3E6')+';border-radius:8px;margin-top:10px" id="bonus-lock-card">';
-  h += '<div style="flex:1"><div style="font-weight:700;font-size:.85rem">Bonus Questions Locked</div>';
-  h += '<div style="font-size:.72rem;color:#666">Lock to prevent players from changing their bonus answers</div></div>';
-  h += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer">';
-  h += '<span style="font-size:.78rem;color:'+(bonusLocked?'#C9041C':'#999')+'" id="bonus-lock-lbl">'+(bonusLocked?'Locked':'Unlocked')+'</span>';
-  h += '<input type="checkbox" data-key="bonus_locked" '+(bonusLocked?'checked':'')+' onchange="saveBonusLockToggle(this)" style="width:18px;height:18px;cursor:pointer">';
   h += '</label></div></div>';
 
   h += '<div class="ss"><h3>Round Unlock</h3><p style="font-size:.78rem;color:#666;margin-bottom:12px">Toggle each KO round on to allow players to submit predictions.</p>';
@@ -920,7 +927,7 @@ async function renderBonus() {
   }
   if (!bonusPlayerId) bonusPlayerId = player.id;
   var viewId = isAdmin ? bonusPlayerId : player.id;
-  var firstMatch = matches.find(function(m){ return m.match_number===1; }); var frozen = false; if (firstMatch) { if (firstMatch.home_score != null) frozen = true; else if (firstMatch.kickoff_utc) frozen = Date.now() >= new Date(firstMatch.kickoff_utc).getTime() - 10*60*1000; } var locked = frozen || settings['bonus_locked']==1 || settings['bonus_locked']==='1';
+  var firstMatch = matches.find(function(m){ return m.match_number===1; }); var frozen = false; if (firstMatch) { if (firstMatch.home_score != null) frozen = true; else if (firstMatch.kickoff_utc) frozen = Date.now() >= new Date(firstMatch.kickoff_utc).getTime() - 10*60*1000; } var locked = frozen; var predsVisible = settings['preds_visible']==1 || settings['preds_visible']==='1';
   var ansRes = await sb.from('bonus_answers').select('*').eq('player_id', viewId);
   var viewAnswers = ansRes.data || [];
   if (viewId === player.id) bonusAnswers = viewAnswers;
@@ -1011,7 +1018,7 @@ async function renderBonus() {
     });
     h += '</div>';
   }
-  if (locked && !isAdmin) {
+  if (locked && !isAdmin && predsVisible) {
     var everyoneRes = await sb.from('bonus_answers').select('*');
     var everyoneAns = everyoneRes.data || [];
     h += '<div class="ss"><h3>Everyone&apos;s Answers</h3>';
@@ -1047,17 +1054,6 @@ async function saveBonusPoints(answerId, points) {
   var pts = points === '' ? null : +points;
   var {error} = await sb.from('bonus_answers').update({points: pts}).eq('id', answerId);
   if (error) { alert('Error saving points: ' + error.message); }
-}
-
-async function saveBonusLockToggle(cb) {
-  var val = cb.checked ? 1 : 0;
-  var res = await sb.from('settings').upsert({key:'bonus_locked', value:val}, {onConflict:'key'});
-  if (res.error) { alert('Error: '+res.error.message); cb.checked=!cb.checked; return; }
-  settings['bonus_locked'] = val;
-  var card = document.getElementById('bonus-lock-card');
-  var lbl = document.getElementById('bonus-lock-lbl');
-  if (card) { card.style.background=val?'#FDEAEA':'#F8FBFF'; card.style.border='2px solid '+(val?'#C9041C':'#9DC3E6'); }
-  if (lbl) { lbl.textContent=val?'Locked':'Unlocked'; lbl.style.color=val?'#C9041C':'#999'; }
 }
 
 function setBonusPlayer(id, btn) {
