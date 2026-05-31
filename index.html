@@ -106,6 +106,16 @@ function formatKickoffShort(m) {
   var opts = {timeZone:'Europe/Oslo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'};
   return d.toLocaleString('nb-NO', opts).replace(',','');
 }
+function formatClosing(m) {
+  if (!m.kickoff_utc) return '';
+  var d = new Date(m.kickoff_utc);
+  var z = {timeZone:'Europe/Oslo'};
+  var wd = d.toLocaleString('en-GB', Object.assign({weekday:'long'}, z));
+  var day = d.toLocaleString('en-GB', Object.assign({day:'numeric'}, z));
+  var mon = d.toLocaleString('en-GB', Object.assign({month:'long'}, z));
+  var tm = d.toLocaleString('en-GB', Object.assign({hour:'2-digit', minute:'2-digit', hour12:false}, z));
+  return wd + ' ' + day + '. ' + mon + ', ' + tm;
+}
 function isMatchFrozen(m) { if (predPlayerId && predPlayerId !== player.id) return false;
   if (m.home_score != null) return true;
   if (!m.kickoff_utc) return false;
@@ -359,6 +369,7 @@ function calcRoundBonus(roundKey, predsList) { var bonusMap = {R16:"bonus_r16",Q
     var isDraw = ph !== '' && pa !== '' && +ph === +pa;
     h += '<div class="prd-card">';
     h += '<div class="prd-meta">M' + m.match_number + icon + ' <span class="prd-date">' + formatKickoffShort(m) + '</span></div>';
+    if (m.kickoff_utc) h += '<div style="font-size:.72rem;color:#1565C0;font-weight:600;margin-bottom:4px">&#x23F0; Closes: ' + formatClosing(m) + '</div>';
     h += '<div class="prd-main">';
     h += '<span class="prd-ht' + (htbd ? ' tbd' : '') + '">' + (m.home_team || 'TBD') + '</span>';
     h += '<input class="si" type="number" min="0" max="20" data-nmid="' + m.id + '" data-nside="h" value="' + ph + '" inputmode="numeric" pattern="[0-9]*" oninput="saveNextPred(' + m.id + ')"' + dattr + '>';
