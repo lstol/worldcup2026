@@ -1018,7 +1018,7 @@ async function renderBonus() {
     });
     h += '</div>';
   }
-  if (locked && !isAdmin && predsVisible) {
+  if (predsVisible && !isAdmin) {
     var everyoneRes = await sb.from('bonus_answers').select('*');
     var everyoneAns = everyoneRes.data || [];
     h += '<div class="ss"><h3>Everyone&apos;s Answers</h3>';
