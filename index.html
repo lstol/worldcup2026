@@ -106,16 +106,6 @@ function formatKickoffShort(m) {
   var opts = {timeZone:'Europe/Oslo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'};
   return d.toLocaleString('nb-NO', opts).replace(',','');
 }
-function formatClosing(m) {
-  if (!m.kickoff_utc) return '';
-  var d = new Date(new Date(m.kickoff_utc).getTime() - 10*60*1000);
-  var z = {timeZone:'Europe/Oslo'};
-  var wd = d.toLocaleString('en-GB', Object.assign({weekday:'long'}, z));
-  var day = d.toLocaleString('en-GB', Object.assign({day:'numeric'}, z));
-  var mon = d.toLocaleString('en-GB', Object.assign({month:'long'}, z));
-  var tm = d.toLocaleString('en-GB', Object.assign({hour:'2-digit', minute:'2-digit', hour12:false}, z));
-  return wd + ' ' + day + '. ' + mon + ', ' + tm;
-}
 function isMatchFrozen(m) { if (predPlayerId && predPlayerId !== player.id) return false;
   if (m.home_score != null) return true;
   if (!m.kickoff_utc) return false;
@@ -367,10 +357,21 @@ function calcRoundBonus(roundKey, predsList) { var bonusMap = {R16:"bonus_r16",Q
     var htbd = !m.home_team || /^(Winner|Runner|Best|Loser)/.test(m.home_team);
     var atbd = !m.away_team || /^(Winner|Runner|Best|Loser)/.test(m.away_team);
     var isDraw = ph !== '' && pa !== '' && +ph === +pa;
-    h += '<div style="border-bottom:1px solid #E4EEF7;padding:5px 6px">';
-    if (m.kickoff_utc) h += '<div style="font-size:.72rem;color:#1565C0;font-weight:600;margin-bottom:4px">&#x23F0; Closes: ' + formatClosing(m) + '</div>';
-    h += '<div class="prd-card" style="border-bottom:none;padding:0">';
-    h += '<div class="prd-meta">M' + m.match_number + icon + '</div>';
+    h += '<div class="prd-card">';
+    h += '<div class="prd-meta" style="width:100px">';
+    if (m.kickoff_utc) {
+      var fz = new Date(new Date(m.kickoff_utc).getTime() - 10*60*1000);
+      var fzo = {timeZone:'Europe/Oslo'};
+      var fzwd = fz.toLocaleString('en-GB', Object.assign({weekday:'short'}, fzo));
+      var fzday = fz.toLocaleString('en-GB', Object.assign({day:'numeric'}, fzo));
+      var fzmon = fz.toLocaleString('en-GB', Object.assign({month:'long'}, fzo));
+      var fztm = fz.toLocaleString('en-GB', Object.assign({hour:'2-digit', minute:'2-digit', hour12:false}, fzo));
+      h += '<span>M' + m.match_number + icon + ' <b style="color:#1565C0">' + fztm + '</b></span>';
+      h += '<span style="color:#1565C0;font-weight:600;font-size:.68rem">&#x23F0; ' + fzwd + ' ' + fzday + '. ' + fzmon + '</span>';
+    } else {
+      h += '<span>M' + m.match_number + icon + '</span>';
+    }
+    h += '</div>';
     h += '<div class="prd-main">';
     h += '<span class="prd-ht' + (htbd ? ' tbd' : '') + '">' + (m.home_team || 'TBD') + '</span>';
     h += '<input class="si" type="number" min="0" max="20" data-nmid="' + m.id + '" data-nside="h" value="' + ph + '" inputmode="numeric" pattern="[0-9]*" oninput="saveNextPred(' + m.id + ')"' + dattr + '>';
@@ -380,7 +381,7 @@ function calcRoundBonus(roundKey, predsList) { var bonusMap = {R16:"bonus_r16",Q
       h += '<select class="et prd-et" data-nmid="' + m.id + '" data-nside="et"' + (isDraw ? '' : ' disabled') + ' onchange="saveNextPred(' + m.id + ')"><option value="">ET?</option><option value="H"' + (pr && pr.et_winner === 'H' ? ' selected' : '') + '>H</option><option value="A"' + (pr && pr.et_winner === 'A' ? ' selected' : '') + '>A</option></select>';
     }
     h += '<span class="prd-at' + (atbd ? ' tbd' : '') + '">' + (m.away_team || 'TBD') + '</span>';
-    h += '</div></div></div>';
+    h += '</div></div>';
   });
   h += '</div></div>';
   el.innerHTML = h;
