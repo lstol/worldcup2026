@@ -70,7 +70,7 @@ const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co'; const SB_KEY = 'eyJhb
   const CLAUDEBOT_ID = '00000000-0000-0000-0000-000000000002';
   var botPreds = {randombot: {}, claude: {}};
   var botRound = 'group';
-  var anthropicKey = ''; const ROUNDS = [ {k:'group',l:'Group Stage'},{k:'R32',l:'Round of 32'}, {k:'R16',l:'Round of 16'},{k:'QF',l:'Quarter-Finals'}, {k:'SF',l:'Semi-Finals'},{k:'final',l:'Final'},{k:'bronze',l:'Bronze Final'}, ]; const GRP = ['A','B','C','D','E','F','G','H','I','J','K','L']; const MEDALS = ['','\u{1F947}','\u{1F948}','\u{1F949}','4th','5th']; const DEF_TEAMS = { A:['Mexico','South Africa','Korea Republic','Czechia'],B:['Canada','Bosnia and Herzegovina','Qatar','Switzerland'], C:['Brazil','Morocco','Haiti','Scotland'],D:['United States','Paraguay','Australia','Turkiye'], E:['Germany','Curacao','Ivory Coast','Ecuador'],F:['Netherlands','Japan','Sweden','Tunisia'], G:['Belgium','Iran','New Zealand','Egypt'],H:['Spain','Saudi Arabia','Uruguay','Cabo Verde'], I:['France','Senegal','Iraq','Norway'],J:['Argentina','Algeria','Austria','Jordan'], K:['Portugal','DR Congo','Uzbekistan','Colombia'],L:['England','Croatia','Ghana','Panama'], }; let player = null, isAdmin = false; let matches = [], preds = [], players = [], settings = {}; let predRound = 'group', adminRound = 'group'; var predPlayerId = null; var whatIfActive = false; var whatIfScores = {}; var wiAllPr = []; let asTimer = null, pendingSave = false; let bonusQuestions = [], bonusAnswers = []; let bonusPlayerId = null; function padPassword(p) { while(p.length < 6) p += '_'; return p; }
+  var anthropicKey = ''; const ROUNDS = [ {k:'group',l:'Group Stage'},{k:'R32',l:'Round of 32'}, {k:'R16',l:'Round of 16'},{k:'QF',l:'Quarter-Finals'}, {k:'SF',l:'Semi-Finals'},{k:'final',l:'Final'},{k:'bronze',l:'Bronze Final'}, ]; const GRP = ['A','B','C','D','E','F','G','H','I','J','K','L']; const MEDALS = ['','\u{1F947}','\u{1F948}','\u{1F949}','4th','5th']; const DEF_TEAMS = { A:['Mexico','South Africa','Korea Republic','Czechia'],B:['Canada','Bosnia and Herzegovina','Qatar','Switzerland'], C:['Brazil','Morocco','Haiti','Scotland'],D:['United States','Paraguay','Australia','Turkiye'], E:['Germany','Curacao','Ivory Coast','Ecuador'],F:['Netherlands','Japan','Sweden','Tunisia'], G:['Belgium','Iran','New Zealand','Egypt'],H:['Spain','Saudi Arabia','Uruguay','Cabo Verde'], I:['France','Senegal','Iraq','Norway'],J:['Argentina','Algeria','Austria','Jordan'], K:['Portugal','DR Congo','Uzbekistan','Colombia'],L:['England','Croatia','Ghana','Panama'], }; let player = null, isAdmin = false; let matches = [], preds = [], players = [], settings = {}; let predRound = 'group', adminRound = 'group'; var predPlayerId = null; var whatIfActive = false; var whatIfScores = {}; var wiAllPr = []; let asTimer = null, pendingSave = false; let bonusQuestions = [], bonusAnswers = []; let bonusPlayerId = null; let nextSaveTimer = null; function padPassword(p) { while(p.length < 6) p += '_'; return p; }
 async function doLogin() { const email = document.getElementById('lemail').value.trim(); const pass = document.getElementById('lpass').value; const errEl = document.getElementById('lerr'); errEl.style.cssText = 'display:block;background:#EBF4FB;color:#1565C0;padding:10px;border-radius:8px;margin-top:12px;font-size:.85rem'; errEl.textContent = 'Signing in...'; try { const {data, error} = await sb.auth.signInWithPassword({email, password: padPassword(pass)}); if (error) { errEl.style.background='#FDEAEA'; errEl.style.color='#C9041C'; errEl.textContent='Error: '+error.message; return; } errEl.textContent = 'Loading...'; await bootApp(data.user); errEl.style.display = 'none'; } catch(e) { errEl.style.background='#FDEAEA'; errEl.style.color='#C9041C'; errEl.textContent='Error: '+e.message; } } async function doLogout() { await sb.auth.signOut(); location.reload(); } async function bootApp(user) { const {data: pRow} = await sb.from('players').select('name,is_admin').eq('id', user.id).single(); if (!pRow && user.email !== ADMIN_EMAIL) { await sb.auth.signOut(); return; } const firstPart = user.email.split('@')[0].split('.')[0]; const displayName = pRow ? pRow.name : (firstPart.charAt(0).toUpperCase() + firstPart.slice(1)); player = {id: user.id, name: displayName, email: user.email, is_admin: (pRow && pRow.is_admin) || user.email === ADMIN_EMAIL}; isAdmin = player.is_admin; document.getElementById('uname').textContent = displayName; if (isAdmin) { document.getElementById('adminpill').style.display = 'inline-block'; document.getElementById('adminbtn').style.display = 'block'; document.getElementById('settingsbtn').style.display = 'block'; } document.getElementById('login-screen').style.display = 'none'; if (user.user_metadata && user.user_metadata.must_change_password) { document.getElementById('chpass-screen').style.display = 'flex'; document.getElementById('chpass-name').textContent = displayName; return; } document.getElementById('app').style.display = 'block'; await loadAll(); updateViewPredBtn(); buildTabs(); gotoPage('home'); } async function loadAll() { try { const [m, pr, pl, s, bq, ba] = await Promise.all([ sb.from('matches').select('*,kickoff_utc').order('match_number'), sb.from('predictions').select('*').eq('player_id', player.id), sb.from('players').select('*').order('name'), sb.from('settings').select('*'), sb.from('bonus_questions').select('*').order('sort_order'), sb.from('bonus_answers').select('*').eq('player_id', player.id), ]); matches = m.data || []; preds = pr.data || []; if (!predPlayerId) predPlayerId = player.id; players = pl.data || []; settings = {}; (s.data || []).forEach(function(r) { settings[r.key] = r.value; if (r.text_value) settings[r.key + '__text'] = r.text_value; }); bonusQuestions = bq.data || []; bonusAnswers = ba.data || []; if (player && player.is_admin && settings['anthropic_key__text']) { anthropicKey = settings['anthropic_key__text']; } } catch(e) { showToast('Failed to load data. Please refresh the page.', 'error'); } } function gotoPage(p) { if (pendingSave) { clearTimeout(asTimer); doAutosave(); } startCountdownTimer(); document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); }); document.querySelectorAll('nav button').forEach(function(el) { el.classList.remove('active'); }); document.getElementById('page-' + p).classList.add('active'); const navBtns = document.querySelectorAll('nav button'); const idx = {home:0, lb:1, groups:2, pred:3, viewpred:4, bonus:5, admin:6, settings:7}[p]; if (navBtns[idx]) navBtns[idx].classList.add('active'); document.getElementById('autosave-bar').classList.toggle('show', p === 'pred'); document.getElementById('admin-savebar').style.display = p === 'admin' ? 'flex' : 'none'; document.getElementById('settings-savebar').style.display = p === 'settings' ? 'flex' : 'none'; if (p === 'home') updateHomeScoring(); if (p === 'lb') renderLB(); if (p === 'groups') renderGroups(); if (p === 'pred') renderPred(); if (p === 'viewpred') renderViewPred(); if (p === 'admin') renderAdmin(); if (p === 'settings') renderSettings(); if (p === 'bonus') renderBonus(); } function buildTabs() { ['pred','admin'].forEach(function(prefix) { const el = document.getElementById(prefix + '-tabs'); if (!el) return; el.innerHTML = ROUNDS.map(function(r) { return '<button class="rtab' + (r.k === 'group' ? ' active' : '') + '" onclick="setRound(\'' + prefix + '\',\'' + r.k + '\',this)">' + r.l + '</button>'; }).join(''); }); if (player && player.is_admin) { var ppEl = document.getElementById('pred-player-tabs'); if (ppEl) { ppEl.style.display = 'flex'; ppEl.style.flexWrap = 'wrap'; ppEl.style.gap = '4px'; ppEl.style.marginBottom = '8px'; var botPlayers = [{id:player.id,name:'My Predictions'},{id:RANDOMBOT_ID,name:'RandomBot'},{id:CLAUDEBOT_ID,name:'Claude'}]; ppEl.innerHTML = botPlayers.map(function(bp) { return '<button class="rtab' + ((!predPlayerId || predPlayerId===player.id) && bp.id===player.id ? ' active' : (predPlayerId===bp.id ? ' active' : '')) + '" onclick="setPredPlayer(&apos;' + bp.id + '&apos;,this)">' + bp.name + '</button>'; }).join(''); } } } async function setPredPlayer(id, btn) {
   predPlayerId = id;
   document.querySelectorAll('#pred-player-tabs .rtab').forEach(function(b){b.classList.remove('active');});
@@ -361,9 +361,9 @@ function calcRoundBonus(roundKey, predsList) { var bonusMap = {R16:"bonus_r16",Q
     h += '<div class="prd-meta">M' + m.match_number + icon + ' <span class="prd-date">' + formatKickoffShort(m) + '</span></div>';
     h += '<div class="prd-main">';
     h += '<span class="prd-ht' + (htbd ? ' tbd' : '') + '">' + (m.home_team || 'TBD') + '</span>';
-    h += '<input class="si" type="number" min="0" max="20" data-nmid="' + m.id + '" data-nside="h" value="' + ph + '" inputmode="numeric" pattern="[0-9]*" onchange="saveNextPred(' + m.id + ')"' + dattr + '>';
+    h += '<input class="si" type="number" min="0" max="20" data-nmid="' + m.id + '" data-nside="h" value="' + ph + '" inputmode="numeric" pattern="[0-9]*" oninput="saveNextPred(' + m.id + ')"' + dattr + '>';
     h += '<span class="prd-dash">-</span>';
-    h += '<input class="si" type="number" min="0" max="20" data-nmid="' + m.id + '" data-nside="a" value="' + pa + '" inputmode="numeric" pattern="[0-9]*" onchange="saveNextPred(' + m.id + ')"' + dattr + '>';
+    h += '<input class="si" type="number" min="0" max="20" data-nmid="' + m.id + '" data-nside="a" value="' + pa + '" inputmode="numeric" pattern="[0-9]*" oninput="saveNextPred(' + m.id + ')"' + dattr + '>';
     if (!isGS) {
       h += '<select class="et prd-et" data-nmid="' + m.id + '" data-nside="et"' + (isDraw ? '' : ' disabled') + ' onchange="saveNextPred(' + m.id + ')"><option value="">ET?</option><option value="H"' + (pr && pr.et_winner === 'H' ? ' selected' : '') + '>H</option><option value="A"' + (pr && pr.et_winner === 'A' ? ' selected' : '') + '>A</option></select>';
     }
@@ -374,25 +374,54 @@ function calcRoundBonus(roundKey, predsList) { var bonusMap = {R16:"bonus_r16",Q
   el.innerHTML = h;
 }
 
-async function saveNextPred(mid) {
+function saveNextPred(mid) {
   var hEl = document.querySelector('#pred-next [data-nmid="' + mid + '"][data-nside="h"]');
   var aEl = document.querySelector('#pred-next [data-nmid="' + mid + '"][data-nside="a"]');
   var etEl = document.querySelector('#pred-next [data-nmid="' + mid + '"][data-nside="et"]');
-  if (!hEl || !aEl) return;
-  if (etEl) { var d = hEl.value !== '' && aEl.value !== '' && +hEl.value === +aEl.value; etEl.disabled = !d; if (!d) etEl.value = ''; }
-  setAS('saving', 'Saving...');
-  if (hEl.value === '' || aEl.value === '') {
-    var del = await sb.from('predictions').delete().eq('player_id', predPlayerId).eq('match_id', mid);
-    if (del.error) { setAS('', 'Error: ' + del.error.message); return; }
-  } else {
-    var row = {player_id: predPlayerId, match_id: mid, home_score: +hEl.value, away_score: +aEl.value, et_winner: (etEl && etEl.value) || null};
-    var ups = await sb.from('predictions').upsert([row], {onConflict: 'player_id,match_id'});
-    if (ups.error) { setAS('', 'Error: ' + ups.error.message); return; }
-  }
-  var res = await sb.from('predictions').select('*').eq('player_id', predPlayerId);
-  preds = res.data || [];
-  setAS('saved', 'Saved');
-  renderPred();
+  if (etEl && hEl && aEl) { var d = hEl.value !== '' && aEl.value !== '' && +hEl.value === +aEl.value; etEl.disabled = !d; if (!d) etEl.value = ''; }
+  scheduleNextSave();
+}
+
+function scheduleNextSave() {
+  setAS('saving', 'Unsaved changes...');
+  clearTimeout(nextSaveTimer);
+  nextSaveTimer = setTimeout(saveNextPreds, 1500);
+}
+
+async function saveNextPreds() {
+  try {
+    setAS('saving', 'Saving...');
+    var allMids = []; var rows = [];
+    document.querySelectorAll('#pred-next [data-nside="h"]').forEach(function(hEl) {
+      var mid = +hEl.dataset.nmid; if (!mid) return; allMids.push(mid);
+      var aEl = document.querySelector('#pred-next [data-nmid="' + mid + '"][data-nside="a"]');
+      var etEl = document.querySelector('#pred-next [data-nmid="' + mid + '"][data-nside="et"]');
+      if (hEl.value === '' || !aEl || aEl.value === '') return;
+      rows.push({player_id: predPlayerId, match_id: mid, home_score: +hEl.value, away_score: +aEl.value, et_winner: (etEl && etEl.value) || null});
+    });
+    if (!allMids.length) { setAS('saved'); return; }
+    var savedMids = rows.map(function(r) { return r.match_id; });
+    var clearedMids = allMids.filter(function(mid) { return savedMids.indexOf(mid) === -1; });
+    if (clearedMids.length) { var del = await sb.from('predictions').delete().eq('player_id', predPlayerId).in('match_id', clearedMids); if (del.error) { setAS('', 'Error: ' + del.error.message); return; } }
+    if (rows.length) { var ups = await sb.from('predictions').upsert(rows, {onConflict: 'player_id,match_id'}); if (ups.error) { setAS('', 'Error: ' + ups.error.message); return; } }
+    var res = await sb.from('predictions').select('*').eq('player_id', predPlayerId); preds = res.data || [];
+    setAS('saved', 'Saved');
+    syncTwins();
+  } catch (e) { setAS('', 'Error: ' + e.message); }
+}
+
+function syncTwins() {
+  document.querySelectorAll('#pred-next [data-nside="h"]').forEach(function(hEl) {
+    var mid = hEl.dataset.nmid;
+    var aEl = document.querySelector('#pred-next [data-nmid="' + mid + '"][data-nside="a"]');
+    var eEl = document.querySelector('#pred-next [data-nmid="' + mid + '"][data-nside="et"]');
+    var th = document.querySelector('#pred-content [data-mid="' + mid + '"][data-side="h"]');
+    var ta = document.querySelector('#pred-content [data-mid="' + mid + '"][data-side="a"]');
+    var te = document.querySelector('#pred-content [data-mid="' + mid + '"][data-side="et"]');
+    if (th) th.value = hEl.value;
+    if (ta && aEl) ta.value = aEl.value;
+    if (te && eEl) { te.disabled = eEl.disabled; te.value = eEl.value; }
+  });
 }
 
 function buildPredTable(ms, pm, isGS) {
