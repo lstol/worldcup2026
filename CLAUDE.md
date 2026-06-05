@@ -181,9 +181,23 @@ Steps inside `savePlayerRow`:
 6. Flip the row UI: set `data-pid`, badge → "Saved" (green), button →
    "Invite", drop the Cancel button, mark the email field readonly.
 
-`sendInvite(btn)` calls `sb.auth.resetPasswordForEmail(email)` — Supabase sends
-no email on `signUp()` when autoconfirm is on, so the customised "Reset
-Password" template is the welcome-invite delivery mechanism.
+`sendInvite(btn)` first calls the `admin_refresh_invite_metadata(p_email)` RPC,
+then `sb.auth.resetPasswordForEmail(email)` — Supabase sends no email on
+`signUp()` when autoconfirm is on, so the customised "Reset Password" template
+is the welcome-invite delivery mechanism.
+
+**Why the refresh RPC matters:** the email template renders
+`{{ .Data.invite_message }}` from each user's *frozen* auth metadata (set at
+signUp time), NOT directly from the live `settings.invite_message`. So editing
+the Settings message would otherwise NOT reach already-created players on
+re-invite. `public.admin_refresh_invite_metadata(p_email)` (SECURITY DEFINER,
+admin-only) re-reads `settings.invite_message`, substitutes `{name}`, and writes
+the result (plus the resolved `name`) into that user's `auth.users`
+`raw_user_meta_data` immediately before the email is sent. Net effect: **hitting
+Re-invite always delivers the current Settings message** to any player.
+Hardening: `savePlayerRow` also re-fetches `settings.invite_message` from the DB
+when the in-memory copy is blank, so new signups can't bake in an empty message
+(the original cause of some early "empty invitation" emails).
 
 **Initial password** = player's name as entered by admin (e.g. "Alma"),
 padded with underscores if under 6 chars. Players are told their initial
@@ -202,6 +216,26 @@ The invite message is stored as plain text with `\n` newlines. The template shou
 <p style="white-space: pre-line">{{ .Data.invite_message }}</p>
 ```
 This ensures line breaks typed in the Settings textarea appear as line breaks in the email.
+
+**Email sending (Custom SMTP via Gmail).** Auth emails (invites / password
+resets) are sent through **Custom SMTP** configured in the Supabase dashboard
+(Project Settings → Authentication → SMTP Settings), using a **personal Gmail
+account**, not Supabase's default sender. Settings: host `smtp.gmail.com`,
+port `465`, username = the Gmail address, password = a Google **App Password**
+(requires 2-Step Verification enabled on that Google account — the normal
+password will NOT work), sender email = same Gmail address.
+- The "from" address is the Gmail address (e.g. `name@gmail.com`), NOT
+  `@syndikatet.eu`. The domain has no email service and paying for one isn't
+  worth it at this scale. No SPF/DKIM/DMARC changes on syndikatet.eu are needed
+  because mail is sent as `@gmail.com` (Google's servers are authorised for it).
+- Supabase shows a warning that the provider is "designed for personal rather
+  than transactional email." **This is expected and safe to ignore** at family
+  scale (~6 recipients). Gmail's limit is ~500 emails/day — far above any need.
+- First invite may land in Spam / the Promotions tab; recipients should mark
+  "not spam" once.
+- Future upgrade path (only if a branded `@syndikatet.eu` sender is ever wanted):
+  a transactional provider like **Resend** (free 3000/month) with DNS records on
+  syndikatet.eu. Not currently used.
 
 **First login** → `must_change_password: true` in user metadata →
 `bootApp` shows the Norwegian change-password screen ("Velg ditt eget passord").
