@@ -784,10 +784,18 @@ async function savePlayerRow(row) {
   // admin session and breaking subsequent RLS-protected writes. Save and restore.
   var savedSession = (await sb.auth.getSession()).data.session;
 
+  // Source the invite body fresh; recover from the DB if the in-memory copy
+  // is blank so a stale/empty value can never produce an empty invitation email.
+  var inviteTpl = settings['invite_message__text'] || '';
+  if (!inviteTpl) {
+    var imRes = await sb.from('settings').select('text_value').eq('key', 'invite_message').single();
+    if (imRes.data && imRes.data.text_value) { inviteTpl = imRes.data.text_value; settings['invite_message__text'] = inviteTpl; }
+  }
+
   var signUpRes = await sb.auth.signUp({
     email: email,
     password: padPassword(nm),
-    options: { data: {name: nm, must_change_password: true, invite_message: (settings['invite_message__text'] || '').replace(/\{name\}/g, nm)} }
+    options: { data: {name: nm, must_change_password: true, invite_message: inviteTpl.replace(/\{name\}/g, nm)} }
   });
 
   var newId = null;
