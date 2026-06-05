@@ -168,17 +168,27 @@ Save and invite are separate actions. Persisting a player to the DB is done by
 - `sendInvite(btn)` — when the row has no `data-pid` yet, save first, then
   send the email.
 
+**Session isolation (critical):** `signUp()` auto-signs-in the new user on
+autoconfirm projects. To stop that from replacing the admin's session, signup
+runs on a **dedicated throwaway client** `sbSignup` created alongside `sb`:
+`supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false,
+autoRefreshToken: false, storageKey: 'wc2026-signup-temp' } })`. Because
+`persistSession:false`, the new user's auto-login never reaches localStorage, so
+the admin's `sb` session is untouched — no getSession/setSession juggling. (The
+old save/restore-token workaround was fragile: it failed with
+`refresh_token_not_found` and left the admin "logged in as the latest added
+participant." Do NOT reintroduce it.)
+
 Steps inside `savePlayerRow`:
-1. Save the admin's current session tokens (`getSession()`).
-2. Call `sb.auth.signUp()` with the player's email and `padPassword(name)`.
-3. Restore admin session via `setSession()` unconditionally — `signUp()` with
-   autoconfirm enabled auto-signs-in the new user even when subsequent steps
-   error, so the restore must happen on both the success and failure branches.
-4. If `signUp` returned "already registered" (orphan in `auth.users` or
+1. Resolve the invite body (`settings['invite_message__text']`, re-fetched from
+   the DB if blank).
+2. Call `sbSignup.auth.signUp()` with the player's email and `padPassword(name)`
+   — on the throwaway client, so the admin session is never replaced.
+3. If `signUp` returned "already registered" (orphan in `auth.users` or
    existing player), call `sb.rpc('admin_create_player', {p_email, p_name})`.
    The RPC ensures a `players` row exists for the auth UUID and returns it.
-5. Otherwise upsert `players` with `{ id: authUUID, name, email, is_admin: false }`.
-6. Flip the row UI: set `data-pid`, badge → "Saved" (green), button →
+4. Otherwise upsert `players` with `{ id: authUUID, name, email, is_admin: false }`.
+5. Flip the row UI: set `data-pid`, badge → "Saved" (green), button →
    "Invite", drop the Cancel button, mark the email field readonly.
 
 `sendInvite(btn)` first calls the `admin_refresh_invite_metadata(p_email)` RPC,
