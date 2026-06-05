@@ -909,6 +909,18 @@ async function sendInvite(btn) {
     }
   }
 
+  // Refresh this user's stored invite metadata from the CURRENT Settings
+  // message before sending, so re-invite always reflects the latest text
+  // (the email template renders {{ .Data.invite_message }} from metadata).
+  var refRes = await sb.rpc('admin_refresh_invite_metadata', { p_email: email });
+  if (refRes.error) {
+    btn.disabled = false;
+    btn.textContent = origText;
+    msgEl.className = 'msg-err';
+    msgEl.textContent = 'Could not refresh invite message: ' + refRes.error.message;
+    return;
+  }
+
   // Trigger the welcome email. Autoconfirm projects send no signup email, so
   // resetPasswordForEmail is the delivery mechanism — the "Reset Password"
   // template is customised to be a welcome invite (no magic link).
