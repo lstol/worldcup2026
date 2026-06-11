@@ -1026,7 +1026,7 @@ async function renderBonus() {
   if (predsVisible) {
     var everyoneRes = await sb.from('bonus_answers').select('*');
     bonusEveryoneAns = everyoneRes.data || [];
-    var realPs = players.filter(function(p){ return p.id!==RANDOMBOT_ID && p.id!==CLAUDEBOT_ID && p.id!==player.id; });
+    var realPs = players.filter(function(p){ return p.id!==RANDOMBOT_ID && p.id!==CLAUDEBOT_ID; });
     var botPs = players.filter(function(p){ return p.id===RANDOMBOT_ID || p.id===CLAUDEBOT_ID; });
     var viewablePs = realPs.concat(botPs);
     if (!bonusViewPlayerId || !viewablePs.find(function(p){return p.id===bonusViewPlayerId;})) {
