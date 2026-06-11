@@ -1023,7 +1023,7 @@ async function renderBonus() {
     });
     h += '</div>';
   }
-  if (predsVisible && !isAdmin) {
+  if (predsVisible) {
     var everyoneRes = await sb.from('bonus_answers').select('*');
     bonusEveryoneAns = everyoneRes.data || [];
     var realPs = players.filter(function(p){ return p.id!==RANDOMBOT_ID && p.id!==CLAUDEBOT_ID && p.id!==player.id; });
@@ -1046,7 +1046,7 @@ async function renderBonus() {
     h += '</div><div id="bonus-view-inner"></div></div>';
   }
   el.innerHTML = h;
-  if (predsVisible && !isAdmin) renderBonusViewInner();
+  if (predsVisible) renderBonusViewInner();
 }
 
 function renderBonusViewInner() {
