@@ -104,7 +104,7 @@ Known keys:
 | bonus_qf       | -       | value       | Bonus pts for QF                            |
 | bonus_sf       | -       | value       | Bonus pts for SF                            |
 | bonus_final    | -       | value       | Bonus pts for Final                         |
-| preds_visible  | 0       | value       | Whether all players can see each other's predictions |
+| preds_visible  | 0       | value       | Whether all players can see each other's predictions AND each other's bonus answers (the bonus page shows an "Everyone's Answers" tabbed viewer — player/bot tabs like View Predictions — when this is on, for non-admins) |
 | anthropic_key  | -       | text_value  | Anthropic API key for Claude bot (admin only) |
 | invite_message | -       | text_value  | Body text of welcome email; use `{name}` as placeholder for player name |
 
@@ -364,8 +364,13 @@ Admin controls bots from the **My Predictions** page via three player-selector t
 is selected:
 - `predPlayerId` is set to the bot's UUID
 - `preds` is reloaded for that player
-- Inputs are never frozen (`isMatchFrozen` returns false for bots)
-- Round-lock is bypassed in `renderPred`
+- Bot predictions DO freeze with the per-round freeze, same as players
+  (`isMatchFrozen` no longer special-cases bots). `savePred` also skips any
+  frozen match, so Random/Ask Claude cannot overwrite a bot result after the
+  round locks. Admin must enter bot predictions before the round freezes.
+- Round-lock (knockout round not yet unlocked) is still bypassed in `renderPred`
+  for bots, so admin can pre-fill bot knockout predictions before those rounds
+  open — that is independent of the time-based freeze.
 - `savePred` saves with `predPlayerId` instead of `player.id`
 
 **RandomBot:** "Random" button fills random scores (0–3) for the current round.
