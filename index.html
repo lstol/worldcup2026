@@ -1321,12 +1321,13 @@ function renderViewPredInner() {
   if (isGS) {
     var byG = {};
     ms.forEach(function(m){var g=m.group_letter||'?';if(!byG[g])byG[g]=[];byG[g].push(m);});
+    var qualPredThirds = calcQualifiedPredThirds(pm);
     GRP.forEach(function(g) {
       if (!byG[g]) return;
       h += '<div class="section"><div class="sec-hdr">Group '+g+'</div>';
       h += '<div class="pred-group-inner">';
       h += '<div class="pred-matches">'+buildViewPredTable(byG[g], pm, true)+'</div>';
-      h += '<div class="pred-standings">'+buildPredStTable(g, pm, st[g]||[])+'</div>';
+      h += '<div class="pred-standings">'+buildPredStTable(g, pm, st[g]||[], qualPredThirds)+'</div>';
       h += '</div></div>';
     });
   } else {
