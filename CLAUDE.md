@@ -269,6 +269,21 @@ is cleared and the player lands in the app.
 - Bonus points for correctly predicting which teams reach each knockout round
   are tracked separately via the `bonus_r*` settings keys.
 
+### Bonus questions (side quiz)
+- `bonus_questions` (id, sort_order, question, type ∈ yesno/choice/number/text,
+  options jsonb, **correct_answer text**) and `bonus_answers` (player_id,
+  question_id, answer, points). RLS: public read both; admin writes both;
+  players write their own answers. Unique key `(player_id, question_id)`.
+- **Admin enters the correct answers on Enter Results → "🎯 Bonus" tab**
+  (`renderAdminBonus` / `saveBonusResults`; the "Bonus" admin tab is appended in
+  `buildTabs`, and `adminRound==='bonus'` routes both `renderAdmin` and
+  `saveResults`). Saving stores `bonus_questions.correct_answer` and
+  **auto-scores**: each `bonus_answers.points` becomes `settings.bonus_q_pts` if
+  the answer matches (case-insensitive trim; numeric compare for number type),
+  else 0. Questions left blank are skipped (existing points untouched), so manual
+  per-player overrides on the Bonus page still work.
+- Leaderboard reads `bonus_answers.points` directly (the `Extra` column).
+
 ### Date/time display (all in Europe/Oslo / CEST)
 - `formatKickoff(m)`: returns full datetime string, e.g. "11.06 21:00"
 - `formatKickoffShort(m)`: returns compact date+time, e.g. "11.06 21:00" (no year)
