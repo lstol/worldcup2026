@@ -201,34 +201,50 @@ function calcGroupQualBonus(predsList) { var bonusVal = +(settings['bonus_r32']|
   const st = calcStandings(); var allThirds3=[]; GRP.forEach(function(g){if((st[g]||[])[2])allThirds3.push({team:st[g][2].team,pts:st[g][2].pts,gd:st[g][2].gd,gf:st[g][2].gf});}); allThirds3.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var qualThirdsMap={}; allThirds3.slice(0,8).forEach(function(t){qualThirdsMap[t.team]=true;}); let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">'; GRP.forEach(function(g) { const rows = st[g] || []; const played = matches.filter(function(m) { return m.group_letter === g && m.home_score != null; }).length; const total = matches.filter(function(m) { return m.group_letter === g; }).length; h += '<div class="section"><div class="sec-hdr"><span>Group ' + g + '</span><span style="font-size:.72rem;opacity:.75">' + played + '/' + total + ' played</span></div>'; h += '<table style="table-layout:fixed;width:100%;font-size:.82rem"><colgroup><col style="width:18px"><col><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:22px"><col style="width:22px"><col style="width:26px"><col style="width:26px"></colgroup><thead><tr><th class="num">#</th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>'; rows.forEach(function(r, i) { const rk = i+1; const bg = rk===1 ? 'background:#1F6BB0;color:#fff' : rk===2 ? 'background:#5BA3D9;color:#fff' : rk===3 && qualThirdsMap[r.team] ? 'background:#BDD7EE' : 'background:#fff'; h += '<tr style="' + bg + ';height:36px"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.ga + '</td><td class="num">' + (r.gd>0?'+':'') + r.gd + '</td><td class="num" style="font-weight:700">' + r.pts + '</td></tr>'; }); h += '</tbody></table></div>'; }); document.getElementById('groups-content').innerHTML = h + '</div>'; } function toggleLbDetails(idx) { var d = document.getElementById('lb-details-' + idx); if (!d) return; var open = d.style.display !== 'none'; d.style.display = open ? 'none' : 'block'; var btn = document.getElementById('lb-expand-' + idx); if (btn) { if (open) btn.classList.remove('open'); else btn.classList.add('open'); } } function buildNext5Predictions(allPr) {
   var visible = settings['preds_visible']==1 || settings['preds_visible']==='1';
   if (!visible) return '';
-  var upcoming = matches.filter(function(m){ return m.home_score == null; });
-  upcoming.sort(function(a,b){ var ta=a.kickoff_utc?new Date(a.kickoff_utc).getTime():Infinity; var tb=b.kickoff_utc?new Date(b.kickoff_utc).getTime():Infinity; if(ta!==tb) return ta-tb; return a.match_number-b.match_number; });
-  var next5 = upcoming.slice(0,5);
-  if (!next5.length) return '';
+  var byKo = function(a,b){ var ta=a.kickoff_utc?new Date(a.kickoff_utc).getTime():Infinity; var tb=b.kickoff_utc?new Date(b.kickoff_utc).getTime():Infinity; if(ta!==tb) return ta-tb; return a.match_number-b.match_number; };
+  var played = matches.filter(function(m){ return m.home_score != null; }).sort(byKo);
+  var prev4 = played.slice(-4);
+  var next4 = matches.filter(function(m){ return m.home_score == null; }).sort(byKo).slice(0,4);
+  var cols = prev4.concat(next4);
+  if (!cols.length) return '';
+  var firstNextIdx = prev4.length;
   var pm = {}; allPr.forEach(function(p){ pm[p.player_id+'_'+p.match_id] = p; });
   var realPs = players.filter(function(p){ return p.id!==RANDOMBOT_ID && p.id!==CLAUDEBOT_ID; });
   var botPs = players.filter(function(p){ return p.id===RANDOMBOT_ID || p.id===CLAUDEBOT_ID; });
   var allPs = realPs.concat(botPs);
-  var h = '<div class="section" style="margin-bottom:14px"><div class="sec-hdr">&#x1F52E; Next 5 Matches &mdash; Everyone&apos;s Predictions</div>';
-  h += '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.8rem;width:100%;min-width:520px">';
+  var h = '<div class="section" style="margin-bottom:14px"><div class="sec-hdr">&#x1F4CA; Recent &amp; Upcoming &mdash; Everyone&apos;s Predictions</div>';
+  h += '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.8rem;width:100%;min-width:620px">';
   h += '<thead><tr style="background:#1A3A5C;color:#fff">';
   h += '<th style="padding:6px 8px;text-align:left;position:sticky;left:0;background:#1A3A5C;z-index:1">Player</th>';
-  next5.forEach(function(m){
-    h += '<th style="padding:6px 8px;text-align:center;white-space:nowrap;font-size:.72rem;line-height:1.3">M'+m.match_number+'<br>'+(m.home_team||'TBD')+'<br><span style="opacity:.6">v</span> '+(m.away_team||'TBD')+'<br><small style="font-weight:400;opacity:.8">'+formatKickoffShort(m)+'</small></th>';
+  cols.forEach(function(m, ci){
+    var isPlayed = m.home_score != null;
+    var sep = (ci===firstNextIdx && firstNextIdx>0) ? 'border-left:3px solid #F59E0B;' : '';
+    var sub = isPlayed
+      ? '<span style="color:#9FE0A8;font-weight:700">'+m.home_score+'&ndash;'+m.away_score+'</span>'+(m.et_winner?' <small>(ET:'+m.et_winner+')</small>':'')
+      : '<small style="font-weight:400;opacity:.8">'+formatKickoffShort(m)+'</small>';
+    h += '<th style="padding:6px 8px;text-align:center;white-space:nowrap;font-size:.72rem;line-height:1.3;'+sep+'">M'+m.match_number+'<br>'+(m.home_team||'TBD')+'<br><span style="opacity:.6">v</span> '+(m.away_team||'TBD')+'<br>'+sub+'</th>';
   });
   h += '</tr></thead><tbody>';
   allPs.forEach(function(p){
     var isBot = p.id===RANDOMBOT_ID || p.id===CLAUDEBOT_ID;
     h += '<tr style="border-bottom:1px solid #E4EEF7">';
     h += '<td style="padding:5px 8px;font-weight:600;white-space:nowrap;position:sticky;left:0;background:#fff'+(isBot?';color:#6B4FA0':'')+'">'+(isBot?'&#129302; ':'')+p.name+'</td>';
-    next5.forEach(function(m){
+    cols.forEach(function(m, ci){
+      var sep = (ci===firstNextIdx && firstNextIdx>0) ? 'border-left:3px solid #F5C77E;' : '';
       var pr = pm[p.id+'_'+m.id];
-      var txt = '<span style="color:#ccc">&ndash;</span>';
+      var cell = '<span style="color:#ccc">&ndash;</span>';
       if (pr && pr.home_score != null && pr.away_score != null) {
-        txt = '<strong>'+pr.home_score+'&ndash;'+pr.away_score+'</strong>';
-        if (pr.et_winner) txt += ' <small style="color:#888">('+pr.et_winner+')</small>';
+        if (m.home_score != null) {
+          var pts = calcScore(pr.home_score, pr.away_score, m.home_score, m.away_score, m.round);
+          var ep = +(settings[m.round==='group'?'gs_exact':'ko_exact']||5);
+          var col = pts===ep ? '#2D7A2D' : pts>0 ? '#B07800' : '#C9041C';
+          cell = '<span style="color:'+col+';font-weight:700">'+pr.home_score+'&ndash;'+pr.away_score+'</span> <small style="color:'+col+'">+'+pts+'</small>';
+        } else {
+          cell = '<strong>'+pr.home_score+'&ndash;'+pr.away_score+'</strong>';
+          if (pr.et_winner) cell += ' <small style="color:#888">('+pr.et_winner+')</small>';
+        }
       }
-      h += '<td style="padding:5px 8px;text-align:center">'+txt+'</td>';
+      h += '<td style="padding:5px 8px;text-align:center;'+sep+'">'+cell+'</td>';
     });
     h += '</tr>';
   });
