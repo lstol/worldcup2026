@@ -235,17 +235,26 @@ function calcGroupQualBonus(predsList) { var bonusVal = +(settings['bonus_r32']|
   // x day labels
   var step=Math.ceil(N/9);
   days.forEach(function(day,i){ if (i%step!==0 && i!==N-1) return; var parts=day.split('-'); var lbl=(+parts[2])+'.'+(+parts[1]); svg+='<text x="'+xFor(i)+'" y="'+(H-12)+'" text-anchor="middle" font-size="10" fill="#999">'+lbl+'</text>'; });
-  // lines per player
+  // lines + points per player
+  var lastX=xFor(N-1);
+  var endLabels=[];
   ps.forEach(function(p,pi){
     var color=palette[pi%palette.length];
     var isBot=p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID;
     var pts=days.map(function(_,i){ return xFor(i)+','+yFor(ranksByDay[i][p.id]); }).join(' ');
     if (N>1) svg+='<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.5"'+(isBot?' stroke-dasharray="5,4"':'')+' stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>';
     days.forEach(function(_,i){ svg+='<circle cx="'+xFor(i)+'" cy="'+yFor(ranksByDay[i][p.id])+'" r="'+(N===1?4:3)+'" fill="'+color+'"/>'; });
-    // legend
-    var ly=mT+pi*((plotH)/(P))+8; var lx=mL+plotW+14;
-    svg+='<line x1="'+lx+'" y1="'+ly+'" x2="'+(lx+16)+'" y2="'+ly+'" stroke="'+color+'" stroke-width="3"'+(isBot?' stroke-dasharray="5,4"':'')+'/>';
-    svg+='<text x="'+(lx+22)+'" y="'+(ly+4)+'" font-size="11" fill="#333"'+(isBot?' font-style="italic"':'')+'>'+(isBot?'&#129302; ':'')+p.name+'</text>';
+    endLabels.push({name:p.name, color:color, isBot:isBot, y0:yFor(ranksByDay[N-1][p.id])});
+  });
+  // place names at the end of each curve, nudged apart so they never overlap
+  endLabels.sort(function(a,b){ return a.y0-b.y0; });
+  var minGap=14;
+  for (var li=0;li<endLabels.length;li++){ endLabels[li].y = (li===0) ? endLabels[li].y0 : Math.max(endLabels[li].y0, endLabels[li-1].y+minGap); }
+  var lblTop=mT, lblBot=mT+plotH;
+  for (var li2=endLabels.length-1;li2>=0;li2--){ if (endLabels[li2].y>lblBot){ endLabels[li2].y=lblBot; if (li2>0 && endLabels[li2-1].y>endLabels[li2].y-minGap) endLabels[li2-1].y=endLabels[li2].y-minGap; } }
+  endLabels.forEach(function(L){
+    if (Math.abs(L.y-L.y0)>2) svg+='<line x1="'+(lastX+3)+'" y1="'+L.y0+'" x2="'+(lastX+9)+'" y2="'+L.y+'" stroke="'+L.color+'" stroke-width="1" opacity="0.5"/>';
+    svg+='<text x="'+(lastX+12)+'" y="'+(L.y+4)+'" font-size="11" font-weight="700" fill="'+L.color+'"'+(L.isBot?' font-style="italic"':'')+'>'+(L.isBot?'&#129302; ':'')+L.name+'</text>';
   });
   svg+='</svg>';
   return '<div class="section" style="margin-top:14px"><div class="sec-hdr">&#x1F4C8; Position by day</div><div style="overflow-x:auto;padding:6px 4px">'+svg+'</div><div style="font-size:.7rem;color:#999;padding:4px 10px 8px">Rank by cumulative match points (1 = top). Bonus points apply at round completion.</div></div>';
