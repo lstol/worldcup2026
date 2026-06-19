@@ -198,7 +198,32 @@ function calcGroupQualBonus(predsList) { var bonusVal = +(settings['bonus_r32']|
     badgeText.textContent = nextM.home_team + ' vs ' + nextM.away_team + ' - ' + formatKickoffShort(nextM);
     badge.style.display = 'block';
   }
-  const st = calcStandings(); var allThirds3=[]; GRP.forEach(function(g){if((st[g]||[])[2])allThirds3.push({team:st[g][2].team,pts:st[g][2].pts,gd:st[g][2].gd,gf:st[g][2].gf});}); allThirds3.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var qualThirdsMap={}; allThirds3.slice(0,8).forEach(function(t){qualThirdsMap[t.team]=true;}); let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">'; GRP.forEach(function(g) { const rows = st[g] || []; const played = matches.filter(function(m) { return m.group_letter === g && m.home_score != null; }).length; const total = matches.filter(function(m) { return m.group_letter === g; }).length; h += '<div class="section"><div class="sec-hdr"><span>Group ' + g + '</span><span style="font-size:.72rem;opacity:.75">' + played + '/' + total + ' played</span></div>'; h += '<table style="table-layout:fixed;width:100%;font-size:.82rem"><colgroup><col style="width:18px"><col><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:22px"><col style="width:22px"><col style="width:26px"><col style="width:26px"></colgroup><thead><tr><th class="num">#</th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>'; rows.forEach(function(r, i) { const rk = i+1; const bg = rk===1 ? 'background:#1F6BB0;color:#fff' : rk===2 ? 'background:#5BA3D9;color:#fff' : rk===3 && qualThirdsMap[r.team] ? 'background:#BDD7EE' : 'background:#fff'; h += '<tr style="' + bg + ';height:36px"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.ga + '</td><td class="num">' + (r.gd>0?'+':'') + r.gd + '</td><td class="num" style="font-weight:700">' + r.pts + '</td></tr>'; }); h += '</tbody></table></div>'; }); document.getElementById('groups-content').innerHTML = h + '</div>'; } function toggleLbDetails(idx) { var d = document.getElementById('lb-details-' + idx); if (!d) return; var open = d.style.display !== 'none'; d.style.display = open ? 'none' : 'block'; var btn = document.getElementById('lb-expand-' + idx); if (btn) { if (open) btn.classList.remove('open'); else btn.classList.add('open'); } } function predictedPositions(pm) {
+  const st = calcStandings(); var allThirds3=[]; GRP.forEach(function(g){if((st[g]||[])[2])allThirds3.push({team:st[g][2].team,pts:st[g][2].pts,gd:st[g][2].gd,gf:st[g][2].gf});}); allThirds3.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var qualThirdsMap={}; allThirds3.slice(0,8).forEach(function(t){qualThirdsMap[t.team]=true;}); let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">'; GRP.forEach(function(g) { const rows = st[g] || []; const played = matches.filter(function(m) { return m.group_letter === g && m.home_score != null; }).length; const total = matches.filter(function(m) { return m.group_letter === g; }).length; h += '<div class="section"><div class="sec-hdr"><span>Group ' + g + '</span><span style="font-size:.72rem;opacity:.75">' + played + '/' + total + ' played</span></div>'; h += '<table style="table-layout:fixed;width:100%;font-size:.82rem"><colgroup><col style="width:18px"><col><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:22px"><col style="width:22px"><col style="width:26px"><col style="width:26px"></colgroup><thead><tr><th class="num">#</th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>'; rows.forEach(function(r, i) { const rk = i+1; const bg = rk===1 ? 'background:#1F6BB0;color:#fff' : rk===2 ? 'background:#5BA3D9;color:#fff' : rk===3 && qualThirdsMap[r.team] ? 'background:#BDD7EE' : 'background:#fff'; h += '<tr style="' + bg + ';height:36px"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.ga + '</td><td class="num">' + (r.gd>0?'+':'') + r.gd + '</td><td class="num" style="font-weight:700">' + r.pts + '</td></tr>'; }); h += '</tbody></table></div>'; }); document.getElementById('groups-content').innerHTML = h + '</div>'; } function toggleLbDetails(idx) { var d = document.getElementById('lb-details-' + idx); if (!d) return; var open = d.style.display !== 'none'; d.style.display = open ? 'none' : 'block'; var btn = document.getElementById('lb-expand-' + idx); if (btn) { if (open) btn.classList.remove('open'); else btn.classList.add('open'); } } function clinchedTop2(g) {
+  // a team has CLINCHED a top-2 finish (guaranteed R32) if, across every
+  // outcome of the group's remaining games, at most one other team can reach
+  // or pass its points. Conservative on ties, so it never greens too early.
+  var gms = matches.filter(function(m){ return m.group_letter===g && m.round==='group'; });
+  var teams = getTeams(g);
+  if (!teams.length) return {};
+  var base={}; teams.forEach(function(t){ base[t]=0; });
+  var remaining=[];
+  gms.forEach(function(m){
+    if (m.home_score==null) { remaining.push(m); return; }
+    if (m.home_score>m.away_score) base[m.home_team]+=3; else if (m.home_score<m.away_score) base[m.away_team]+=3; else { base[m.home_team]++; base[m.away_team]++; }
+  });
+  var played = gms.length - remaining.length;
+  var clinched={}; teams.forEach(function(t){ clinched[t]= played>0; }); // need at least one result
+  var R=remaining.length, total=Math.pow(3,R);
+  for (var s=0;s<total;s++){
+    var pts={}; teams.forEach(function(t){ pts[t]=base[t]; });
+    var x=s;
+    for (var ri=0;ri<R;ri++){ var o=x%3; x=Math.floor(x/3); var m=remaining[ri]; if(o===0)pts[m.home_team]+=3; else if(o===1){pts[m.home_team]++;pts[m.away_team]++;} else pts[m.away_team]+=3; }
+    teams.forEach(function(t){ if(!clinched[t])return; var cnt=0; teams.forEach(function(u){ if(u!==t && pts[u]>=pts[t]) cnt++; }); if(cnt>=2) clinched[t]=false; });
+  }
+  return clinched;
+}
+
+function predictedPositions(pm) {
   var res={};
   var thirds = calcQualifiedPredThirds(pm);
   GRP.forEach(function(g){
@@ -226,8 +251,9 @@ function buildQualifierSummary(allPr) {
   var actualQual={}; groups.forEach(function(g){ if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])actualQual[st[0].team]=1; if(st[1])actualQual[st[1].team]=1; } });
   if(allComplete){ var thirds=[]; groups.forEach(function(g){ var st=actualSt[g]||[]; if(st[2])thirds.push(st[2]); }); thirds.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); thirds.slice(0,8).forEach(function(t){actualQual[t.team]=1;}); }
   var bonus=+(settings['bonus_r32']||0);
+  var clinchedBy={}; groups.forEach(function(g){ clinchedBy[g]=clinchedTop2(g); });
   function thirdPos(team){ var g=teamGroup[team]; if(!g)return -1; var st=actualSt[g]||[]; for(var i=0;i<st.length;i++){if(st[i].team===team)return i;} return -1; }
-  function statusOf(t){ if(actualQual[t])return 'q'; var g=teamGroup[t]; if(!g||!grpComplete[g])return 'pending'; if(allComplete)return 'out'; return thirdPos(t)===2?'pending':'out'; }
+  function statusOf(t){ if(actualQual[t]||(clinchedBy[teamGroup[t]]&&clinchedBy[teamGroup[t]][t]))return 'q'; var g=teamGroup[t]; if(!g||!grpComplete[g])return 'pending'; if(allComplete)return 'out'; return thirdPos(t)===2?'pending':'out'; }
   var realPs=players.filter(function(p){return p.id!==RANDOMBOT_ID&&p.id!==CLAUDEBOT_ID;});
   var botPs=players.filter(function(p){return p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID;});
   var allPs=realPs.concat(botPs);
@@ -242,7 +268,7 @@ function buildQualifierSummary(allPr) {
   }
   var minW = 92 + allPs.length*138;
   var h='<div class="section" style="margin-top:14px"><div class="sec-hdr">&#x1F3AB; Predicted R32 Qualifiers</div>';
-  h+='<div style="font-size:.72rem;color:#999;padding:6px 10px">Each player&apos;s qualifiers per group (badge = predicted finish 1/2/3). Green = actually through (+'+bonus+' pts), red strike = out, grey = undecided.</div>';
+  h+='<div style="font-size:.72rem;color:#999;padding:6px 10px">Each player&apos;s qualifiers per group (badge = predicted finish 1/2/3). Green = qualified / guaranteed through (+'+bonus+' pts), red strike = out, grey = undecided. Totals post to the leaderboard once the group stage is complete.</div>';
   h+='<div class="hscroll"><table style="border-collapse:collapse;font-size:.78rem;min-width:'+minW+'px">';
   h+='<thead><tr style="background:#1A3A5C;color:#fff">';
   h+='<th style="position:sticky;left:0;background:#1A3A5C;z-index:2;text-align:left;padding:6px 8px">Group</th>';
