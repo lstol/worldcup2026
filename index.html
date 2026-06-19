@@ -190,14 +190,49 @@ function autoPopulateR32() { var allGrp=calcStandings(); var groups=['A','B','C'
   return qual;
 }
 
+function groupClinchInfo(g) {
+  // One brute-force pass over a group's remaining games producing: base points,
+  // teams that have clinched top-2, teams guaranteed top-3 (never 4th), and the
+  // max points the group's 3rd-place team could still finish on.
+  var gms=matches.filter(function(m){ return m.group_letter===g && m.round==='group'; });
+  var teams=getTeams(g);
+  var base={}; teams.forEach(function(t){ base[t]=0; });
+  var remaining=[];
+  gms.forEach(function(m){ if(m.home_score==null){remaining.push(m);return;} if(m.home_score>m.away_score)base[m.home_team]+=3; else if(m.home_score<m.away_score)base[m.away_team]+=3; else {base[m.home_team]++;base[m.away_team]++;} });
+  var played=gms.length-remaining.length;
+  var clinchTop2={}, guarTop3={}; teams.forEach(function(t){ clinchTop2[t]=played>0; guarTop3[t]=played>0; });
+  var maxThird=0;
+  var R=remaining.length, total=Math.pow(3,R);
+  for (var s=0;s<total;s++){
+    var pts={}; teams.forEach(function(t){ pts[t]=base[t]; });
+    var x=s; for(var ri=0;ri<R;ri++){ var o=x%3;x=Math.floor(x/3); var m=remaining[ri]; if(o===0)pts[m.home_team]+=3; else if(o===1){pts[m.home_team]++;pts[m.away_team]++;} else pts[m.away_team]+=3; }
+    teams.forEach(function(t){ var cnt=0; teams.forEach(function(u){ if(u!==t && pts[u]>=pts[t]) cnt++; }); if(cnt>=2) clinchTop2[t]=false; if(cnt>=3) guarTop3[t]=false; });
+    var arr=teams.map(function(t){ return pts[t]; }).sort(function(a,b){ return b-a; });
+    if (arr[2]>maxThird) maxThird=arr[2];
+  }
+  return {base:base, clinchTop2:clinchTop2, guarTop3:guarTop3, maxThird:maxThird};
+}
+
 function actualQualifiedSet() {
   var groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   var actualSt = calcStandings();
   var grpComplete={}, allComplete=true;
   groups.forEach(function(g){ var c=matches.filter(function(m){return m.group_letter===g&&m.round==='group';}).every(function(m){return m.home_score!=null;}); grpComplete[g]=c; if(!c)allComplete=false; });
+  var info={}; groups.forEach(function(g){ info[g]=groupClinchInfo(g); });
   var qual={};
-  groups.forEach(function(g){ var cl=clinchedTop2(g); getTeams(g).forEach(function(t){ if(cl[t]) qual[t]=1; }); });
-  groups.forEach(function(g){ if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])qual[st[0].team]=1; if(st[1])qual[st[1].team]=1; } });
+  // clinched top-2 + confirmed top-2 of completed groups
+  groups.forEach(function(g){ var t2=info[g].clinchTop2; getTeams(g).forEach(function(t){ if(t2[t]) qual[t]=1; }); if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])qual[st[0].team]=1; if(st[1])qual[st[1].team]=1; } });
+  // guaranteed best-third: team can't finish 4th, and at most 7 other groups
+  // could produce a 3rd-place team reaching its (minimum) points total.
+  groups.forEach(function(g){
+    getTeams(g).forEach(function(t){
+      if (qual[t] || !info[g].guarTop3[t]) return;
+      var tmin = info[g].base[t];
+      var cnt=0; groups.forEach(function(g2){ if(g2!==g && info[g2].maxThird >= tmin) cnt++; });
+      if (cnt <= 7) qual[t]=1;
+    });
+  });
+  // exact best-8 thirds once every group is complete
   if (allComplete){ var thirds=[]; groups.forEach(function(g){ var st=actualSt[g]||[]; if(st[2])thirds.push(st[2]); }); thirds.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); thirds.slice(0,8).forEach(function(t){ qual[t.team]=1; }); }
   return qual;
 }
