@@ -198,39 +198,70 @@ function calcGroupQualBonus(predsList) { var bonusVal = +(settings['bonus_r32']|
     badgeText.textContent = nextM.home_team + ' vs ' + nextM.away_team + ' - ' + formatKickoffShort(nextM);
     badge.style.display = 'block';
   }
-  const st = calcStandings(); var allThirds3=[]; GRP.forEach(function(g){if((st[g]||[])[2])allThirds3.push({team:st[g][2].team,pts:st[g][2].pts,gd:st[g][2].gd,gf:st[g][2].gf});}); allThirds3.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var qualThirdsMap={}; allThirds3.slice(0,8).forEach(function(t){qualThirdsMap[t.team]=true;}); let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">'; GRP.forEach(function(g) { const rows = st[g] || []; const played = matches.filter(function(m) { return m.group_letter === g && m.home_score != null; }).length; const total = matches.filter(function(m) { return m.group_letter === g; }).length; h += '<div class="section"><div class="sec-hdr"><span>Group ' + g + '</span><span style="font-size:.72rem;opacity:.75">' + played + '/' + total + ' played</span></div>'; h += '<table style="table-layout:fixed;width:100%;font-size:.82rem"><colgroup><col style="width:18px"><col><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:22px"><col style="width:22px"><col style="width:26px"><col style="width:26px"></colgroup><thead><tr><th class="num">#</th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>'; rows.forEach(function(r, i) { const rk = i+1; const bg = rk===1 ? 'background:#1F6BB0;color:#fff' : rk===2 ? 'background:#5BA3D9;color:#fff' : rk===3 && qualThirdsMap[r.team] ? 'background:#BDD7EE' : 'background:#fff'; h += '<tr style="' + bg + ';height:36px"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.ga + '</td><td class="num">' + (r.gd>0?'+':'') + r.gd + '</td><td class="num" style="font-weight:700">' + r.pts + '</td></tr>'; }); h += '</tbody></table></div>'; }); document.getElementById('groups-content').innerHTML = h + '</div>'; } function toggleLbDetails(idx) { var d = document.getElementById('lb-details-' + idx); if (!d) return; var open = d.style.display !== 'none'; d.style.display = open ? 'none' : 'block'; var btn = document.getElementById('lb-expand-' + idx); if (btn) { if (open) btn.classList.remove('open'); else btn.classList.add('open'); } } function buildQualifierSummary(allPr) {
+  const st = calcStandings(); var allThirds3=[]; GRP.forEach(function(g){if((st[g]||[])[2])allThirds3.push({team:st[g][2].team,pts:st[g][2].pts,gd:st[g][2].gd,gf:st[g][2].gf});}); allThirds3.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var qualThirdsMap={}; allThirds3.slice(0,8).forEach(function(t){qualThirdsMap[t.team]=true;}); let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">'; GRP.forEach(function(g) { const rows = st[g] || []; const played = matches.filter(function(m) { return m.group_letter === g && m.home_score != null; }).length; const total = matches.filter(function(m) { return m.group_letter === g; }).length; h += '<div class="section"><div class="sec-hdr"><span>Group ' + g + '</span><span style="font-size:.72rem;opacity:.75">' + played + '/' + total + ' played</span></div>'; h += '<table style="table-layout:fixed;width:100%;font-size:.82rem"><colgroup><col style="width:18px"><col><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:20px"><col style="width:22px"><col style="width:22px"><col style="width:26px"><col style="width:26px"></colgroup><thead><tr><th class="num">#</th><th class="tl">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>'; rows.forEach(function(r, i) { const rk = i+1; const bg = rk===1 ? 'background:#1F6BB0;color:#fff' : rk===2 ? 'background:#5BA3D9;color:#fff' : rk===3 && qualThirdsMap[r.team] ? 'background:#BDD7EE' : 'background:#fff'; h += '<tr style="' + bg + ';height:36px"><td class="num" style="font-weight:700">' + rk + '</td><td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.team + '</td><td class="num">' + r.p + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + r.gf + '</td><td class="num">' + r.ga + '</td><td class="num">' + (r.gd>0?'+':'') + r.gd + '</td><td class="num" style="font-weight:700">' + r.pts + '</td></tr>'; }); h += '</tbody></table></div>'; }); document.getElementById('groups-content').innerHTML = h + '</div>'; } function toggleLbDetails(idx) { var d = document.getElementById('lb-details-' + idx); if (!d) return; var open = d.style.display !== 'none'; d.style.display = open ? 'none' : 'block'; var btn = document.getElementById('lb-expand-' + idx); if (btn) { if (open) btn.classList.remove('open'); else btn.classList.add('open'); } } function predictedPositions(pm) {
+  var res={};
+  var thirds = calcQualifiedPredThirds(pm);
+  GRP.forEach(function(g){
+    var pst={}; getTeams(g).forEach(function(t){ pst[t]={team:t,pts:0,gd:0,gf:0,ga:0}; });
+    matches.filter(function(m){ return m.group_letter===g && m.round==='group'; }).forEach(function(m){
+      var pr=pm[m.id]; if(!pr||pr.home_score==null) return;
+      var h=pst[m.home_team],a=pst[m.away_team]; if(!h||!a) return;
+      h.gf+=pr.home_score; h.ga+=pr.away_score; h.gd=h.gf-h.ga; a.gf+=pr.away_score; a.ga+=pr.home_score; a.gd=a.gf-a.ga;
+      if(pr.home_score>pr.away_score){h.pts+=3;} else if(pr.home_score<pr.away_score){a.pts+=3;} else{h.pts++;a.pts++;}
+    });
+    var sorted=Object.values(pst).sort(function(a,b){ return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.team.localeCompare(b.team); });
+    sorted.forEach(function(x,i){ var pos=i+1; res[x.team]={pos:pos, qual:(pos<=2)||(pos===3&&!!thirds[x.team]), group:g}; });
+  });
+  return res;
+}
+
+function buildQualifierSummary(allPr) {
   var visible = settings['preds_visible']==1 || settings['preds_visible']==='1';
   if (!visible) return '';
   var groups = GRP;
-  var teamGroup = {}; groups.forEach(function(g){ getTeams(g).forEach(function(t){ teamGroup[t]=g; }); });
-  var actualSt = calcStandings();
-  var grpComplete={}, allComplete=true;
-  groups.forEach(function(g){ var c = matches.filter(function(m){ return m.group_letter===g && m.round==='group'; }).every(function(m){ return m.home_score!=null; }); grpComplete[g]=c; if(!c) allComplete=false; });
-  var actualQual={};
-  groups.forEach(function(g){ if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])actualQual[st[0].team]=1; if(st[1])actualQual[st[1].team]=1; } });
-  if (allComplete) { var thirds=[]; groups.forEach(function(g){ var st=actualSt[g]||[]; if(st[2])thirds.push(st[2]); }); thirds.sort(function(a,b){ return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf; }); thirds.slice(0,8).forEach(function(t){ actualQual[t.team]=1; }); }
-  var bonus = +(settings['bonus_r32']||0);
-  function thirdPos(team){ var g=teamGroup[team]; if(!g) return -1; var st=actualSt[g]||[]; for(var i=0;i<st.length;i++){ if(st[i].team===team) return i; } return -1; }
-  function statusOf(t){ if (actualQual[t]) return 'q'; var g=teamGroup[t]; if(!g||!grpComplete[g]) return 'pending'; if (allComplete) return 'out'; return thirdPos(t)===2 ? 'pending' : 'out'; }
-  var realPs = players.filter(function(p){ return p.id!==RANDOMBOT_ID && p.id!==CLAUDEBOT_ID; });
-  var botPs = players.filter(function(p){ return p.id===RANDOMBOT_ID || p.id===CLAUDEBOT_ID; });
-  var allPs = realPs.concat(botPs);
-  var h = '<div class="section" style="margin-top:14px"><div class="sec-hdr">&#x1F3AB; Predicted R32 Qualifiers</div>';
-  h += '<div style="font-size:.72rem;color:#999;padding:6px 10px">Each player&apos;s 32 predicted qualifiers (top 2 per group + 8 best thirds). Green = through (+'+bonus+' pts each), red = out, grey = group not decided. Totals post to the leaderboard once the group stage is complete.</div>';
-  allPs.forEach(function(p){
-    var pm={}; allPr.forEach(function(pr){ if(pr.player_id===p.id) pm[pr.match_id]=pr; });
-    var qual = predictedQualifierSet(pm);
-    var teams = Object.keys(qual).sort(function(a,b){ var ga=teamGroup[a]||'Z', gb=teamGroup[b]||'Z'; return ga<gb?-1:ga>gb?1:a.localeCompare(b); });
-    var qct=0; teams.forEach(function(t){ if(statusOf(t)==='q') qct++; });
-    var pts = qct*bonus;
-    var isBot = p.id===RANDOMBOT_ID || p.id===CLAUDEBOT_ID;
-    h += '<div style="padding:8px 8px;border-top:1px solid #EEF3F8">';
-    h += '<div style="font-weight:700;margin-bottom:6px'+(isBot?';color:#6B4FA0':'')+'">'+(isBot?'&#129302; ':'')+p.name+' <span style="font-weight:400;color:#999;font-size:.8rem">&mdash; '+qct+'/'+teams.length+' through &middot; '+pts+' pts</span></div>';
-    h += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
-    teams.forEach(function(t){ var s=statusOf(t); var bg=s==='q'?'#C6EFCE':s==='out'?'#FDE8E8':'#EEF1F4'; var col=s==='q'?'#1A5C1A':s==='out'?'#9B2226':'#777'; var tag=s==='q'?' +'+bonus:''; h += '<span style="background:'+bg+';color:'+col+';padding:2px 7px;border-radius:10px;font-size:.72rem;white-space:nowrap">'+t+tag+'</span>'; });
-    h += '</div></div>';
+  var teamGroup={}; var allTeams=[];
+  groups.forEach(function(g){ getTeams(g).forEach(function(t){ teamGroup[t]=g; allTeams.push({team:t,group:g}); }); });
+  var actualSt=calcStandings(); var grpComplete={},allComplete=true;
+  groups.forEach(function(g){ var c=matches.filter(function(m){return m.group_letter===g&&m.round==='group';}).every(function(m){return m.home_score!=null;}); grpComplete[g]=c; if(!c)allComplete=false; });
+  var actualQual={}; groups.forEach(function(g){ if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])actualQual[st[0].team]=1; if(st[1])actualQual[st[1].team]=1; } });
+  if(allComplete){ var thirds=[]; groups.forEach(function(g){ var st=actualSt[g]||[]; if(st[2])thirds.push(st[2]); }); thirds.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); thirds.slice(0,8).forEach(function(t){actualQual[t.team]=1;}); }
+  var bonus=+(settings['bonus_r32']||0);
+  function thirdPos(team){ var g=teamGroup[team]; if(!g)return -1; var st=actualSt[g]||[]; for(var i=0;i<st.length;i++){if(st[i].team===team)return i;} return -1; }
+  function statusOf(t){ if(actualQual[t])return 'q'; var g=teamGroup[t]; if(!g||!grpComplete[g])return 'pending'; if(allComplete)return 'out'; return thirdPos(t)===2?'pending':'out'; }
+  var realPs=players.filter(function(p){return p.id!==RANDOMBOT_ID&&p.id!==CLAUDEBOT_ID;});
+  var botPs=players.filter(function(p){return p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID;});
+  var allPs=realPs.concat(botPs);
+  var posByPlayer={}; allPs.forEach(function(p){ var pm={}; allPr.forEach(function(pr){ if(pr.player_id===p.id) pm[pr.match_id]=pr; }); posByPlayer[p.id]=predictedPositions(pm); });
+  var minW = 150 + allPs.length*58;
+  var h='<div class="section" style="margin-top:14px"><div class="sec-hdr">&#x1F3AB; Predicted R32 Qualifiers</div>';
+  h+='<div style="font-size:.72rem;color:#999;padding:6px 10px">Cells show each player&apos;s predicted finish (1/2/3) for teams they send through. Green = actually through (+'+bonus+' pts), red = out, grey = undecided. Group letter in the team badge.</div>';
+  h+='<div class="hscroll"><table style="border-collapse:collapse;font-size:.74rem;min-width:'+minW+'px">';
+  h+='<thead><tr style="background:#1A3A5C;color:#fff">';
+  h+='<th style="position:sticky;left:0;background:#1A3A5C;z-index:2;text-align:left;padding:6px 8px">Team</th>';
+  allPs.forEach(function(p){ var isBot=p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID; h+='<th style="padding:6px 6px;text-align:center;white-space:nowrap'+(isBot?';color:#B8A9FF':'')+'">'+(isBot?'&#129302; ':'')+p.name+'</th>'; });
+  h+='</tr></thead><tbody>';
+  allTeams.forEach(function(rt){
+    var t=rt.team, g=rt.group;
+    var s=statusOf(t);
+    var rowTint = s==='q'?'#F1FBF3':s==='out'?'#FCF3F3':'#fff';
+    var nameCol = s==='q'?'#1A5C1A':s==='out'?'#9B2226':'#333';
+    h+='<tr style="border-top:1px solid #EEF3F8">';
+    h+='<td style="position:sticky;left:0;background:'+rowTint+';z-index:1;padding:5px 8px;white-space:nowrap;font-weight:600;color:'+nameCol+'"><span style="display:inline-block;min-width:14px;font-size:.6rem;color:#fff;background:#6B4FA0;border-radius:4px;text-align:center;padding:1px 4px;margin-right:5px">'+g+'</span>'+t+'</td>';
+    allPs.forEach(function(p){
+      var pp=posByPlayer[p.id][t];
+      var cbg='transparent', ccol='#ccc', cell='&middot;';
+      if (pp && pp.qual) {
+        if (s==='q'){cbg='#C6EFCE';ccol='#1A5C1A';} else if(s==='out'){cbg='#FDE8E8';ccol='#9B2226';} else {cbg='#EEF1F4';ccol='#555';}
+        cell='<strong>'+pp.pos+'</strong>';
+      }
+      h+='<td style="text-align:center;padding:5px 6px;background:'+cbg+';color:'+ccol+'">'+cell+'</td>';
+    });
+    h+='</tr>';
   });
-  h += '</div>';
+  h+='</tbody><tfoot><tr style="background:#0D2137;color:#fff;font-weight:700">';
+  h+='<td style="position:sticky;left:0;background:#0D2137;z-index:1;padding:6px 8px">Points</td>';
+  allPs.forEach(function(p){ var pos=posByPlayer[p.id]; var pts=0; allTeams.forEach(function(rt){ var pp=pos[rt.team]; if(pp&&pp.qual&&statusOf(rt.team)==='q')pts+=bonus; }); h+='<td style="text-align:center;padding:6px 6px">'+pts+'</td>'; });
+  h+='</tr></tfoot></table></div></div>';
   return h;
 }
 
