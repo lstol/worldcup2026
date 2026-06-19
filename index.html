@@ -219,8 +219,8 @@ function buildQualifierSummary(allPr) {
   var visible = settings['preds_visible']==1 || settings['preds_visible']==='1';
   if (!visible) return '';
   var groups = GRP;
-  var teamGroup={}; var allTeams=[];
-  groups.forEach(function(g){ getTeams(g).forEach(function(t){ teamGroup[t]=g; allTeams.push({team:t,group:g}); }); });
+  var teamGroup={};
+  groups.forEach(function(g){ getTeams(g).forEach(function(t){ teamGroup[t]=g; }); });
   var actualSt=calcStandings(); var grpComplete={},allComplete=true;
   groups.forEach(function(g){ var c=matches.filter(function(m){return m.group_letter===g&&m.round==='group';}).every(function(m){return m.home_score!=null;}); grpComplete[g]=c; if(!c)allComplete=false; });
   var actualQual={}; groups.forEach(function(g){ if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])actualQual[st[0].team]=1; if(st[1])actualQual[st[1].team]=1; } });
@@ -232,35 +232,38 @@ function buildQualifierSummary(allPr) {
   var botPs=players.filter(function(p){return p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID;});
   var allPs=realPs.concat(botPs);
   var posByPlayer={}; allPs.forEach(function(p){ var pm={}; allPr.forEach(function(pr){ if(pr.player_id===p.id) pm[pr.match_id]=pr; }); posByPlayer[p.id]=predictedPositions(pm); });
-  var minW = 150 + allPs.length*58;
-  var h='<div class="section" style="margin-top:14px"><div class="sec-hdr">&#x1F3AB; Predicted R32 Qualifiers</div>';
-  h+='<div style="font-size:.72rem;color:#999;padding:6px 10px">Cells show each player&apos;s predicted finish (1/2/3) for teams they send through. Green = actually through (+'+bonus+' pts), red = out, grey = undecided. Group letter in the team badge.</div>';
-  h+='<div class="hscroll"><table style="border-collapse:collapse;font-size:.74rem;min-width:'+minW+'px">';
-  h+='<thead><tr style="background:#1A3A5C;color:#fff">';
-  h+='<th style="position:sticky;left:0;background:#1A3A5C;z-index:2;text-align:left;padding:6px 8px">Team</th>';
-  allPs.forEach(function(p){ var isBot=p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID; h+='<th style="padding:6px 6px;text-align:center;white-space:nowrap'+(isBot?';color:#B8A9FF':'')+'">'+(isBot?'&#129302; ':'')+p.name+'</th>'; });
-  h+='</tr></thead><tbody>';
-  allTeams.forEach(function(rt){
-    var t=rt.team, g=rt.group;
+  function teamLine(t, pp) {
     var s=statusOf(t);
-    var rowTint = s==='q'?'#F1FBF3':s==='out'?'#FCF3F3':'#fff';
-    var nameCol = s==='q'?'#1A5C1A':s==='out'?'#9B2226':'#333';
+    var bc = s==='q'?'#2D7A2D':s==='out'?'#C9041C':'#999';
+    var tcol = s==='q'?'#1A5C1A':s==='out'?'#9B2226':'#555';
+    var deco = s==='out'?';text-decoration:line-through':'';
+    var badge='<span style="display:inline-block;min-width:13px;font-size:.6rem;font-weight:700;border-radius:4px;text-align:center;padding:0 3px;margin-right:5px;background:'+bc+';color:#fff">'+pp.pos+'</span>';
+    return '<div style="white-space:nowrap;padding:1px 0;color:'+tcol+deco+'">'+badge+t+'</div>';
+  }
+  var minW = 92 + allPs.length*138;
+  var h='<div class="section" style="margin-top:14px"><div class="sec-hdr">&#x1F3AB; Predicted R32 Qualifiers</div>';
+  h+='<div style="font-size:.72rem;color:#999;padding:6px 10px">Each player&apos;s qualifiers per group (badge = predicted finish 1/2/3). Green = actually through (+'+bonus+' pts), red strike = out, grey = undecided.</div>';
+  h+='<div class="hscroll"><table style="border-collapse:collapse;font-size:.78rem;min-width:'+minW+'px">';
+  h+='<thead><tr style="background:#1A3A5C;color:#fff">';
+  h+='<th style="position:sticky;left:0;background:#1A3A5C;z-index:2;text-align:left;padding:6px 8px">Group</th>';
+  allPs.forEach(function(p){ var isBot=p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID; h+='<th style="padding:6px 10px;text-align:left;white-space:nowrap'+(isBot?';color:#B8A9FF':'')+'">'+(isBot?'&#129302; ':'')+p.name+'</th>'; });
+  h+='</tr></thead><tbody>';
+  groups.forEach(function(g, gi){
+    var rowbg = gi%2 ? '#F7FAFD' : '#fff';
     h+='<tr style="border-top:1px solid #EEF3F8">';
-    h+='<td style="position:sticky;left:0;background:'+rowTint+';z-index:1;padding:5px 8px;white-space:nowrap;font-weight:600;color:'+nameCol+'"><span style="display:inline-block;min-width:14px;font-size:.6rem;color:#fff;background:#6B4FA0;border-radius:4px;text-align:center;padding:1px 4px;margin-right:5px">'+g+'</span>'+t+'</td>';
+    h+='<td style="position:sticky;left:0;background:'+rowbg+';z-index:1;padding:6px 8px;font-weight:700;color:#0D2137;white-space:nowrap">Group '+g+'</td>';
     allPs.forEach(function(p){
-      var pp=posByPlayer[p.id][t];
-      var cbg='transparent', ccol='#ccc', cell='&middot;';
-      if (pp && pp.qual) {
-        if (s==='q'){cbg='#C6EFCE';ccol='#1A5C1A';} else if(s==='out'){cbg='#FDE8E8';ccol='#9B2226';} else {cbg='#EEF1F4';ccol='#555';}
-        cell='<strong>'+pp.pos+'</strong>';
-      }
-      h+='<td style="text-align:center;padding:5px 6px;background:'+cbg+';color:'+ccol+'">'+cell+'</td>';
+      var pos=posByPlayer[p.id];
+      var teamsIn=getTeams(g).filter(function(t){ var pp=pos[t]; return pp&&pp.qual; });
+      teamsIn.sort(function(a,b){ return pos[a].pos-pos[b].pos; });
+      var cell=''; teamsIn.forEach(function(t){ cell+=teamLine(t,pos[t]); });
+      h+='<td style="padding:5px 10px;vertical-align:top;background:'+rowbg+'">'+(cell||'<span style="color:#ccc">&middot;</span>')+'</td>';
     });
     h+='</tr>';
   });
   h+='</tbody><tfoot><tr style="background:#0D2137;color:#fff;font-weight:700">';
   h+='<td style="position:sticky;left:0;background:#0D2137;z-index:1;padding:6px 8px">Points</td>';
-  allPs.forEach(function(p){ var pos=posByPlayer[p.id]; var pts=0; allTeams.forEach(function(rt){ var pp=pos[rt.team]; if(pp&&pp.qual&&statusOf(rt.team)==='q')pts+=bonus; }); h+='<td style="text-align:center;padding:6px 6px">'+pts+'</td>'; });
+  allPs.forEach(function(p){ var pos=posByPlayer[p.id]; var pts=0; Object.keys(pos).forEach(function(t){ var pp=pos[t]; if(pp&&pp.qual&&statusOf(t)==='q')pts+=bonus; }); h+='<td style="text-align:left;padding:6px 10px">'+pts+' pts</td>'; });
   h+='</tr></tfoot></table></div></div>';
   return h;
 }
