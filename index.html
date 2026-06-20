@@ -200,30 +200,41 @@ function groupClinchInfo(g) {
   var remaining=[];
   gms.forEach(function(m){ if(m.home_score==null){remaining.push(m);return;} if(m.home_score>m.away_score)base[m.home_team]+=3; else if(m.home_score<m.away_score)base[m.away_team]+=3; else {base[m.home_team]++;base[m.away_team]++;} });
   var played=gms.length-remaining.length;
-  var clinchTop2={}, guarTop3={}; teams.forEach(function(t){ clinchTop2[t]=played>0; guarTop3[t]=played>0; });
-  var maxThird=0;
+  var remCount={}; teams.forEach(function(t){ remCount[t]=0; });
+  remaining.forEach(function(m){ if(remCount[m.home_team]!=null)remCount[m.home_team]++; if(remCount[m.away_team]!=null)remCount[m.away_team]++; });
+  var clinchTop2={}, guarTop3={}, notTop2={}, always4th={}; teams.forEach(function(t){ clinchTop2[t]=played>0; guarTop3[t]=played>0; notTop2[t]=played>0; always4th[t]=played>0; });
+  var maxThird=0, minThird=99;
   var R=remaining.length, total=Math.pow(3,R);
   for (var s=0;s<total;s++){
     var pts={}; teams.forEach(function(t){ pts[t]=base[t]; });
     var x=s; for(var ri=0;ri<R;ri++){ var o=x%3;x=Math.floor(x/3); var m=remaining[ri]; if(o===0)pts[m.home_team]+=3; else if(o===1){pts[m.home_team]++;pts[m.away_team]++;} else pts[m.away_team]+=3; }
-    teams.forEach(function(t){ var cnt=0; teams.forEach(function(u){ if(u!==t && pts[u]>=pts[t]) cnt++; }); if(cnt>=2) clinchTop2[t]=false; if(cnt>=3) guarTop3[t]=false; });
+    teams.forEach(function(t){
+      var ge=0, gt=0;
+      teams.forEach(function(u){ if(u!==t){ if(pts[u]>=pts[t])ge++; if(pts[u]>pts[t])gt++; } });
+      if(ge>=2) clinchTop2[t]=false;   // someone could tie/pass -> not yet top-2 locked
+      if(ge>=3) guarTop3[t]=false;     // could be 4th
+      if(gt<2) notTop2[t]=false;       // could still be top-2 in some scenario
+      if(gt<3) always4th[t]=false;     // could be 3rd-or-better in some scenario
+    });
     var arr=teams.map(function(t){ return pts[t]; }).sort(function(a,b){ return b-a; });
     if (arr[2]>maxThird) maxThird=arr[2];
+    if (arr[2]<minThird) minThird=arr[2];
   }
-  return {base:base, clinchTop2:clinchTop2, guarTop3:guarTop3, maxThird:maxThird};
+  if (total===0) minThird=0;
+  return {base:base, remCount:remCount, clinchTop2:clinchTop2, guarTop3:guarTop3, notTop2:notTop2, always4th:always4th, maxThird:maxThird, minThird:minThird};
 }
 
-function actualQualifiedSet() {
+function r32Analysis() {
   var groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   var actualSt = calcStandings();
   var grpComplete={}, allComplete=true;
   groups.forEach(function(g){ var c=matches.filter(function(m){return m.group_letter===g&&m.round==='group';}).every(function(m){return m.home_score!=null;}); grpComplete[g]=c; if(!c)allComplete=false; });
   var info={}; groups.forEach(function(g){ info[g]=groupClinchInfo(g); });
-  var qual={};
-  // clinched top-2 + confirmed top-2 of completed groups
+  var qual={}, elim={};
+  // QUALIFIED: clinched top-2 + confirmed top-2 of completed groups
   groups.forEach(function(g){ var t2=info[g].clinchTop2; getTeams(g).forEach(function(t){ if(t2[t]) qual[t]=1; }); if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])qual[st[0].team]=1; if(st[1])qual[st[1].team]=1; } });
-  // guaranteed best-third: team can't finish 4th, and at most 7 other groups
-  // could produce a 3rd-place team reaching its (minimum) points total.
+  // guaranteed best-third: can't finish 4th, and at most 7 other groups could
+  // produce a 3rd-place team reaching its minimum points total.
   groups.forEach(function(g){
     getTeams(g).forEach(function(t){
       if (qual[t] || !info[g].guarTop3[t]) return;
@@ -234,9 +245,49 @@ function actualQualifiedSet() {
   });
   // exact best-8 thirds once every group is complete
   if (allComplete){ var thirds=[]; groups.forEach(function(g){ var st=actualSt[g]||[]; if(st[2])thirds.push(st[2]); }); thirds.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); thirds.slice(0,8).forEach(function(t){ qual[t.team]=1; }); }
-  return qual;
+  // ELIMINATED: always finishes 4th, OR can't make top-2 and even its best
+  // possible points are beaten by >=8 other groups' guaranteed thirds.
+  groups.forEach(function(g){
+    getTeams(g).forEach(function(t){
+      if (qual[t]) return;
+      if (info[g].always4th[t]) { elim[t]=1; return; }
+      if (info[g].notTop2[t]) {
+        var tmax = info[g].base[t] + 3*info[g].remCount[t];
+        var cnt=0; groups.forEach(function(g2){ if(g2!==g && info[g2].minThird > tmax) cnt++; });
+        if (cnt >= 8) elim[t]=1;
+      }
+      if (grpComplete[g] && allComplete && !qual[t]) elim[t]=1;
+    });
+  });
+  return {qualified:qual, eliminated:elim};
 }
-function calcGroupQualBonus(predsList) { var bonusVal = +(settings['bonus_r32']||0); if (!bonusVal) return {pts:0,correct:0}; var actualQual = actualQualifiedSet(); if (Object.keys(actualQual).length===0) return {pts:0,correct:0}; var pmMap={}; predsList.forEach(function(p){pmMap[p.match_id]=p;}); var predQual = predictedQualifierSet(pmMap); var correct = 0; Object.keys(actualQual).forEach(function(team){if(predQual[team])correct++;}); return {pts:correct*bonusVal,correct:correct}; } function calcStandings() { const st = {}; GRP.forEach(function(g) { st[g] = {}; getTeams(g).forEach(function(t) { st[g][t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; }); }); matches.filter(function(m) { return m.round === 'group' && m.home_score != null; }).forEach(function(m) { const g = m.group_letter; if (!g || !st[g]) return; if (!st[g][m.home_team]) st[g][m.home_team] = {team:m.home_team,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; if (!st[g][m.away_team]) st[g][m.away_team] = {team:m.away_team,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; const h = st[g][m.home_team], a = st[g][m.away_team]; h.p++; a.p++; h.gf += m.home_score; h.ga += m.away_score; h.gd = h.gf - h.ga; a.gf += m.away_score; a.ga += m.home_score; a.gd = a.gf - a.ga; if (m.home_score > m.away_score) { h.w++; h.pts += 3; a.l++; } else if (m.home_score < m.away_score) { a.w++; a.pts += 3; h.l++; } else { h.d++; h.pts++; a.d++; a.pts++; } }); GRP.forEach(function(g) { st[g] = Object.values(st[g]).sort(function(a, b) { return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.team.localeCompare(b.team); }); }); return st; } function updateHomeScoring() { var gs_e = document.getElementById("home-gs-exact"); var gs_r = document.getElementById("home-gs-result"); var ko_e = document.getElementById("home-ko-exact"); var ko_r = document.getElementById("home-ko-result"); if (gs_e) gs_e.textContent = settings["gs_exact"] || 5; if (gs_r) gs_r.textContent = settings["gs_result"] || 2; if (ko_e) ko_e.textContent = settings["ko_exact"] || 5; if (ko_r) ko_r.textContent = settings["ko_result"] || 2; var br32=document.getElementById("home-bonus-r32"); var br16=document.getElementById("home-bonus-r16"); var bqf=document.getElementById("home-bonus-qf"); var bsf=document.getElementById("home-bonus-sf"); var bfinal=document.getElementById("home-bonus-final"); var bchamp=document.getElementById("home-bonus-champion"); var bbronze=document.getElementById("home-bonus-bronze"); if (br32) br32.textContent = settings["bonus_r32"] || "-"; if (br16) br16.textContent = settings["bonus_r16"] || "-"; if (bqf) bqf.textContent = settings["bonus_qf"] || "-"; if (bsf) bsf.textContent = settings["bonus_sf"] || "-"; if (bfinal) bfinal.textContent = settings["bonus_final"] || "-"; if (bchamp) bchamp.textContent = settings["bonus_champion"] || "-"; if (bbronze) bbronze.textContent = settings["bonus_bronze"] || "-"; var bqp=document.getElementById("home-bonus-q"); if (bqp) bqp.textContent = settings["bonus_q_pts"] || "-"; var vBtn = document.getElementById("home-viewpred-btn"); if (vBtn) vBtn.style.display = (settings["preds_visible"]==1||settings["preds_visible"]==="1") ? "block" : "none";} function renderGroups() {
+function actualQualifiedSet() { return r32Analysis().qualified; }
+function calcGroupQualBonus(predsList) { var bonusVal = +(settings['bonus_r32']||0); if (!bonusVal) return {pts:0,correct:0}; var actualQual = actualQualifiedSet(); if (Object.keys(actualQual).length===0) return {pts:0,correct:0}; var pmMap={}; predsList.forEach(function(p){pmMap[p.match_id]=p;}); var predQual = predictedQualifierSet(pmMap); var correct = 0; Object.keys(actualQual).forEach(function(team){if(predQual[team])correct++;}); return {pts:correct*bonusVal,correct:correct}; } function calcStandings() { const st = {}; GRP.forEach(function(g) { st[g] = {}; getTeams(g).forEach(function(t) { st[g][t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; }); }); matches.filter(function(m) { return m.round === 'group' && m.home_score != null; }).forEach(function(m) { const g = m.group_letter; if (!g || !st[g]) return; if (!st[g][m.home_team]) st[g][m.home_team] = {team:m.home_team,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; if (!st[g][m.away_team]) st[g][m.away_team] = {team:m.away_team,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; const h = st[g][m.home_team], a = st[g][m.away_team]; h.p++; a.p++; h.gf += m.home_score; h.ga += m.away_score; h.gd = h.gf - h.ga; a.gf += m.away_score; a.ga += m.home_score; a.gd = a.gf - a.ga; if (m.home_score > m.away_score) { h.w++; h.pts += 3; a.l++; } else if (m.home_score < m.away_score) { a.w++; a.pts += 3; h.l++; } else { h.d++; h.pts++; a.d++; a.pts++; } }); GRP.forEach(function(g) { st[g] = rankGroupTeams(Object.values(st[g])); }); return st; }
+function rankGroupTeams(arr) {
+  // FIFA ranking: points, then head-to-head (pts/GD/goals among tied teams),
+  // then overall GD, overall goals. (Fair-play and FIFA ranking not modelled.)
+  arr = arr.slice().sort(function(a,b){ return b.pts-a.pts; });
+  var out=[], i=0;
+  while (i<arr.length) {
+    var j=i+1; while (j<arr.length && arr[j].pts===arr[i].pts) j++;
+    var block=arr.slice(i,j);
+    if (block.length>1) block=resolveGroupTie(block);
+    out=out.concat(block); i=j;
+  }
+  return out;
+}
+function resolveGroupTie(block) {
+  var names={}; block.forEach(function(t){ names[t.team]=true; });
+  var h={}; block.forEach(function(t){ h[t.team]={pts:0,gd:0,gf:0}; });
+  matches.filter(function(m){ return m.round==='group' && m.home_score!=null && names[m.home_team] && names[m.away_team]; }).forEach(function(m){
+    var H=h[m.home_team], A=h[m.away_team];
+    H.gf+=m.home_score; H.gd+=m.home_score-m.away_score; A.gf+=m.away_score; A.gd+=m.away_score-m.home_score;
+    if(m.home_score>m.away_score)H.pts+=3; else if(m.home_score<m.away_score)A.pts+=3; else {H.pts++;A.pts++;}
+  });
+  return block.sort(function(a,b){
+    return (h[b.team].pts-h[a.team].pts) || (h[b.team].gd-h[a.team].gd) || (h[b.team].gf-h[a.team].gf) || (b.gd-a.gd) || (b.gf-a.gf) || a.team.localeCompare(b.team);
+  });
+} function updateHomeScoring() { var gs_e = document.getElementById("home-gs-exact"); var gs_r = document.getElementById("home-gs-result"); var ko_e = document.getElementById("home-ko-exact"); var ko_r = document.getElementById("home-ko-result"); if (gs_e) gs_e.textContent = settings["gs_exact"] || 5; if (gs_r) gs_r.textContent = settings["gs_result"] || 2; if (ko_e) ko_e.textContent = settings["ko_exact"] || 5; if (ko_r) ko_r.textContent = settings["ko_result"] || 2; var br32=document.getElementById("home-bonus-r32"); var br16=document.getElementById("home-bonus-r16"); var bqf=document.getElementById("home-bonus-qf"); var bsf=document.getElementById("home-bonus-sf"); var bfinal=document.getElementById("home-bonus-final"); var bchamp=document.getElementById("home-bonus-champion"); var bbronze=document.getElementById("home-bonus-bronze"); if (br32) br32.textContent = settings["bonus_r32"] || "-"; if (br16) br16.textContent = settings["bonus_r16"] || "-"; if (bqf) bqf.textContent = settings["bonus_qf"] || "-"; if (bsf) bsf.textContent = settings["bonus_sf"] || "-"; if (bfinal) bfinal.textContent = settings["bonus_final"] || "-"; if (bchamp) bchamp.textContent = settings["bonus_champion"] || "-"; if (bbronze) bbronze.textContent = settings["bonus_bronze"] || "-"; var bqp=document.getElementById("home-bonus-q"); if (bqp) bqp.textContent = settings["bonus_q_pts"] || "-"; var vBtn = document.getElementById("home-viewpred-btn"); if (vBtn) vBtn.style.display = (settings["preds_visible"]==1||settings["preds_visible"]==="1") ? "block" : "none";} function renderGroups() {
   var nextM = matches.filter(function(m){ return m.round==='group' && m.home_score==null && m.match_date; }).sort(function(a,b){ return a.match_date.localeCompare(b.match_date); })[0];
   var badge = document.getElementById('next-match-badge');
   var badgeText = document.getElementById('next-match-text');
@@ -294,10 +345,10 @@ function buildQualifierSummary(allPr) {
   groups.forEach(function(g){ getTeams(g).forEach(function(t){ teamGroup[t]=g; }); });
   var actualSt=calcStandings(); var grpComplete={},allComplete=true;
   groups.forEach(function(g){ var c=matches.filter(function(m){return m.group_letter===g&&m.round==='group';}).every(function(m){return m.home_score!=null;}); grpComplete[g]=c; if(!c)allComplete=false; });
-  var actualQual=actualQualifiedSet();
+  var _an=r32Analysis(); var actualQual=_an.qualified; var elimSet=_an.eliminated;
   var bonus=+(settings['bonus_r32']||0);
   function thirdPos(team){ var g=teamGroup[team]; if(!g)return -1; var st=actualSt[g]||[]; for(var i=0;i<st.length;i++){if(st[i].team===team)return i;} return -1; }
-  function statusOf(t){ if(actualQual[t])return 'q'; var g=teamGroup[t]; if(!g||!grpComplete[g])return 'pending'; if(allComplete)return 'out'; return thirdPos(t)===2?'pending':'out'; }
+  function statusOf(t){ if(actualQual[t])return 'q'; if(elimSet[t])return 'out'; var g=teamGroup[t]; if(!g||!grpComplete[g])return 'pending'; if(allComplete)return 'out'; return thirdPos(t)===2?'pending':'out'; }
   var realPs=players.filter(function(p){return p.id!==RANDOMBOT_ID&&p.id!==CLAUDEBOT_ID;});
   var botPs=players.filter(function(p){return p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID;});
   var allPs=realPs.concat(botPs);
