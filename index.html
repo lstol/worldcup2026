@@ -181,7 +181,7 @@ function autoPopulateR32() { var allGrp=calcStandings(); var groups=['A','B','C'
       h.gf+=pr.home_score; h.ga+=pr.away_score; h.gd=h.gf-h.ga; a.gf+=pr.away_score; a.ga+=pr.home_score; a.gd=a.gf-a.ga;
       if(pr.home_score>pr.away_score){h.pts+=3;} else if(pr.home_score<pr.away_score){a.pts+=3;} else{h.pts++;a.pts++;}
     });
-    var sorted=Object.values(pst).sort(function(a,b){ return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.team.localeCompare(b.team); });
+    var sorted=rankPredTeams(Object.values(pst), pm, g);
     if(sorted[0]) qual[sorted[0].team]=1;
     if(sorted[1]) qual[sorted[1].team]=1;
   });
@@ -276,6 +276,25 @@ function rankGroupTeams(arr) {
   }
   return out;
 }
+function rankPredTeams(arr, pm, g) {
+  // Predicted standings ranked with the same FIFA tiebreakers, using the
+  // player's predicted scores for the head-to-head step.
+  arr = arr.slice().sort(function(a,b){ return b.pts-a.pts; });
+  var out=[], i=0;
+  while (i<arr.length) { var j=i+1; while (j<arr.length && arr[j].pts===arr[i].pts) j++; var block=arr.slice(i,j); if (block.length>1) block=resolvePredTie(block, pm, g); out=out.concat(block); i=j; }
+  return out;
+}
+function resolvePredTie(block, pm, g) {
+  var names={}; block.forEach(function(t){ names[t.team]=true; });
+  var h={}; block.forEach(function(t){ h[t.team]={pts:0,gd:0,gf:0}; });
+  matches.filter(function(m){ return m.group_letter===g && m.round==='group' && names[m.home_team] && names[m.away_team]; }).forEach(function(m){
+    var pr=pm[m.id]; if(!pr||pr.home_score==null) return;
+    var H=h[m.home_team], A=h[m.away_team];
+    H.gf+=pr.home_score; H.gd+=pr.home_score-pr.away_score; A.gf+=pr.away_score; A.gd+=pr.away_score-pr.home_score;
+    if(pr.home_score>pr.away_score)H.pts+=3; else if(pr.home_score<pr.away_score)A.pts+=3; else {H.pts++;A.pts++;}
+  });
+  return block.sort(function(a,b){ return (h[b.team].pts-h[a.team].pts) || (h[b.team].gd-h[a.team].gd) || (h[b.team].gf-h[a.team].gf) || (b.gd-a.gd) || (b.gf-a.gf) || a.team.localeCompare(b.team); });
+}
 function resolveGroupTie(block) {
   var names={}; block.forEach(function(t){ names[t.team]=true; });
   var h={}; block.forEach(function(t){ h[t.team]={pts:0,gd:0,gf:0}; });
@@ -331,7 +350,7 @@ function predictedPositions(pm) {
       h.gf+=pr.home_score; h.ga+=pr.away_score; h.gd=h.gf-h.ga; a.gf+=pr.away_score; a.ga+=pr.home_score; a.gd=a.gf-a.ga;
       if(pr.home_score>pr.away_score){h.pts+=3;} else if(pr.home_score<pr.away_score){a.pts+=3;} else{h.pts++;a.pts++;}
     });
-    var sorted=Object.values(pst).sort(function(a,b){ return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.team.localeCompare(b.team); });
+    var sorted=rankPredTeams(Object.values(pst), pm, g);
     sorted.forEach(function(x,i){ var pos=i+1; res[x.team]={pos:pos, qual:(pos<=2)||(pos===3&&!!thirds[x.team]), group:g}; });
   });
   return res;
@@ -662,7 +681,7 @@ function calcRoundBonus(roundKey, predsList) { var bonusMap = {R16:"bonus_r16",Q
     claudeBar += '<button onclick="askAllClaudePred()" style="padding:6px 14px;background:#5436DA;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:.85rem;white-space:nowrap">&#129302; Ask Claude All</button>';
     claudeBar += '</div>';
   }
-  document.getElementById('pred-content').innerHTML = claudeBar + buildRoundSummaryBar(predRound, preds) + h; setAS('idle'); } function calcQualifiedPredThirds(pm) { var groups=['A','B','C','D','E','F','G','H','I','J','K','L']; var predThirds=[]; groups.forEach(function(g){ var pst={}; getTeams(g).forEach(function(t){pst[t]={team:t,pts:0,gd:0,gf:0,ga:0};}); matches.filter(function(m){return m.group_letter===g&&m.round==='group';}).forEach(function(m){ var pr=pm[m.id]; if(!pr||pr.home_score==null) return; var h=pst[m.home_team],a=pst[m.away_team]; if(!h||!a) return; h.gf+=pr.home_score;h.ga+=pr.away_score;h.gd=h.gf-h.ga;a.gf+=pr.away_score;a.ga+=pr.home_score;a.gd=a.gf-a.ga; if(pr.home_score>pr.away_score){h.pts+=3;}else if(pr.home_score<pr.away_score){a.pts+=3;}else{h.pts++;a.pts++;} }); var sorted=Object.values(pst).sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf||a.team.localeCompare(b.team);}); if(sorted[2]) predThirds.push({team:sorted[2].team,pts:sorted[2].pts,gd:sorted[2].gd,gf:sorted[2].gf}); }); predThirds.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var qt={}; predThirds.slice(0,8).forEach(function(t){qt[t.team]=true;}); return qt; } function buildPredStTable(grp, pm, actualSt, qualThirds) { if (!qualThirds) qualThirds = {}; const teams = getTeams(grp); const pst = {}; teams.forEach(function(t) { pst[t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; }); matches.filter(function(m) { return m.group_letter === grp && m.round === 'group'; }).forEach(function(m) { const pr = pm[m.id]; if (!pr || pr.home_score == null) return; const h = pst[m.home_team], a = pst[m.away_team]; if (!h || !a) return; h.p++; a.p++; h.gf += pr.home_score; h.ga += pr.away_score; h.gd = h.gf - h.ga; a.gf += pr.away_score; a.ga += pr.home_score; a.gd = a.gf - a.ga; if (pr.home_score > pr.away_score) { h.w++; h.pts += 3; a.l++; } else if (pr.home_score < pr.away_score) { a.w++; a.pts += 3; h.l++; } else { h.d++; h.pts++; a.d++; a.pts++; } }); const sorted = Object.values(pst).sort(function(a,b) { return b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.team.localeCompare(b.team); }); const aRank = {}; actualSt.forEach(function(r, i) { aRank[r.team] = i+1; }); let h = '<table style="table-layout:fixed;width:100%"><colgroup><col style="width:18px"><col><col style="width:22px"><col style="width:28px"><col style="width:28px"><col style="width:40px"></colgroup><thead><tr><th class="num">#</th><th class="tl">Team</th><th>P</th><th>Pts</th><th>GD</th><th>Act.</th></tr></thead><tbody>'; sorted.forEach(function(r, i) { const rk = i+1; const bg = rk===1?'#1F6BB0':rk===2?'#5BA3D9':rk===3&&qualThirds[r.team]?'#BDD7EE':'#fff'; const tc = rk <= 2 ? 'color:#fff' : ''; const noPred = sorted.every(function(x) { return x.p === 0; }); const aR = aRank[r.team] ? '#'+aRank[r.team] : '-'; h += '<tr style="background:' + bg + ';' + tc + '"><td class="num" style="font-weight:700">' + rk + '</td>'; h += '<td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.team + '</td>'; h += '<td class="num">' + r.p + '</td>'; h += '<td class="num" style="font-weight:700">' + (noPred ? '-' : r.pts) + '</td>'; h += '<td class="num">' + (noPred ? '-' : (r.gd>0?'+':'') + r.gd) + '</td>'; h += '<td class="num">' + aR + '</td></tr>'; }); return h + '</tbody></table>'; } function buildPredTable(ms, pm, isGS) {
+  document.getElementById('pred-content').innerHTML = claudeBar + buildRoundSummaryBar(predRound, preds) + h; setAS('idle'); } function calcQualifiedPredThirds(pm) { var groups=['A','B','C','D','E','F','G','H','I','J','K','L']; var predThirds=[]; groups.forEach(function(g){ var pst={}; getTeams(g).forEach(function(t){pst[t]={team:t,pts:0,gd:0,gf:0,ga:0};}); matches.filter(function(m){return m.group_letter===g&&m.round==='group';}).forEach(function(m){ var pr=pm[m.id]; if(!pr||pr.home_score==null) return; var h=pst[m.home_team],a=pst[m.away_team]; if(!h||!a) return; h.gf+=pr.home_score;h.ga+=pr.away_score;h.gd=h.gf-h.ga;a.gf+=pr.away_score;a.ga+=pr.home_score;a.gd=a.gf-a.ga; if(pr.home_score>pr.away_score){h.pts+=3;}else if(pr.home_score<pr.away_score){a.pts+=3;}else{h.pts++;a.pts++;} }); var sorted=rankPredTeams(Object.values(pst), pm, g); if(sorted[2]) predThirds.push({team:sorted[2].team,pts:sorted[2].pts,gd:sorted[2].gd,gf:sorted[2].gf}); }); predThirds.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var qt={}; predThirds.slice(0,8).forEach(function(t){qt[t.team]=true;}); return qt; } function buildPredStTable(grp, pm, actualSt, qualThirds) { if (!qualThirds) qualThirds = {}; const teams = getTeams(grp); const pst = {}; teams.forEach(function(t) { pst[t] = {team:t,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; }); matches.filter(function(m) { return m.group_letter === grp && m.round === 'group'; }).forEach(function(m) { const pr = pm[m.id]; if (!pr || pr.home_score == null) return; const h = pst[m.home_team], a = pst[m.away_team]; if (!h || !a) return; h.p++; a.p++; h.gf += pr.home_score; h.ga += pr.away_score; h.gd = h.gf - h.ga; a.gf += pr.away_score; a.ga += pr.home_score; a.gd = a.gf - a.ga; if (pr.home_score > pr.away_score) { h.w++; h.pts += 3; a.l++; } else if (pr.home_score < pr.away_score) { a.w++; a.pts += 3; h.l++; } else { h.d++; h.pts++; a.d++; a.pts++; } }); const sorted = rankPredTeams(Object.values(pst), pm, grp); const aRank = {}; actualSt.forEach(function(r, i) { aRank[r.team] = i+1; }); let h = '<table style="table-layout:fixed;width:100%"><colgroup><col style="width:18px"><col><col style="width:22px"><col style="width:28px"><col style="width:28px"><col style="width:40px"></colgroup><thead><tr><th class="num">#</th><th class="tl">Team</th><th>P</th><th>Pts</th><th>GD</th><th>Act.</th></tr></thead><tbody>'; sorted.forEach(function(r, i) { const rk = i+1; const bg = rk===1?'#1F6BB0':rk===2?'#5BA3D9':rk===3&&qualThirds[r.team]?'#BDD7EE':'#fff'; const tc = rk <= 2 ? 'color:#fff' : ''; const noPred = sorted.every(function(x) { return x.p === 0; }); const aR = aRank[r.team] ? '#'+aRank[r.team] : '-'; h += '<tr style="background:' + bg + ';' + tc + '"><td class="num" style="font-weight:700">' + rk + '</td>'; h += '<td style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.team + '</td>'; h += '<td class="num">' + r.p + '</td>'; h += '<td class="num" style="font-weight:700">' + (noPred ? '-' : r.pts) + '</td>'; h += '<td class="num">' + (noPred ? '-' : (r.gd>0?'+':'') + r.gd) + '</td>'; h += '<td class="num">' + aR + '</td></tr>'; }); return h + '</tbody></table>'; } function buildPredTable(ms, pm, isGS) {
   var h = '<div class="prd-list">';
   ms.forEach(function(m) {
     var pr = pm[m.id];
