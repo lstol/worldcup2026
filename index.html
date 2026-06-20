@@ -191,36 +191,49 @@ function autoPopulateR32() { var allGrp=calcStandings(); var groups=['A','B','C'
 }
 
 function groupClinchInfo(g) {
-  // One brute-force pass over a group's remaining games producing: base points,
-  // teams that have clinched top-2, teams guaranteed top-3 (never 4th), and the
-  // max points the group's 3rd-place team could still finish on.
+  // Brute-force every outcome of a group's remaining games. Uses points for the
+  // "could tie/pass" checks (clinch/top-3, conservative) and points + already-
+  // decided head-to-head for the "definitely above" checks (elimination), so a
+  // team that loses the H2H tiebreak when level on points is handled correctly.
   var gms=matches.filter(function(m){ return m.group_letter===g && m.round==='group'; });
   var teams=getTeams(g);
   var base={}; teams.forEach(function(t){ base[t]=0; });
-  var remaining=[];
+  var remaining=[]; var remCount={}; teams.forEach(function(t){ remCount[t]=0; });
   gms.forEach(function(m){ if(m.home_score==null){remaining.push(m);return;} if(m.home_score>m.away_score)base[m.home_team]+=3; else if(m.home_score<m.away_score)base[m.away_team]+=3; else {base[m.home_team]++;base[m.away_team]++;} });
-  var played=gms.length-remaining.length;
-  var remCount={}; teams.forEach(function(t){ remCount[t]=0; });
   remaining.forEach(function(m){ if(remCount[m.home_team]!=null)remCount[m.home_team]++; if(remCount[m.away_team]!=null)remCount[m.away_team]++; });
+  var played=gms.length-remaining.length;
+  var pairM={}; gms.forEach(function(m){ pairM[m.home_team+'|'+m.away_team]=m; pairM[m.away_team+'|'+m.home_team]=m; });
+  var remIdx={}; remaining.forEach(function(m,i){ remIdx[m.home_team+'|'+m.away_team]=i; });
+  function beat(u,t,outc){
+    var m=pairM[u+'|'+t]; if(!m) return false;
+    var hs,as_;
+    if(m.home_score!=null){ hs=m.home_score; as_=m.away_score; }
+    else { var o=outc[remIdx[m.home_team+'|'+m.away_team]]; if(o===0){hs=1;as_=0;} else if(o===1){hs=0;as_=0;} else {hs=0;as_=1;} }
+    var uHome=(m.home_team===u); var uS=uHome?hs:as_, tS=uHome?as_:hs;
+    return uS>tS;
+  }
   var clinchTop2={}, guarTop3={}, notTop2={}, always4th={}; teams.forEach(function(t){ clinchTop2[t]=played>0; guarTop3[t]=played>0; notTop2[t]=played>0; always4th[t]=played>0; });
   var maxThird=0, minThird=99;
   var R=remaining.length, total=Math.pow(3,R);
   for (var s=0;s<total;s++){
     var pts={}; teams.forEach(function(t){ pts[t]=base[t]; });
-    var x=s; for(var ri=0;ri<R;ri++){ var o=x%3;x=Math.floor(x/3); var m=remaining[ri]; if(o===0)pts[m.home_team]+=3; else if(o===1){pts[m.home_team]++;pts[m.away_team]++;} else pts[m.away_team]+=3; }
+    var outc=new Array(R);
+    var x=s; for(var ri=0;ri<R;ri++){ var o=x%3; outc[ri]=o; x=Math.floor(x/3); var m=remaining[ri]; if(o===0)pts[m.home_team]+=3; else if(o===1){pts[m.home_team]++;pts[m.away_team]++;} else pts[m.away_team]+=3; }
     teams.forEach(function(t){
-      var ge=0, gt=0;
-      teams.forEach(function(u){ if(u!==t){ if(pts[u]>=pts[t])ge++; if(pts[u]>pts[t])gt++; } });
-      if(ge>=2) clinchTop2[t]=false;   // someone could tie/pass -> not yet top-2 locked
-      if(ge>=3) guarTop3[t]=false;     // could be 4th
-      if(gt<2) notTop2[t]=false;       // could still be top-2 in some scenario
-      if(gt<3) always4th[t]=false;     // could be 3rd-or-better in some scenario
+      var ge=0, defAbove=0;
+      teams.forEach(function(u){ if(u===t)return;
+        if(pts[u]>pts[t]){ ge++; defAbove++; }
+        else if(pts[u]===pts[t]){ ge++; if(beat(u,t,outc)) defAbove++; }
+      });
+      if(ge>=2) clinchTop2[t]=false;       // could be tied/passed -> top-2 not locked
+      if(ge>=3) guarTop3[t]=false;          // could be 4th
+      if(defAbove<2) notTop2[t]=false;      // could still reach top-2
+      if(defAbove<3) always4th[t]=false;    // could be 3rd-or-better
     });
     var arr=teams.map(function(t){ return pts[t]; }).sort(function(a,b){ return b-a; });
     if (arr[2]>maxThird) maxThird=arr[2];
     if (arr[2]<minThird) minThird=arr[2];
   }
-  if (total===0) minThird=0;
   return {base:base, remCount:remCount, clinchTop2:clinchTop2, guarTop3:guarTop3, notTop2:notTop2, always4th:always4th, maxThird:maxThird, minThird:minThird};
 }
 
