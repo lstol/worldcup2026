@@ -352,8 +352,14 @@ where each character at position p gives which group's 3rd-place team goes to th
 in match `T3_POS[match]` (T3_POS: M74→pos3, M77→pos5, M79→pos0, M80→pos7,
 M81→pos2, M82→pos4, M85→pos1, M87→pos6).
 
-`autoPopulateR32()` resolves slots and updates match home_team/away_team automatically
-when admin saves group stage results.
+R32 matches keep their **bracket labels** in `home_team`/`away_team` (`1E`, `2A`,
+`3ABCDF` — see `R32_LABELS`). `r32Projection()` derives the **current projected**
+team per slot from live `calcStandings()` (winners, runners-up, best-8 thirds via
+`THIRD_PLACE_MAP`) and `projSmall(m, side)` renders it in small text **next to**
+the label in My Predictions / View Predictions / Enter Results (R32 only). This
+is **display-only** — the DB is never overwritten, so the bracket structure is
+preserved. `_r32proj` caches the projection per render (reset at the top of
+renderPred / renderViewPredInner / renderAdmin).
 
 #### R16 (M89–M96) — `KO_BRACKET` in code
 | Match | Home       | Away       |
