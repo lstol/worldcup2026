@@ -90,6 +90,21 @@ authoritative. `auth.users` must mirror it — never the other way around.
   existing auth UUID, inserts a matching `players` row with that UUID, and
   returns it. Net effect: orphans no longer block re-adding the same email.
 
+### `chat_messages`
+| Column     | Type        | Notes                                            |
+|------------|-------------|--------------------------------------------------|
+| id         | bigint      | identity PK                                      |
+| player_id  | UUID        | FK → players.id (ON DELETE CASCADE)              |
+| message    | text        | ≤1000 chars                                      |
+| created_at | TIMESTAMPTZ | default now()                                    |
+
+Family chat shown at the top of the Standings page. RLS: public read; insert
+where `player_id = auth.uid()`; delete own or admin. Client polls every 12s
+while the Standings page is open (`startChatPoll`/`stopChatPoll`, wired in
+`gotoPage`); `sendChat`/`deleteChatMsg`/`loadChat`/`renderChatMessages` manage
+it. The chat box lives in `lb-main` outside `lb-content`, so renderLB re-renders
+don't disturb it.
+
 ### `settings`
 Key/value table. Has two value columns: `value` (integer, NOT NULL) and `text_value` (text, nullable).
 Known keys:
