@@ -73,6 +73,7 @@ Unique constraint: `(player_id, match_id)` — used as the upsert conflict targe
 | email      | text        | UNIQUE (two constraints: players_email_key and players_email_unique) |
 | is_admin   | bool        | Default false                                   |
 | created_at | TIMESTAMPTZ | Default now()                                   |
+| chat_last_seen | TIMESTAMPTZ | Last time the player viewed the chat; drives @mention notifications |
 
 **Important:** `players.id` must equal `auth.users.id` for RLS to work correctly.
 New players created via Settings → Add Player will have this set correctly.
@@ -107,7 +108,7 @@ another page bump an unread badge on the Standings nav button (`#lbbtn` /
 `updateChatBadge`), cleared on entering Standings. **@mentions:** typing `@`
 opens a player autocomplete (`chatMentionInput`/`pickMention`/`chatKey`);
 rendered messages highlight `@Name` tokens (`chatHighlight`), and a message that
-tags you gets an amber left border. `sendChat`/`deleteChatMsg`/`loadChat`/
+tags you gets an amber left border. **Mention notifications:** `players.chat_last_seen` records when each player last opened the chat (updated by `markChatSeen` on entering Standings). On login `checkChatMentions()` queries messages newer than that which contain `@<my name>` and shows an amber `#mention-banner` ("X tagged you in chat — Open chat" via `gotoChat`); live `@`-mentions while you're elsewhere show the same banner and turn the Standings badge amber (`@N`). `sendChat`/`deleteChatMsg`/`loadChat`/
 `renderChatMessages` manage the rest. The chat box lives in `lb-main` outside
 `lb-content`, so renderLB re-renders don't disturb it.
 
