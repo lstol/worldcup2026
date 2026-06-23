@@ -99,11 +99,17 @@ authoritative. `auth.users` must mirror it — never the other way around.
 | created_at | TIMESTAMPTZ | default now()                                    |
 
 Family chat shown at the top of the Standings page. RLS: public read; insert
-where `player_id = auth.uid()`; delete own or admin. Client polls every 12s
-while the Standings page is open (`startChatPoll`/`stopChatPoll`, wired in
-`gotoPage`); `sendChat`/`deleteChatMsg`/`loadChat`/`renderChatMessages` manage
-it. The chat box lives in `lb-main` outside `lb-content`, so renderLB re-renders
-don't disturb it.
+where `player_id = auth.uid()`; delete own or admin. Added to the
+`supabase_realtime` publication — `setupChatRealtime()` (called once after boot)
+subscribes to INSERTs for instant delivery; a 12s poll (`startChatPoll`) stays
+as a fallback while the page is open. New messages arriving while you're on
+another page bump an unread badge on the Standings nav button (`#lbbtn` /
+`updateChatBadge`), cleared on entering Standings. **@mentions:** typing `@`
+opens a player autocomplete (`chatMentionInput`/`pickMention`/`chatKey`);
+rendered messages highlight `@Name` tokens (`chatHighlight`), and a message that
+tags you gets an amber left border. `sendChat`/`deleteChatMsg`/`loadChat`/
+`renderChatMessages` manage the rest. The chat box lives in `lb-main` outside
+`lb-content`, so renderLB re-renders don't disturb it.
 
 ### `settings`
 Key/value table. Has two value columns: `value` (integer, NOT NULL) and `text_value` (text, nullable).
