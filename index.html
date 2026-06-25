@@ -534,7 +534,7 @@ async function loadChat() {
 }
 function renderChatMessages() {
   var el = document.getElementById('chat-messages'); if(!el) return;
-  var reactCnt={}, reactMine={}; chatLikes.forEach(function(l){ var e=l.emoji||'👍'; if(!reactCnt[l.message_id])reactCnt[l.message_id]={}; reactCnt[l.message_id][e]=(reactCnt[l.message_id][e]||0)+1; if(player && l.player_id===player.id){ if(!reactMine[l.message_id])reactMine[l.message_id]={}; reactMine[l.message_id][e]=true; } });
+  var pNames={}; players.forEach(function(p){ pNames[p.id]=p.name; }); var reactCnt={}, reactMine={}, reactNames={}; chatLikes.forEach(function(l){ var e=l.emoji||'👍'; if(!reactCnt[l.message_id])reactCnt[l.message_id]={}; reactCnt[l.message_id][e]=(reactCnt[l.message_id][e]||0)+1; if(!reactNames[l.message_id])reactNames[l.message_id]={}; (reactNames[l.message_id][e]=reactNames[l.message_id][e]||[]).push(pNames[l.player_id]||'?'); if(player && l.player_id===player.id){ if(!reactMine[l.message_id])reactMine[l.message_id]={}; reactMine[l.message_id][e]=true; } });
   var nameById={}; players.forEach(function(p){ nameById[p.id]=p.name; });
   var atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
   var h='';
@@ -548,19 +548,22 @@ function renderChatMessages() {
     h+='<div style="background:'+(mine?'#E3F0FB':'#F4F6F9')+';border-radius:9px;padding:6px 10px;align-self:'+(mine?'flex-end':'flex-start')+';max-width:88%'+((mentionsMe&&!mine)?';border-left:3px solid #F59E0B':'')+'">';
     h+='<div style="font-size:.68rem;color:#8a97a3;margin-bottom:1px"><strong style="color:#1A3A5C">'+chatEsc(nm)+'</strong> &middot; '+t+(canDel?' <span onclick="deleteChatMsg('+m.id+')" style="cursor:pointer;color:#C9041C;font-weight:700">&times;</span>':'')+'</div>';
     h+='<div style="font-size:.9rem;color:#222;white-space:pre-wrap;word-break:break-word">'+chatHighlight(chatEsc(m.message))+'</div>';
-    h+=reactionBar(m.id, reactCnt, reactMine);
+    h+=reactionBar(m.id, reactCnt, reactMine, reactNames);
     h+='</div>';
   });
   el.innerHTML=h;
   if (atBottom) el.scrollTop = el.scrollHeight;
 }
-function reactionBar(mid, reactCnt, reactMine) {
-  var rc=reactCnt[mid]||{}, rm=reactMine[mid]||{};
+function reactionBar(mid, reactCnt, reactMine, reactNames) {
+  var rc=reactCnt[mid]||{}, rm=reactMine[mid]||{}, rn=reactNames[mid]||{};
   var s='<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">';
-  REACTIONS.forEach(function(e){ var c=rc[e]||0; if(c>0){ var mine=rm[e]; s+='<span onclick="toggleReaction('+mid+',&apos;'+e+'&apos;)" style="cursor:pointer;font-size:.74rem;padding:1px 7px;border-radius:11px;background:'+(mine?'#FFE08A':'#E7ECF1')+';font-weight:'+(mine?'700':'400')+'">'+e+' '+c+'</span>'; } });
+  REACTIONS.forEach(function(e){ var c=rc[e]||0; if(c>0){ var mine=rm[e]; var who=(rn[e]||[]).join(', '); s+='<span title="'+chatEsc(who)+'" onclick="toggleReaction('+mid+',&apos;'+e+'&apos;)" style="cursor:pointer;font-size:.74rem;padding:1px 7px;border-radius:11px;background:'+(mine?'#FFE08A':'#E7ECF1')+';font-weight:'+(mine?'700':'400')+'">'+e+' '+c+'</span>'; } });
   s+='<span onclick="openReact('+mid+')" style="cursor:pointer;font-size:.78rem;padding:1px 7px;border-radius:11px;background:#EEF1F4;color:#7a8896">&#128578;+</span>';
   if(chatReactOpen===mid){ s+='<span style="display:inline-flex;gap:3px;background:#fff;border:1px solid #ccd5dd;border-radius:14px;padding:3px 7px;box-shadow:0 2px 6px rgba(0,0,0,.14)">'; REACTIONS.forEach(function(e){ s+='<span onclick="toggleReaction('+mid+',&apos;'+e+'&apos;)" style="cursor:pointer;font-size:1.05rem;padding:0 2px">'+e+'</span>'; }); s+='</span>'; }
   s+='</div>';
+  var seen={}; Object.keys(rn).forEach(function(e){ rn[e].forEach(function(n){ seen[n]=true; }); });
+  var names=Object.keys(seen);
+  if(names.length){ s+='<div style="font-size:.64rem;color:#9aa7b3;margin-top:2px">&#128064; '+chatEsc(names.join(', '))+'</div>'; }
   return s;
 }
 function openReact(mid) { chatReactOpen = (chatReactOpen===mid?null:mid); renderChatMessages(); }
