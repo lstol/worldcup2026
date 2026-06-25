@@ -352,14 +352,22 @@ where each character at position p gives which group's 3rd-place team goes to th
 in match `T3_POS[match]` (T3_POS: M74→pos3, M77→pos5, M79→pos0, M80→pos7,
 M81→pos2, M82→pos4, M85→pos1, M87→pos6).
 
-R32 matches keep their **bracket labels** in `home_team`/`away_team` (`1E`, `2A`,
-`3ABCDF` — see `R32_LABELS`). `r32Projection()` derives the **current projected**
-team per slot from live `calcStandings()` (winners, runners-up, best-8 thirds via
-`THIRD_PLACE_MAP`) and `projSmall(m, side)` renders it in small text **next to**
-the label in My Predictions / View Predictions / Enter Results (R32 only). This
-is **display-only** — the DB is never overwritten, so the bracket structure is
-preserved. `_r32proj` caches the projection per render (reset at the top of
-renderPred / renderViewPredInner / renderAdmin).
+R32 slots are **certain vs. provisional**:
+- **Certain** (a team has mathematically clinched that exact slot): the actual
+  team name is **written to the DB** by `resolveCertainR32()` (runs on admin
+  login and on every group-result save). `groupClinchInfo` returns
+  `certainWinnerTeam` / `certainRunnerUpTeam` (guaranteed 1st / guaranteed 2nd,
+  using points + head-to-head; completed groups use the actual standings); best-8
+  thirds become certain only once the whole group stage is complete. Uncertain
+  slots are reset to their bracket **label** (`R32_LABELS`: `1E`, `2A`,
+  `3ABCDF`), so a corrected result reverts a slot to its label.
+- **Provisional** (still a label): `r32Projection()` derives the current
+  projected team from live `calcStandings()` and `projSmall(m, side)` shows it in
+  small grey text **next to** the label — in My Predictions, View Predictions,
+  Enter Results, and the Settings KO editor. `projSmall` only annotates cells
+  whose value is still a digit-prefixed label. `_r32proj` caches per render
+  (reset at the top of renderPred / renderViewPredInner / renderAdmin /
+  renderSettings).
 
 #### R16 (M89–M96) — `KO_BRACKET` in code
 | Match | Home       | Away       |
