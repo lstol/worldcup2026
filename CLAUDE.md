@@ -112,6 +112,11 @@ tags you gets an amber left border. **Mention notifications:** `players.chat_las
 `renderChatMessages` manage the rest. The chat box lives in `lb-main` outside
 `lb-content`, so renderLB re-renders don't disturb it.
 
+**Likes:** `chat_likes` (PK `message_id`+`player_id`; RLS public read, insert/delete
+own; in the realtime publication). Each message shows a 👍 toggle with a count
+(`toggleLike`); `loadChat` fetches likes alongside messages and the realtime
+channel reloads on `chat_likes` changes while Standings is open.
+
 ### `settings`
 Key/value table. Has two value columns: `value` (integer, NOT NULL) and `text_value` (text, nullable).
 Known keys:

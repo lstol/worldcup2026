@@ -65,7 +65,7 @@
 /* exported doLogin, doLogout, setRound, onPredInput, onAdminInput, saveResults,
    saveRoundToggle, saveAllSettings, savePlayerNames, addPlayerRow, sendInvite,
    removePlayer, saveVisToggle, setViewPredPlayer, setViewPredRound, doChangePassword,
-   saveBonusAnswer, saveBonusPoints, setBonusViewPlayer, showAdminBonus, sendChat, deleteChatMsg, chatKey, chatMentionInput, pickMention, gotoChat, dismissMentionBanner */
+   saveBonusAnswer, saveBonusPoints, setBonusViewPlayer, showAdminBonus, sendChat, deleteChatMsg, chatKey, chatMentionInput, pickMention, gotoChat, dismissMentionBanner, toggleLike */
 const SB_URL = 'https://agreoglnwnesdekjbacu.supabase.co'; const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFncmVvZ2xud25lc2Rla2piYWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjQ1NjgsImV4cCI6MjA4OTg0MDU2OH0.4P3YRTK4vW6IkSVNdLJnwbpzTT5kbtDE3pCqd-hSSyc'; const sb = supabase.createClient(SB_URL, SB_KEY); // Throwaway client used ONLY for creating new auth users (signUp). // persistSession:false keeps the new user's auto-login OUT of storage so it // can never replace the admin's session (the cause of 'logged in as latest participant').
   const sbSignup = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false, autoRefreshToken: false, storageKey: 'wc2026-signup-temp' } }); const ADMIN_EMAIL = 'lasse.stoltenberg@gmail.com'; const RANDOMBOT_ID = '00000000-0000-0000-0000-000000000001';
   const CLAUDEBOT_ID = '00000000-0000-0000-0000-000000000002';
@@ -513,16 +513,19 @@ function buildPositionChart(allPr, scores) {
   return '<div class="section" style="margin-top:14px"><div class="sec-hdr">&#x1F4C8; Position by day</div><div class="hscroll" style="padding:6px 4px">'+svg+'</div><div style="font-size:.7rem;color:#999;padding:4px 10px 8px">Rank over time (1 = top). The right edge matches the current standings.</div></div>';
 }
 
-var chatPollTimer=null; var chatMsgs=[]; var chatChannel=null; var chatUnread=0; var chatMentions=0; var chatMentionState=null;
+var chatPollTimer=null; var chatMsgs=[]; var chatChannel=null; var chatUnread=0; var chatMentions=0; var chatMentionState=null; var chatLikes=[];
 function chatEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 async function loadChat() {
   var res = await sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(200);
   if (res.error) return;
   chatMsgs = res.data || [];
+  var lr = await sb.from('chat_likes').select('message_id,player_id');
+  chatLikes = (lr && !lr.error && lr.data) ? lr.data : [];
   renderChatMessages();
 }
 function renderChatMessages() {
   var el = document.getElementById('chat-messages'); if(!el) return;
+  var likeCnt={}, likedMe={}; chatLikes.forEach(function(l){ likeCnt[l.message_id]=(likeCnt[l.message_id]||0)+1; if(player && l.player_id===player.id) likedMe[l.message_id]=true; });
   var nameById={}; players.forEach(function(p){ nameById[p.id]=p.name; });
   var atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
   var h='';
@@ -536,10 +539,18 @@ function renderChatMessages() {
     h+='<div style="background:'+(mine?'#E3F0FB':'#F4F6F9')+';border-radius:9px;padding:6px 10px;align-self:'+(mine?'flex-end':'flex-start')+';max-width:88%'+((mentionsMe&&!mine)?';border-left:3px solid #F59E0B':'')+'">';
     h+='<div style="font-size:.68rem;color:#8a97a3;margin-bottom:1px"><strong style="color:#1A3A5C">'+chatEsc(nm)+'</strong> &middot; '+t+(canDel?' <span onclick="deleteChatMsg('+m.id+')" style="cursor:pointer;color:#C9041C;font-weight:700">&times;</span>':'')+'</div>';
     h+='<div style="font-size:.9rem;color:#222;white-space:pre-wrap;word-break:break-word">'+chatHighlight(chatEsc(m.message))+'</div>';
+    h+='<div style="margin-top:4px"><span onclick="toggleLike('+m.id+')" style="cursor:pointer;font-size:.72rem;display:inline-block;padding:1px 8px;border-radius:11px;background:'+(likedMe[m.id]?'#FFE08A':'#E7ECF1')+';color:'+(likedMe[m.id]?'#7a5b00':'#5a6b7a')+';font-weight:'+(likedMe[m.id]?'700':'400')+'">&#128077;'+(likeCnt[m.id]?' '+likeCnt[m.id]:'')+'</span></div>';
     h+='</div>';
   });
   el.innerHTML=h;
   if (atBottom) el.scrollTop = el.scrollHeight;
+}
+async function toggleLike(mid) {
+  if(!player) return;
+  var mine=false; chatLikes.forEach(function(l){ if(l.message_id===mid && l.player_id===player.id) mine=true; });
+  if(mine){ var d=await sb.from('chat_likes').delete().eq('message_id',mid).eq('player_id',player.id); if(d.error){ alert('Error: '+d.error.message); return; } }
+  else { var ins=await sb.from('chat_likes').insert({message_id:mid, player_id:player.id}); if(ins.error){ alert('Error: '+ins.error.message); return; } }
+  await loadChat();
 }
 async function sendChat() {
   var inp=document.getElementById('chat-input'); if(!inp||!player) return;
@@ -571,7 +582,7 @@ function setupChatRealtime() {
       if (mentionsMe) { chatMentions++; var nm={}; players.forEach(function(p){nm[p.id]=p.name;}); showMentionBanner(chatMentions, nm[m.player_id]||'Someone'); }
       updateChatBadge();
     }
-  }).subscribe();
+  }).on('postgres_changes', {event:'*', schema:'public', table:'chat_likes'}, function(){ var lb2=document.getElementById('page-lb'); if(lb2 && lb2.classList.contains('active')) loadChat(); }).subscribe();
 }
 function updateChatBadge() {
   var b=document.getElementById('lbbtn'); if(!b) return;
