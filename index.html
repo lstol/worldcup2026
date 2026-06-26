@@ -280,13 +280,22 @@ function r32Analysis() {
   var qual={}, elim={};
   // QUALIFIED: clinched top-2 + confirmed top-2 of completed groups
   groups.forEach(function(g){ var t2=info[g].clinchTop2; getTeams(g).forEach(function(t){ if(t2[t]) qual[t]=1; }); if(grpComplete[g]){ var st=actualSt[g]||[]; if(st[0])qual[st[0].team]=1; if(st[1])qual[st[1].team]=1; } });
-  // guaranteed best-third: can't finish 4th, and at most 7 other groups could
-  // produce a 3rd-place team reaching its minimum points total.
+  // guaranteed best-third: can't finish 4th, and at most 7 other groups can
+  // field a 3rd-place team ranked at-or-above it. Completed groups are compared
+  // exactly (points -> GD -> goals); ongoing groups use the max points their
+  // 3rd could still reach (their GD is unbounded, so points alone decide).
+  function thirdStatsOf(g, team){ var st=actualSt[g]||[]; for(var k=0;k<st.length;k++){ if(st[k].team===team) return st[k]; } return null; }
+  function cmpThird(a,b){ return (a.pts-b.pts) || (a.gd-b.gd) || (a.gf-b.gf); }
   groups.forEach(function(g){
     getTeams(g).forEach(function(t){
       if (qual[t] || !info[g].guarTop3[t]) return;
       var tmin = info[g].base[t];
-      var cnt=0; groups.forEach(function(g2){ if(g2!==g && info[g2].maxThird >= tmin) cnt++; });
+      var tStats = grpComplete[g] ? thirdStatsOf(g, t) : null;
+      var cnt=0;
+      groups.forEach(function(g2){ if(g2===g) return;
+        if (grpComplete[g2] && tStats) { var st2=actualSt[g2]||[]; if (st2[2] && cmpThird(st2[2], tStats) >= 0) cnt++; }
+        else { if (info[g2].maxThird >= tmin) cnt++; }
+      });
       if (cnt <= 7) qual[t]=1;
     });
   });
