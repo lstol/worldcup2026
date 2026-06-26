@@ -711,10 +711,28 @@ function resolveCertainR32() {
   groups.forEach(function(g){ if(grpComplete[g]){ var st=allGrp[g]||[]; certWin[g]=st[0]?st[0].team:null; certRun[g]=st[1]?st[1].team:null; } else { certWin[g]=info[g].certainWinnerTeam||null; certRun[g]=info[g].certainRunnerUpTeam||null; } });
   var thirdByPos=[];
   if(allComplete){ var thirds=[]; groups.forEach(function(g){ var st=allGrp[g]||[]; if(st[2])thirds.push({group:g,team:st[2].team,pts:st[2].pts,gd:st[2].gd,gf:st[2].gf}); }); thirds.sort(function(a,b){return b.pts!==a.pts?b.pts-a.pts:b.gd!==a.gd?b.gd-a.gd:b.gf-a.gf;}); var best8=thirds.slice(0,8); var qualGroups=best8.map(function(t){return t.group;}).sort().join(''); var assignment=THIRD_PLACE_MAP[qualGroups]||''; var thirdMap={}; best8.forEach(function(t){thirdMap[t.group]=t.team;}); for(var i2=0;i2<8;i2++){ thirdByPos[i2]=assignment[i2]?thirdMap[assignment[i2]]||null:null; } }
+  // A guaranteed third's R32 slot is fixed if, across every qualifying combination
+  // that still includes all currently-guaranteed third groups, it maps to one match.
+  var posToMatch={}; Object.keys(T3_POS).forEach(function(mn){ posToMatch[T3_POS[mn]]=+mn; });
+  var qualified = r32Analysis().qualified;
+  var gThirdGroups=[], gThirdTeam={};
+  groups.forEach(function(g){ if(grpComplete[g]){ var st=allGrp[g]||[]; if(st[2] && qualified[st[2].team]){ gThirdGroups.push(g); gThirdTeam[g]=st[2].team; } } });
+  var thirdFixed={};
+  gThirdGroups.forEach(function(g){
+    var slot=null, multi=false;
+    for(var key in THIRD_PLACE_MAP){
+      var ok=true; for(var ki=0;ki<gThirdGroups.length;ki++){ if(key.indexOf(gThirdGroups[ki])<0){ ok=false; break; } }
+      if(!ok) continue;
+      var asg=THIRD_PLACE_MAP[key];
+      for(var p=0;p<asg.length;p++){ if(asg[p]===g){ var mn=posToMatch[p]; if(slot===null) slot=mn; else if(slot!==mn){ multi=true; break; } } }
+      if(multi) break;
+    }
+    if(!multi && slot!=null) thirdFixed[slot]=gThirdTeam[g];
+  });
   var updates=[];
   matches.filter(function(m){return m.round==='R32'&&m.home_score==null;}).forEach(function(m){
     var br=R32_BRACKET[m.match_number], lab=R32_LABELS[m.match_number]; if(!br||!lab) return;
-    function certTeam(slot){ if(!slot) return null; if(slot==='T3') return thirdByPos[T3_POS[m.match_number]]||null; var g=slot.slice(2); return slot.charAt(0)==='W'?certWin[g]:certRun[g]; }
+    function certTeam(slot){ if(!slot) return null; if(slot==='T3') return thirdFixed[m.match_number] || thirdByPos[T3_POS[m.match_number]] || null; var g=slot.slice(2); return slot.charAt(0)==='W'?certWin[g]:certRun[g]; }
     var nh=certTeam(br.h)||lab.h, na=certTeam(br.a)||lab.a;
     if(nh!==m.home_team || na!==m.away_team) updates.push({id:m.id,home_team:nh,away_team:na});
   });
