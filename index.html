@@ -714,14 +714,15 @@ function resolveCertainR32() {
   // A guaranteed third's R32 slot is fixed if, across every qualifying combination
   // that still includes all currently-guaranteed third groups, it maps to one match.
   var posToMatch={}; Object.keys(T3_POS).forEach(function(mn){ posToMatch[T3_POS[mn]]=+mn; });
-  var qualified = r32Analysis().qualified;
-  var gThirdGroups=[], gThirdTeam={};
-  groups.forEach(function(g){ if(grpComplete[g]){ var st=allGrp[g]||[]; if(st[2] && qualified[st[2].team]){ gThirdGroups.push(g); gThirdTeam[g]=st[2].team; } } });
+  var _ana = r32Analysis(); var qualified = _ana.qualified, eliminated = _ana.eliminated;
+  var gThirdGroups=[], gThirdTeam={}, elimThirdGroups=[];
+  groups.forEach(function(g){ if(grpComplete[g]){ var st=allGrp[g]||[]; if(st[2]){ if(qualified[st[2].team]){ gThirdGroups.push(g); gThirdTeam[g]=st[2].team; } else if(eliminated[st[2].team]){ elimThirdGroups.push(g); } } } });
   var thirdFixed={};
   gThirdGroups.forEach(function(g){
     var slot=null, multi=false;
     for(var key in THIRD_PLACE_MAP){
       var ok=true; for(var ki=0;ki<gThirdGroups.length;ki++){ if(key.indexOf(gThirdGroups[ki])<0){ ok=false; break; } }
+      if(ok) for(var ei=0;ei<elimThirdGroups.length;ei++){ if(key.indexOf(elimThirdGroups[ei])>=0){ ok=false; break; } }
       if(!ok) continue;
       var asg=THIRD_PLACE_MAP[key];
       for(var p=0;p<asg.length;p++){ if(asg[p]===g){ var mn=posToMatch[p]; if(slot===null) slot=mn; else if(slot!==mn){ multi=true; break; } } }
