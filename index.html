@@ -1906,23 +1906,24 @@ function renderViewPredInner() {
       if (!byG[g]) return;
       h += '<div class="section"><div class="sec-hdr">Group '+g+'</div>';
       h += '<div class="pred-group-inner">';
-      h += '<div class="pred-matches">'+buildViewPredTable(byG[g], pm, true)+'</div>';
+      h += '<div class="pred-matches">'+buildViewPredTable(byG[g], pm, true, isOwn)+'</div>';
       h += '<div class="pred-standings">'+buildPredStTable(g, pm, st[g]||[], qualPredThirds)+'</div>';
       h += '</div></div>';
     });
   } else {
-    h += '<div class="section">'+buildViewPredTable(ms, pm, false)+'</div>';
+    h += '<div class="section">'+buildViewPredTable(ms, pm, false, isOwn)+'</div>';
   }
 
   inner.innerHTML = buildRoundSummaryBar(viewPredRound, viewPlayerPreds) + h;
 }
 
-function buildViewPredTable(ms, pm, isGS) {
+function buildViewPredTable(ms, pm, isGS, isOwn) {
   var vColgroup = isGS ? '<colgroup><col style="width:82px"><col><col style="width:50px"><col style="width:50px"><col><col style="width:44px"><col style="width:54px"></colgroup>' : '<colgroup><col style="width:78px"><col><col style="width:46px"><col style="width:46px"><col><col style="width:34px"><col style="width:32px"><col style="width:32px"><col style="width:54px"></colgroup>';
   var h = '<table style="table-layout:fixed;width:100%">'+vColgroup+'<thead><tr><th class="tl">Match</th><th class="tl">Home</th><th>H</th><th>A</th><th class="tl">Away</th>'
     + (!isGS ? '<th>ET</th>' : '') + '<th>Pts</th>' + (!isGS ? '<th>Qual</th>' : '') + '<th>Actual</th>' + (predPlayerId===CLAUDEBOT_ID ? '<th></th>' : '') + '</tr></thead><tbody>';
   ms.forEach(function(m) {
     var pr = pm[m.id];
+    var hide = !isOwn && !isMatchFrozen(m);
     var ph = pr ? (pr.home_score != null ? pr.home_score : '-') : '-';
     var pa = pr ? (pr.away_score != null ? pr.away_score : '-') : '-';
     var ah = m.home_score, aa = m.away_score;
@@ -1936,8 +1937,8 @@ function buildViewPredTable(ms, pm, isGS) {
     var actHtml = ah != null ? '<span style="background:'+(ah>aa?'#D6EAF8':ah<aa?'#FDE8E8':'#F5F5F5')+';padding:2px 5px;border-radius:4px;font-weight:700">'+ah+'-'+aa+'</span>' + (m.et_winner ? ' <small style="color:#888">(ET:'+m.et_winner+')</small>' : '') : '-';
     var htbd = !m.home_team||m.home_team.indexOf('Winner')===0||m.home_team.indexOf('Runner')===0||m.home_team.indexOf('Best')===0||m.home_team.indexOf('Loser')===0 || /^[0-9]/.test(m.home_team);
     var atbd = !m.away_team||m.away_team.indexOf('Winner')===0||m.away_team.indexOf('Runner')===0||m.away_team.indexOf('Best')===0||m.away_team.indexOf('Loser')===0 || /^[0-9]/.test(m.away_team);
-    var predHtml = pr ? '<span style="font-weight:700;font-size:.95rem">'+ph+' - '+pa+'</span>' : '<span style="color:#999">-</span>';
-    var etHtml = (!isGS && pr && pr.et_winner) ? pr.et_winner : '-';
+    var predHtml = hide ? '<span style="color:#bbb" title="Hidden until this match locks">&#x1F512;</span>' : (pr ? '<span style="font-weight:700;font-size:.95rem">'+ph+' - '+pa+'</span>' : '<span style="color:#999">-</span>');
+    var etHtml = hide ? '-' : ((!isGS && pr && pr.et_winner) ? pr.et_winner : '-');
     h += '<tr>';
     h += '<td style="font-size:.75rem;color:#999">M'+m.match_number+'<br><small>'+formatKickoffShort(m)+'</small></td>';
     h += '<td class="tc'+(htbd?' tbd':'')+'">'+(m.home_team||'TBD')+projSmall(m,'home')+'</td>';
