@@ -485,7 +485,7 @@ function buildKOQualBody(allPr, sourceRound, mode, bonusKey){
   var prBy={}; allPs.forEach(function(p){ prBy[p.id]={}; });
   allPr.forEach(function(pr){ if(prBy[pr.player_id]) prBy[pr.player_id][pr.match_id]=pr; });
   var bonus=bonusKey?+(settings[bonusKey]||0):0;
-  var minW=140+allPs.length*120;
+  var minW=230+allPs.length*120;
   var ptsNote = bonus>0 ? ' (+'+bonus+' pts each correct)' : ' (informational &ndash; not separately scored)';
   var h='<div style="font-size:.72rem;color:#999;padding:6px 10px">Each player&apos;s predicted '+(mode==='loser'?'bronze-final teams':'advancing teams')+ptsNote+'. Green = correct, red strike = wrong, grey = undecided.</div>';
   h+='<div class="hscroll"><table style="border-collapse:collapse;font-size:.78rem;min-width:'+minW+'px">';
@@ -495,7 +495,8 @@ function buildKOQualBody(allPr, sourceRound, mode, bonusKey){
   srcMs.forEach(function(m,mi){
     var rowbg=mi%2?'#F7FAFD':'#fff';
     var actAdv=koAdvancer(m,null,mode);
-    h+='<tr style="border-top:1px solid #EEF3F8"><td style="position:sticky;left:0;background:'+rowbg+';z-index:1;padding:6px 8px;font-weight:700;color:#0D2137;white-space:nowrap">M'+m.match_number+'</td>';
+    var mLabel=(m.home_team||'TBD')+' v '+(m.away_team||'TBD');
+    h+='<tr style="border-top:1px solid #EEF3F8"><td style="position:sticky;left:0;background:'+rowbg+';z-index:1;padding:6px 8px;white-space:nowrap"><div style="font-weight:700;color:#0D2137">'+mLabel+'</div><div style="font-size:.68rem;color:#999;font-weight:400">M'+m.match_number+' &middot; '+formatKickoffShort(m)+'</div></td>';
     allPs.forEach(function(p){
       var t=koAdvancer(m,prBy[p.id][m.id],mode);
       var cell;
