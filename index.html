@@ -891,7 +891,7 @@ function buildKOBracket() {
       if (/^[0-9]/.test(val||'')){ if(_r32proj===null)_r32proj=r32Projection(); var p=_r32proj[m.match_number]; var pn=p?p[side]:null; name= pn||val; prov=true; }
       else { name=val||'TBD'; }
     } else {
-      var r=resolveKOTeam(val, byNum, 0); if(r===val){ name='&middot;'; tbd=true; } else name=r;
+      var r=resolveKOTeam(val, byNum, 0); if(!r || /^(Winner|Loser) M\d+$/.test(r)){ name='&middot;'; tbd=true; } else name=r;
     }
     var won = (m.home_score!=null) && ((side==='home'&&(m.home_score>m.away_score||(m.home_score===m.away_score&&m.et_winner==='H'))) || (side==='away'&&(m.away_score>m.home_score||(m.home_score===m.away_score&&m.et_winner==='A'))));
     var col = tbd?'#bbb': prov?'#8a97a3': '#1A3A5C';
