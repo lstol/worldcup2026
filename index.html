@@ -580,7 +580,11 @@ function buildBonusSummary(allBonusAns){
       var cell;
       if(!val && val!==0){ cell='<span style="color:#ccc">&middot;</span>'; }
       else {
-        var s = !hasCorr ? 'pending' : (norm(val)===norm(corr) ? 'q' : 'out');
+        var s;
+        if(a && a.points!=null){ s = a.points>0 ? 'q' : 'out'; }
+        else if(!hasCorr){ s='pending'; }
+        else if(q.type==='yesno'||q.type==='choice'||q.type==='number'){ s = ((q.type==='number'?parseFloat(val)===parseFloat(corr):norm(val)===norm(corr)) ? 'q' : 'out'); }
+        else { s='pending'; }
         var tcol=s==='q'?'#1A5C1A':s==='out'?'#9B2226':'#555';
         var deco=s==='out'?';text-decoration:line-through':'';
         cell='<span style="color:'+tcol+deco+'">'+val+'</span>';
