@@ -1082,7 +1082,7 @@ function renderAdminBonus() {
   var el = document.getElementById('admin-content');
   if (!bonusQuestions.length) { el.innerHTML = '<div class="section"><div style="padding:20px;text-align:center;color:#999">No bonus questions.</div></div>'; return; }
   var pts = settings['bonus_q_pts'] || 0;
-  var h = '<div class="section"><div class="info" style="margin-bottom:10px">Enter the correct answer for each bonus question. Saving awards <strong>'+pts+' pts</strong> to every player whose answer matches it (others 0). Questions left blank are not scored. You can still fine-tune individual points on the Bonus page.</div>';
+  var h = '<div class="section"><div class="info" style="margin-bottom:10px">Enter the correct answer for each bonus question. Saving auto-scores <strong>Yes/No</strong>, <strong>choice</strong> and <strong>number</strong> questions (<strong>'+pts+' pts</strong> for a match, else 0). <strong>Free-text</strong> questions are never auto-scored &mdash; their correct answer is saved for display, but you set each player&apos;s points by hand on the Bonus page (so saving here won&apos;t wipe manual scores). Questions left blank are not scored.</div>';
   h += '<table style="width:100%;border-collapse:collapse;font-size:.85rem"><tbody>';
   bonusQuestions.forEach(function(q) {
     h += '<tr style="border-bottom:1px solid #E4EEF7">';
@@ -1118,6 +1118,7 @@ async function saveBonusResults() {
     var ca = corr[a.question_id];
     if (ca === undefined || ca === '') continue;
     var q = qById[a.question_id]; if (!q) continue;
+    if (q.type!=='yesno' && q.type!=='choice' && q.type!=='number') continue; // free-text: scored manually, never auto-overwritten
     var match = (q.type==='number') ? (parseFloat(a.answer)===parseFloat(ca)) : (norm(a.answer)===norm(ca));
     var newPts = match ? pts : 0;
     if (a.points !== newPts) {
