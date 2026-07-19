@@ -1088,7 +1088,7 @@ function renderAdminBonus() {
   var el = document.getElementById('admin-content');
   if (!bonusQuestions.length) { el.innerHTML = '<div class="section"><div style="padding:20px;text-align:center;color:#999">No bonus questions.</div></div>'; return; }
   var pts = settings['bonus_q_pts'] || 0;
-  var h = '<div class="section"><div class="info" style="margin-bottom:10px">Enter the correct answer for each bonus question. Saving auto-scores <strong>Yes/No</strong>, <strong>choice</strong> and <strong>number</strong> questions (<strong>'+pts+' pts</strong> for a match, else 0). <strong>Free-text</strong> questions are never auto-scored &mdash; their correct answer is saved for display, but you set each player&apos;s points by hand on the Bonus page (so saving here won&apos;t wipe manual scores). Questions left blank are not scored.</div>';
+  var h = '<div class="section"><div class="info" style="margin-bottom:10px">Enter the correct answer for each bonus question. Saving auto-scores <strong>Yes/No</strong> and <strong>choice</strong> questions on exact match, and <strong>number</strong> questions as <strong>closest-wins</strong> (the eligible player(s) nearest your value get the points; disqualified bots are never eligible) &mdash; <strong>'+pts+' pts</strong> each. <strong>Free-text</strong> questions are never auto-scored &mdash; their correct answer is saved for display, but you set each player&apos;s points by hand on the Bonus page (so saving here won&apos;t wipe manual scores). Questions left blank are not scored.</div>';
   h += '<table style="width:100%;border-collapse:collapse;font-size:.85rem"><tbody>';
   bonusQuestions.forEach(function(q) {
     h += '<tr style="border-bottom:1px solid #E4EEF7">';
@@ -1118,6 +1118,18 @@ async function saveBonusResults() {
   var answers = ansRes.data || [];
   var qById = {}; bonusQuestions.forEach(function(q){ qById[q.id]=q; });
   function norm(v){ return String(v==null?'':v).trim().toLowerCase(); }
+  // 'closest wins' scoring for number questions: award the eligible answer(s) nearest the
+  // correct value. Disqualified bots (RandomBot, Claude) are never eligible to win these.
+  var closestWin={};
+  Object.keys(qById).forEach(function(qk){
+    var q=qById[qk]; if(!q || q.type!=='number') return;
+    var ca=corr[q.id]; if(ca===undefined || ca==='') return;
+    var target=parseFloat(ca); if(isNaN(target)) return;
+    var elig=answers.filter(function(a){ return a.question_id===q.id && a.player_id!==RANDOMBOT_ID && a.player_id!==CLAUDEBOT_ID && a.answer!=null && a.answer!=='' && !isNaN(parseFloat(a.answer)); });
+    if(!elig.length) return;
+    var best=Infinity; elig.forEach(function(a){ var d=Math.abs(parseFloat(a.answer)-target); if(d<best)best=d; });
+    elig.forEach(function(a){ if(Math.abs(parseFloat(a.answer)-target)===best) closestWin[a.player_id+'|'+a.question_id]=true; });
+  });
   var scored = 0;
   for (var i=0;i<answers.length;i++) {
     var a = answers[i];
@@ -1125,8 +1137,7 @@ async function saveBonusResults() {
     if (ca === undefined || ca === '') continue;
     var q = qById[a.question_id]; if (!q) continue;
     if (q.type!=='yesno' && q.type!=='choice' && q.type!=='number') continue; // free-text: scored manually, never auto-overwritten
-    var match = (q.type==='number') ? (parseFloat(a.answer)===parseFloat(ca)) : (norm(a.answer)===norm(ca));
-    var newPts = match ? pts : 0;
+    var newPts = (q.type==='number') ? (closestWin[a.player_id+'|'+a.question_id] ? pts : 0) : ((norm(a.answer)===norm(ca)) ? pts : 0);
     if (a.points !== newPts) {
       var up = await sb.from('bonus_answers').update({points:newPts}).eq('player_id', a.player_id).eq('question_id', a.question_id);
       if (up.error) { st.textContent='Error: '+up.error.message; return; }
