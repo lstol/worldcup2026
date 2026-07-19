@@ -476,7 +476,7 @@ function koAdvancer(m, pr, mode){
   if(mode==='loser') winSide = winSide==='H'?'A':'H';
   return winSide==='H'?ht:at;
 }
-function buildKOQualBody(allPr, sourceRound, mode, bonusKey){
+function buildKOQualBody(allPr, sourceRound, mode, bonusKey, whatLabel){
   var srcMs=matches.filter(function(m){return m.round===sourceRound;}).sort(byKickoff);
   if(!srcMs.length) return '<div style="padding:16px;text-align:center;color:#999">No matches yet.</div>';
   var realPs=players.filter(function(p){return p.id!==RANDOMBOT_ID&&p.id!==CLAUDEBOT_ID;});
@@ -487,7 +487,8 @@ function buildKOQualBody(allPr, sourceRound, mode, bonusKey){
   var bonus=bonusKey?+(settings[bonusKey]||0):0;
   var minW=230+allPs.length*120;
   var ptsNote = bonus>0 ? ' (+'+bonus+' pts each correct)' : ' (informational &ndash; not separately scored)';
-  var h='<div style="font-size:.72rem;color:#999;padding:6px 10px">Each player&apos;s predicted '+(mode==='loser'?'bronze-final teams':'advancing teams')+ptsNote+'. Green = correct, red strike = wrong, grey = undecided.</div>';
+  var whatNoun = whatLabel || (mode==='loser'?'bronze-final teams':'advancing teams');
+  var h='<div style="font-size:.72rem;color:#999;padding:6px 10px">Each player&apos;s predicted '+whatNoun+ptsNote+'. Green = correct, red strike = wrong, grey = undecided.</div>';
   h+='<div class="hscroll"><table style="border-collapse:collapse;font-size:.78rem;min-width:'+minW+'px">';
   h+='<thead><tr style="background:#1A3A5C;color:#fff"><th style="position:sticky;left:0;background:#1A3A5C;z-index:2;text-align:left;padding:6px 8px">Match</th>';
   allPs.forEach(function(p){ var isBot=p.id===RANDOMBOT_ID||p.id===CLAUDEBOT_ID; h+='<th style="padding:6px 10px;text-align:left;white-space:nowrap'+(isBot?';color:#B8A9FF':'')+'">'+(isBot?'&#129302; ':'')+p.name+'</th>'; });
@@ -527,14 +528,15 @@ function toggleQualSec(key){ var b=document.getElementById('qsec-body-'+key); va
 function buildAllQualifierSummaries(allPr){
   var visible = settings['preds_visible']==1 || settings['preds_visible']==='1';
   if (!visible) return '';
-  var roundLabel={group:'group stage',R32:'Round of 32',R16:'Round of 16',QF:'Quarter-Finals',SF:'Semi-Finals'};
+  var roundLabel={group:'group stage',R32:'Round of 32',R16:'Round of 16',QF:'Quarter-Finals',SF:'Semi-Finals',bronze:'bronze final',final:'final'};
   var defs=[
     {key:'r32', icon:'&#x1F3AB;', title:'Predicted R32 Qualifiers', src:'group', kind:'r32'},
     {key:'r16', icon:'&#x1F3AB;', title:'Predicted R16 Qualifiers', src:'R32', kind:'ko', mode:'winner', bonusKey:'bonus_r16'},
     {key:'qf',  icon:'&#x1F3AB;', title:'Predicted Quarter-Final Qualifiers', src:'R16', kind:'ko', mode:'winner', bonusKey:'bonus_qf'},
     {key:'sf',  icon:'&#x1F3AB;', title:'Predicted Semi-Final Qualifiers', src:'QF', kind:'ko', mode:'winner', bonusKey:'bonus_sf'},
     {key:'final', icon:'&#x1F3C6;', title:'Predicted Finalists', src:'SF', kind:'ko', mode:'winner', bonusKey:'bonus_final'},
-    {key:'bronze', icon:'&#x1F949;', title:'Predicted Bronze Finalists', src:'SF', kind:'ko', mode:'loser', bonusKey:null}
+    {key:'bronze', icon:'&#x1F949;', title:'Predicted Bronze Winner', src:'bronze', kind:'ko', mode:'winner', bonusKey:'bonus_bronze', noun:'bronze-final winner'},
+    {key:'champion', icon:'&#x1F3C6;', title:'Predicted Champion', src:'final', kind:'ko', mode:'winner', bonusKey:'bonus_champion', noun:'tournament champion'}
   ];
   // ongoing = most advanced section whose source round is frozen (predictions locked);
   // on a tie (final & bronze both fed by SF) the earlier listed (final) wins.
@@ -544,7 +546,7 @@ function buildAllQualifierSummaries(allPr){
   defs.forEach(function(d){
     var frozen=isRoundFrozen(d.src);
     var lockMsg='Visible once the '+(roundLabel[d.src]||d.src)+' predictions lock.';
-    var body = frozen ? (d.kind==='r32'? buildR32QualBody(allPr) : buildKOQualBody(allPr, d.src, d.mode, d.bonusKey)) : '';
+    var body = frozen ? (d.kind==='r32'? buildR32QualBody(allPr) : buildKOQualBody(allPr, d.src, d.mode, d.bonusKey, d.noun)) : '';
     out += qualSection(d.key, d.icon, d.title, d.key===ongoing, !frozen, lockMsg, body);
   });
   return out;
